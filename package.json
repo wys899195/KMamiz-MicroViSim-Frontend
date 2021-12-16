@@ -15,6 +15,7 @@
     "force-graph": "^1.42.4",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
+    "react-force-graph": "^1.41.7",
     "react-router-dom": "^6.1.1"
   },
   "devDependencies": {
