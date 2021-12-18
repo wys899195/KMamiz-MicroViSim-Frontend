@@ -6,27 +6,6 @@ type HighlightInfo = {
   hoverNode: any;
 };
 
-const GraphBasicSettings = {
-  linkDirectionalArrowColor: () => "dimgray",
-  linkDirectionalParticles: 1,
-  linkDirectionalArrowRelPos: 1,
-  nodeRelSize: 4,
-  linkLabel: (d: any) => `${d.source.id} -> ${d.target.id}`,
-};
-
-const CanvasSettingFactory = (
-  highlightLinkStrategy: (link: any) => boolean,
-  highlightNodeStrategy: (node: any) => boolean
-) => ({
-  nodeCanvasObjectMode: ((node: any) =>
-    highlightNodeStrategy(node) ? "before" : undefined) as any,
-  linkDirectionalArrowLength: (link: any) =>
-    highlightLinkStrategy(link) ? 6 : 3,
-  linkWidth: (link: any) => (highlightLinkStrategy(link) ? 7 : 1),
-  linkDirectionalParticleWidth: (link: any) =>
-    highlightLinkStrategy(link) ? 6 : 4,
-});
-
 const useHoverHighlight = (): [
   HighlightInfo,
   Dispatch<SetStateAction<HighlightInfo>>
@@ -80,23 +59,70 @@ const handleNodeHover = (node: any, info: HighlightInfo): HighlightInfo => {
   return { ...info, highlightNodes, highlightLinks, hoverNode: node || null };
 };
 
-const paintRing = (
+const getColor = (id: string) => {
+  const n = [...id].reduce((prev, curr) => prev + curr.charCodeAt(0), 0);
+  return "#" + ((n * 1234567) % Math.pow(2, 24)).toString(16).padStart(6, "0");
+};
+
+const drawHexagon = (
+  x: any,
+  y: any,
+  r: number,
+  ctx: CanvasRenderingContext2D
+) => {
+  ctx.moveTo(x, y + 2 * r);
+  ctx.lineTo(x + Math.sqrt(3) * r, y + r);
+  ctx.lineTo(x + Math.sqrt(3) * r, y - r);
+  ctx.lineTo(x, y - 2 * r);
+  ctx.lineTo(x - Math.sqrt(3) * r, y - r);
+  ctx.lineTo(x - Math.sqrt(3) * r, y + r);
+  ctx.closePath();
+};
+
+const paintNode = (node: any, color: string, ctx: CanvasRenderingContext2D) => {
+  ctx.fillStyle = color;
+  const r = GraphBasicSettings.nodeRelSize * 0.6;
+  const { x, y } = node;
+
+  ctx.beginPath();
+  // paint hexagon if node is a service (group center)
+  if (node.id === node.group) {
+    drawHexagon(x, y, r, ctx);
+  } else {
+    ctx.arc(x, y, GraphBasicSettings.nodeRelSize, 0, 2 * Math.PI, false);
+  }
+  ctx.fill();
+};
+
+const paintNodeRing = (
   node: any,
   ctx: CanvasRenderingContext2D,
+  highlight: boolean,
   hoverNode: any
 ) => {
   // add ring just for highlighted nodes
-  ctx.beginPath();
-  ctx.arc(
-    node.x,
-    node.y,
-    GraphBasicSettings.nodeRelSize * 1.4,
-    0,
-    2 * Math.PI,
-    false
-  );
-  ctx.fillStyle = node === hoverNode ? "red" : "orange";
-  ctx.fill();
+  if (highlight) {
+    ctx.fillStyle = node === hoverNode ? "navy" : "orange";
+    const { x, y } = node;
+    ctx.beginPath();
+    if (node.id === node.group) {
+      const r = GraphBasicSettings.nodeRelSize * 0.85;
+      drawHexagon(x, y, r, ctx);
+    } else {
+      ctx.arc(
+        x,
+        y,
+        GraphBasicSettings.nodeRelSize * 1.4,
+        0,
+        2 * Math.PI,
+        false
+      );
+    }
+    ctx.fill();
+  }
+
+  // paint underlying style on top of ring
+  paintNode(node, getColor(node.group), ctx);
 };
 
 const zoomOnClick = (node: any, graphRef: any) => {
@@ -105,10 +131,37 @@ const zoomOnClick = (node: any, graphRef: any) => {
   graphRef.current.zoom(8, 2000);
 };
 
+const GraphBasicSettings = {
+  linkDirectionalArrowColor: () => "dimgray",
+  linkDirectionalParticles: 1,
+  linkDirectionalArrowRelPos: 1,
+  nodeRelSize: 4,
+  // nodeAutoColorBy: "group",
+  nodePointerAreaPaint: paintNode,
+  linkLabel: (d: any) => `${d.source.id} -> ${d.target.id}`,
+};
+
+const CanvasSettingFactory = (
+  highlightLinkStrategy: (link: any) => boolean,
+  highlightNodeStrategy: (node: any) => boolean,
+  hoverNode: any
+) => ({
+  // nodeCanvasObjectMode: ((node: any) => {
+  //   if (node.id === node.group && !highlightNodeStrategy(node)) return "before";
+  //   return highlightNodeStrategy(node) ? "before" : undefined;
+  // }) as any,
+  linkDirectionalArrowLength: (link: any) =>
+    highlightLinkStrategy(link) ? 6 : 3,
+  linkWidth: (link: any) => (highlightLinkStrategy(link) ? 7 : 1),
+  linkDirectionalParticleWidth: (link: any) =>
+    highlightLinkStrategy(link) ? 6 : 4,
+  nodeCanvasObject: (node: any, ctx: any) =>
+    paintNodeRing(node, ctx, highlightNodeStrategy(node), hoverNode),
+});
+
 export {
   handleLinkHover,
   handleNodeHover,
-  paintRing,
   GraphBasicSettings,
   useHoverHighlight,
   preprocessData,

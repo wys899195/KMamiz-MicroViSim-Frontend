@@ -1,5 +1,5 @@
 import { makeStyles } from "@mui/styles";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ForceGraph2D } from "react-force-graph";
 import {
   CanvasSettingFactory,
@@ -7,10 +7,10 @@ import {
   zoomOnClick,
   handleLinkHover,
   handleNodeHover,
-  paintRing,
   preprocessData,
   useHoverHighlight,
 } from "../services/DependencyGraphUtils";
+import { MockGraphData } from "../services/MockData";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -20,23 +20,16 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const graphData: any = {
-  nodes: [
-    { id: "a", name: "test_a", color: "steelblue", neighbors: [], links: [] },
-    { id: "b", name: "test_b", color: "navy", neighbors: [], links: [] },
-    { id: "c", name: "test_c", color: "steelblue", neighbors: [], links: [] },
-  ],
-  links: [
-    { source: "a", target: "b" },
-    { source: "b", target: "c" },
-  ],
-};
-
 export default function DependencyGraph() {
   const classes = useStyles();
   const [highlightInfo, setHighlightInfo] = useHoverHighlight();
   const graphRef = useRef<any>();
-  const data = useMemo(() => preprocessData(graphData), []);
+  const [data, setData] = useState<any>();
+
+  useEffect(() => {
+    // TODO: change to api call after backend is ready
+    setData(preprocessData(MockGraphData));
+  }, []);
 
   return (
     <div className={classes.root}>
@@ -46,12 +39,10 @@ export default function DependencyGraph() {
         {...GraphBasicSettings}
         {...CanvasSettingFactory(
           (link: any) => highlightInfo.highlightLinks.has(link),
-          (node: any) => highlightInfo.highlightNodes.has(node)
+          (node: any) => highlightInfo.highlightNodes.has(node),
+          highlightInfo.hoverNode
         )}
         onNodeClick={(node) => zoomOnClick(node, graphRef)}
-        nodeCanvasObject={(node, ctx) =>
-          paintRing(node, ctx, highlightInfo.hoverNode)
-        }
         onNodeHover={(node) =>
           setHighlightInfo(handleNodeHover(node, highlightInfo))
         }
