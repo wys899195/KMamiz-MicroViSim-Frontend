@@ -138,7 +138,7 @@ const GraphBasicSettings = {
   nodeRelSize: 4,
   // nodeAutoColorBy: "group",
   nodePointerAreaPaint: paintNode,
-  linkLabel: (d: any) => `${d.source.id} -> ${d.target.id}`,
+  linkLabel: (d: any) => `${d.source.name} ➔ ${d.target.name}`,
 };
 
 const CanvasSettingFactory = (
