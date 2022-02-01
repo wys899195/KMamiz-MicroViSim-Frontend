@@ -1,4 +1,5 @@
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
+import { Color } from "./ColorUtils";
 
 type HighlightInfo = {
   highlightLinks: Set<any>;
@@ -122,7 +123,12 @@ const paintNodeRing = (
   }
 
   // paint underlying style on top of ring
-  paintNode(node, getColor(node.group), ctx);
+  let color = Color.generateFromString(node.group);
+  const { h, s, l } = color.hsl;
+  if (node.id !== node.group) {
+    color = Color.fromHSL(h, s - 10, l + 10)!;
+  }
+  paintNode(node, color.hex, ctx);
 };
 
 const zoomOnClick = (node: any, graphRef: any) => {
