@@ -57,8 +57,8 @@ export class DependencyGraphFactory {
     highlightLinks.clear();
     if (node) {
       highlightNodes.add(node);
-      node.neighbors.forEach((neighbor: any) => highlightNodes.add(neighbor));
-      node.links.forEach((link: any) => highlightLinks.add(link));
+      node.highlight.forEach((n: any) => highlightNodes.add(n));
+      node.links.forEach((l: any) => highlightLinks.add(l));
     }
     return { ...info, highlightNodes, highlightLinks, hoverNode: node || null };
   }
