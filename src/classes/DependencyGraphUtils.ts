@@ -1,4 +1,6 @@
 import { Dispatch, SetStateAction, useState } from "react";
+import { IEndpointDependency } from "../entites/IEndpointDependency";
+import IGraphData, { ILink, INode } from "../entites/IGraphData";
 import { Color } from "./ColorUtils";
 
 export type HighlightInfo = {
@@ -32,19 +34,29 @@ export class DependencyGraphUtils {
     linkLabel: (d: any) => `${d.source.name} ➔ ${d.target.name}`,
   };
 
-  static ProcessData(data: { nodes: any[]; links: any[] }) {
-    const graphData = {
-      nodes: data.nodes.map((n) => ({ ...n, neighbors: [], links: [] })),
+  static ProcessData(data: IGraphData) {
+    const graphData: {
+      nodes: (INode & { highlight: INode[]; links: ILink[] })[];
+      links: ILink[];
+    } = {
+      nodes: data.nodes.map((n) => ({
+        ...n,
+        highlight: [],
+        links: [],
+      })),
       links: data.links,
     };
 
-    graphData.links.forEach((l: any) => {
-      const source = graphData.nodes.find((n: any) => n.id === l.source);
-      const target = graphData.nodes.find((n: any) => n.id === l.target);
-      source.neighbors.push(target);
-      target.neighbors.push(source);
-      source.links.push(l);
-      target.links.push(l);
+    graphData.nodes.forEach((node) => {
+      node.highlight = node.dependencies.map(
+        (d) => graphData.nodes.find((n) => n.id === d)!
+      );
+      node.linkInBetween.forEach(({ source, target }) => {
+        const link = graphData.links.find(
+          (l) => l.source === source && l.target === target
+        );
+        if (link) node.links.push(link);
+      });
     });
     return graphData;
   }
@@ -116,16 +128,11 @@ export class DependencyGraphUtils {
     if (label !== "EP") {
       DependencyGraphUtils.DrawText(node.name, "#000", node, ctx, 1.5);
     } else {
-      const idSec = node.id.split("\t");
-      let path = idSec[idSec.length - 1];
-      if (path.length > 15) path = path.substring(0, 15) + "...";
-      DependencyGraphUtils.DrawText(
-        `(${idSec[idSec.length - 2]}) ${path}`,
-        "#000",
-        node,
-        ctx,
-        1.5
-      );
+      let path = node.name;
+      if (node.name.length > 30)
+        path =
+          path.substring(0, 15) + " ... " + path.substring(path.length - 15);
+      DependencyGraphUtils.DrawText(path, "#000", node, ctx, 1.5);
     }
   }
 

@@ -1,103 +1,617 @@
+import { IEndpointDependency } from "../entites/IEndpointDependency";
+
 const MockGraphData = {
   nodes: [
-    { id: "null", group: "null", name: "external requests" },
+    {
+      id: "null",
+      group: "null",
+      name: "external requests",
+      dependencies: [
+        "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/productpage",
+        "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/static*",
+      ],
+      linkInBetween: [
+        {
+          source: "null",
+          target:
+            "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/productpage",
+        },
+        {
+          source: "null",
+          target:
+            "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/static*",
+        },
+      ],
+    },
     {
       id: "details\tbook",
       group: "details\tbook",
       name: "details.book",
+      dependencies: [
+        "details\tbook\tv1\tdetails.book.svc.cluster.local:9080/*",
+      ],
+      linkInBetween: [
+        {
+          source: "details\tbook",
+          target: "details\tbook\tv1\tdetails.book.svc.cluster.local:9080/*",
+        },
+      ],
     },
     {
-      id: "details\tbook\tv1\t/*",
+      id: "details\tbook\tv1\tdetails.book.svc.cluster.local:9080/*",
       group: "details\tbook",
-      name: "(details.book v1) /*",
+      name: "(v1) /*",
+      dependencies: [
+        "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/productpage",
+      ],
+      linkInBetween: [
+        {
+          source:
+            "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/productpage",
+          target: "details\tbook\tv1\tdetails.book.svc.cluster.local:9080/*",
+        },
+      ],
     },
     {
       id: "reviews\tbook",
       group: "reviews\tbook",
       name: "reviews.book",
+      dependencies: [
+        "reviews\tbook\tv1\treviews.book.svc.cluster.local:9080/*",
+        "reviews\tbook\tv3\treviews.book.svc.cluster.local:9080/*",
+        "reviews\tbook\tv2\treviews.book.svc.cluster.local:9080/*",
+      ],
+      linkInBetween: [
+        {
+          source: "reviews\tbook",
+          target: "reviews\tbook\tv1\treviews.book.svc.cluster.local:9080/*",
+        },
+        {
+          source: "reviews\tbook",
+          target: "reviews\tbook\tv3\treviews.book.svc.cluster.local:9080/*",
+        },
+        {
+          source: "reviews\tbook",
+          target: "reviews\tbook\tv2\treviews.book.svc.cluster.local:9080/*",
+        },
+      ],
     },
     {
-      id: "reviews\tbook\tv1\t/*",
+      id: "reviews\tbook\tv1\treviews.book.svc.cluster.local:9080/*",
       group: "reviews\tbook",
-      name: "(reviews.book v1) /*",
+      name: "(v1) /*",
+      dependencies: [
+        "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/productpage",
+      ],
+      linkInBetween: [
+        {
+          source:
+            "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/productpage",
+          target: "reviews\tbook\tv1\treviews.book.svc.cluster.local:9080/*",
+        },
+      ],
     },
     {
-      id: "reviews\tbook\tv3\t/*",
+      id: "reviews\tbook\tv3\treviews.book.svc.cluster.local:9080/*",
       group: "reviews\tbook",
-      name: "(reviews.book v3) /*",
+      name: "(v3) /*",
+      dependencies: [
+        "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/productpage",
+        "ratings\tbook\tv1\tratings.book.svc.cluster.local:9080/*",
+      ],
+      linkInBetween: [
+        {
+          source:
+            "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/productpage",
+          target: "reviews\tbook\tv3\treviews.book.svc.cluster.local:9080/*",
+        },
+        {
+          source: "reviews\tbook\tv3\treviews.book.svc.cluster.local:9080/*",
+          target: "ratings\tbook\tv1\tratings.book.svc.cluster.local:9080/*",
+        },
+      ],
     },
     {
-      id: "reviews\tbook\tv2\t/*",
+      id: "reviews\tbook\tv2\treviews.book.svc.cluster.local:9080/*",
       group: "reviews\tbook",
-      name: "(reviews.book v2) /*",
+      name: "(v2) /*",
+      dependencies: [
+        "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/productpage",
+        "ratings\tbook\tv1\tratings.book.svc.cluster.local:9080/*",
+      ],
+      linkInBetween: [
+        {
+          source:
+            "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/productpage",
+          target: "reviews\tbook\tv2\treviews.book.svc.cluster.local:9080/*",
+        },
+        {
+          source: "reviews\tbook\tv2\treviews.book.svc.cluster.local:9080/*",
+          target: "ratings\tbook\tv1\tratings.book.svc.cluster.local:9080/*",
+        },
+      ],
     },
     {
       id: "productpage\tbook",
       group: "productpage\tbook",
       name: "productpage.book",
+      dependencies: [
+        "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/productpage",
+        "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/static*",
+      ],
+      linkInBetween: [
+        {
+          source: "productpage\tbook",
+          target:
+            "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/productpage",
+        },
+        {
+          source: "productpage\tbook",
+          target:
+            "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/static*",
+        },
+      ],
     },
     {
-      id: "productpage\tbook\tv1\t/productpage",
+      id: "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/productpage",
       group: "productpage\tbook",
-      name: "(productpage.book v1) /productpage",
+      name: "(v1) /productpage",
+      dependencies: [
+        "reviews\tbook\tv2\treviews.book.svc.cluster.local:9080/*",
+        "reviews\tbook\tv3\treviews.book.svc.cluster.local:9080/*",
+        "reviews\tbook\tv1\treviews.book.svc.cluster.local:9080/*",
+        "details\tbook\tv1\tdetails.book.svc.cluster.local:9080/*",
+        "ratings\tbook\tv1\tratings.book.svc.cluster.local:9080/*",
+      ],
+      linkInBetween: [
+        {
+          source:
+            "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/productpage",
+          target: "reviews\tbook\tv2\treviews.book.svc.cluster.local:9080/*",
+        },
+        {
+          source:
+            "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/productpage",
+          target: "reviews\tbook\tv3\treviews.book.svc.cluster.local:9080/*",
+        },
+        {
+          source:
+            "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/productpage",
+          target: "reviews\tbook\tv1\treviews.book.svc.cluster.local:9080/*",
+        },
+        {
+          source:
+            "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/productpage",
+          target: "details\tbook\tv1\tdetails.book.svc.cluster.local:9080/*",
+        },
+        {
+          source: "reviews\tbook\tv3\treviews.book.svc.cluster.local:9080/*",
+          target: "ratings\tbook\tv1\tratings.book.svc.cluster.local:9080/*",
+        },
+      ],
     },
     {
-      id: "productpage\tbook\tv1\t/static*",
+      id: "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/static*",
       group: "productpage\tbook",
-      name: "(productpage.book v1) /static*",
+      name: "(v1) /static*",
+      dependencies: [],
+      linkInBetween: [],
     },
     {
       id: "ratings\tbook",
       group: "ratings\tbook",
       name: "ratings.book",
+      dependencies: [
+        "ratings\tbook\tv1\tratings.book.svc.cluster.local:9080/*",
+      ],
+      linkInBetween: [
+        {
+          source: "ratings\tbook",
+          target: "ratings\tbook\tv1\tratings.book.svc.cluster.local:9080/*",
+        },
+      ],
     },
     {
-      id: "ratings\tbook\tv1\t/*",
+      id: "ratings\tbook\tv1\tratings.book.svc.cluster.local:9080/*",
       group: "ratings\tbook",
-      name: "(ratings.book v1) /*",
+      name: "(v1) /*",
+      dependencies: [
+        "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/productpage",
+        "reviews\tbook\tv3\treviews.book.svc.cluster.local:9080/*",
+        "reviews\tbook\tv2\treviews.book.svc.cluster.local:9080/*",
+      ],
+      linkInBetween: [
+        {
+          source:
+            "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/productpage",
+          target: "reviews\tbook\tv2\treviews.book.svc.cluster.local:9080/*",
+        },
+        {
+          source: "reviews\tbook\tv3\treviews.book.svc.cluster.local:9080/*",
+          target: "ratings\tbook\tv1\tratings.book.svc.cluster.local:9080/*",
+        },
+        {
+          source: "reviews\tbook\tv2\treviews.book.svc.cluster.local:9080/*",
+          target: "ratings\tbook\tv1\tratings.book.svc.cluster.local:9080/*",
+        },
+      ],
     },
   ],
   links: [
-    { source: "details\tbook", target: "details\tbook\tv1\t/*" },
-    { source: "reviews\tbook", target: "reviews\tbook\tv1\t/*" },
-    { source: "reviews\tbook", target: "reviews\tbook\tv3\t/*" },
     {
-      source: "reviews\tbook\tv3\t/*",
-      target: "ratings\tbook\tv1\t/*",
+      source: "details\tbook",
+      target: "details\tbook\tv1\tdetails.book.svc.cluster.local:9080/*",
     },
-    { source: "reviews\tbook", target: "reviews\tbook\tv2\t/*" },
     {
-      source: "reviews\tbook\tv2\t/*",
-      target: "ratings\tbook\tv1\t/*",
+      source: "reviews\tbook",
+      target: "reviews\tbook\tv1\treviews.book.svc.cluster.local:9080/*",
+    },
+    {
+      source: "reviews\tbook",
+      target: "reviews\tbook\tv3\treviews.book.svc.cluster.local:9080/*",
+    },
+    {
+      source: "reviews\tbook\tv3\treviews.book.svc.cluster.local:9080/*",
+      target: "ratings\tbook\tv1\tratings.book.svc.cluster.local:9080/*",
+    },
+    {
+      source: "reviews\tbook",
+      target: "reviews\tbook\tv2\treviews.book.svc.cluster.local:9080/*",
+    },
+    {
+      source: "reviews\tbook\tv2\treviews.book.svc.cluster.local:9080/*",
+      target: "ratings\tbook\tv1\tratings.book.svc.cluster.local:9080/*",
     },
     {
       source: "productpage\tbook",
-      target: "productpage\tbook\tv1\t/productpage",
+      target:
+        "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/productpage",
     },
     {
-      source: "productpage\tbook\tv1\t/productpage",
-      target: "reviews\tbook\tv2\t/*",
+      source:
+        "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/productpage",
+      target: "reviews\tbook\tv2\treviews.book.svc.cluster.local:9080/*",
     },
     {
-      source: "productpage\tbook\tv1\t/productpage",
-      target: "reviews\tbook\tv3\t/*",
+      source:
+        "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/productpage",
+      target: "reviews\tbook\tv3\treviews.book.svc.cluster.local:9080/*",
     },
     {
-      source: "productpage\tbook\tv1\t/productpage",
-      target: "reviews\tbook\tv1\t/*",
+      source:
+        "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/productpage",
+      target: "reviews\tbook\tv1\treviews.book.svc.cluster.local:9080/*",
     },
     {
-      source: "productpage\tbook\tv1\t/productpage",
-      target: "details\tbook\tv1\t/*",
+      source:
+        "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/productpage",
+      target: "details\tbook\tv1\tdetails.book.svc.cluster.local:9080/*",
     },
-    { source: "null", target: "productpage\tbook\tv1\t/productpage" },
+    {
+      source: "null",
+      target:
+        "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/productpage",
+    },
     {
       source: "productpage\tbook",
-      target: "productpage\tbook\tv1\t/static*",
+      target:
+        "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/static*",
     },
-    { source: "null", target: "productpage\tbook\tv1\t/static*" },
-    { source: "ratings\tbook", target: "ratings\tbook\tv1\t/*" },
+    {
+      source: "null",
+      target:
+        "productpage\tbook\tv1\tproductpage.book.svc.cluster.local:9080/static*",
+    },
+    {
+      source: "ratings\tbook",
+      target: "ratings\tbook\tv1\tratings.book.svc.cluster.local:9080/*",
+    },
   ],
 };
 
-export { MockGraphData };
+const MockEndpointDependencies: IEndpointDependency[] = [
+  {
+    endpoint: {
+      name: "details.book.svc.cluster.local:9080/*",
+      version: "v1",
+      service: "details",
+      namespace: "book",
+      host: "details",
+      path: "/details/0",
+      port: ":9080",
+      clusterName: "cluster.local",
+    },
+    dependsOn: [],
+    dependBy: [
+      {
+        endpoint: {
+          name: "productpage.book.svc.cluster.local:9080/productpage",
+          version: "v1",
+          service: "productpage",
+          namespace: "book",
+          host: "192.168.39.24",
+          path: "/productpage",
+          port: ":31629",
+          clusterName: "cluster.local",
+        },
+        distance: 1,
+        type: "CLIENT",
+      },
+    ],
+  },
+  {
+    endpoint: {
+      name: "reviews.book.svc.cluster.local:9080/*",
+      version: "v1",
+      service: "reviews",
+      namespace: "book",
+      host: "reviews",
+      path: "/reviews/0",
+      port: ":9080",
+      clusterName: "cluster.local",
+    },
+    dependsOn: [],
+    dependBy: [
+      {
+        endpoint: {
+          name: "productpage.book.svc.cluster.local:9080/productpage",
+          version: "v1",
+          service: "productpage",
+          namespace: "book",
+          host: "192.168.39.24",
+          path: "/productpage",
+          port: ":31629",
+          clusterName: "cluster.local",
+        },
+        distance: 1,
+        type: "CLIENT",
+      },
+    ],
+  },
+  {
+    endpoint: {
+      name: "productpage.book.svc.cluster.local:9080/productpage",
+      version: "v1",
+      service: "productpage",
+      namespace: "book",
+      host: "192.168.39.24",
+      path: "/productpage",
+      port: ":31629",
+      clusterName: "cluster.local",
+    },
+    dependsOn: [
+      {
+        endpoint: {
+          name: "reviews.book.svc.cluster.local:9080/*",
+          version: "v2",
+          service: "reviews",
+          namespace: "book",
+          host: "reviews",
+          path: "/reviews/0",
+          port: ":9080",
+          clusterName: "cluster.local",
+        },
+        distance: 1,
+        type: "SERVER",
+      },
+      {
+        endpoint: {
+          name: "reviews.book.svc.cluster.local:9080/*",
+          version: "v3",
+          service: "reviews",
+          namespace: "book",
+          host: "reviews",
+          path: "/reviews/0",
+          port: ":9080",
+          clusterName: "cluster.local",
+        },
+        distance: 1,
+        type: "SERVER",
+      },
+      {
+        endpoint: {
+          name: "reviews.book.svc.cluster.local:9080/*",
+          version: "v1",
+          service: "reviews",
+          namespace: "book",
+          host: "reviews",
+          path: "/reviews/0",
+          port: ":9080",
+          clusterName: "cluster.local",
+        },
+        distance: 1,
+        type: "SERVER",
+      },
+      {
+        endpoint: {
+          name: "details.book.svc.cluster.local:9080/*",
+          version: "v1",
+          service: "details",
+          namespace: "book",
+          host: "details",
+          path: "/details/0",
+          port: ":9080",
+          clusterName: "cluster.local",
+        },
+        distance: 1,
+        type: "SERVER",
+      },
+      {
+        endpoint: {
+          name: "ratings.book.svc.cluster.local:9080/*",
+          version: "v1",
+          service: "ratings",
+          namespace: "book",
+          host: "ratings",
+          path: "/ratings/0",
+          port: ":9080",
+          clusterName: "cluster.local",
+        },
+        distance: 2,
+        type: "SERVER",
+      },
+    ],
+    dependBy: [],
+  },
+  {
+    endpoint: {
+      name: "reviews.book.svc.cluster.local:9080/*",
+      version: "v3",
+      service: "reviews",
+      namespace: "book",
+      host: "reviews",
+      path: "/reviews/0",
+      port: ":9080",
+      clusterName: "cluster.local",
+    },
+    dependsOn: [
+      {
+        endpoint: {
+          name: "ratings.book.svc.cluster.local:9080/*",
+          version: "v1",
+          service: "ratings",
+          namespace: "book",
+          host: "ratings",
+          path: "/ratings/0",
+          port: ":9080",
+          clusterName: "cluster.local",
+        },
+        distance: 1,
+        type: "SERVER",
+      },
+    ],
+    dependBy: [
+      {
+        endpoint: {
+          name: "productpage.book.svc.cluster.local:9080/productpage",
+          version: "v1",
+          service: "productpage",
+          namespace: "book",
+          host: "192.168.39.24",
+          path: "/productpage",
+          port: ":31629",
+          clusterName: "cluster.local",
+        },
+        distance: 1,
+        type: "CLIENT",
+      },
+    ],
+  },
+  {
+    endpoint: {
+      name: "ratings.book.svc.cluster.local:9080/*",
+      version: "v1",
+      service: "ratings",
+      namespace: "book",
+      host: "ratings",
+      path: "/ratings/0",
+      port: ":9080",
+      clusterName: "cluster.local",
+    },
+    dependsOn: [],
+    dependBy: [
+      {
+        endpoint: {
+          name: "productpage.book.svc.cluster.local:9080/productpage",
+          version: "v1",
+          service: "productpage",
+          namespace: "book",
+          host: "192.168.39.24",
+          path: "/productpage",
+          port: ":31629",
+          clusterName: "cluster.local",
+        },
+        distance: 2,
+        type: "CLIENT",
+      },
+      {
+        endpoint: {
+          name: "reviews.book.svc.cluster.local:9080/*",
+          version: "v3",
+          service: "reviews",
+          namespace: "book",
+          host: "reviews",
+          path: "/reviews/0",
+          port: ":9080",
+          clusterName: "cluster.local",
+        },
+        distance: 1,
+        type: "CLIENT",
+      },
+      {
+        endpoint: {
+          name: "reviews.book.svc.cluster.local:9080/*",
+          version: "v2",
+          service: "reviews",
+          namespace: "book",
+          host: "reviews",
+          path: "/reviews/0",
+          port: ":9080",
+          clusterName: "cluster.local",
+        },
+        distance: 1,
+        type: "CLIENT",
+      },
+    ],
+  },
+  {
+    endpoint: {
+      name: "reviews.book.svc.cluster.local:9080/*",
+      version: "v2",
+      service: "reviews",
+      namespace: "book",
+      host: "reviews",
+      path: "/reviews/0",
+      port: ":9080",
+      clusterName: "cluster.local",
+    },
+    dependsOn: [
+      {
+        endpoint: {
+          name: "ratings.book.svc.cluster.local:9080/*",
+          version: "v1",
+          service: "ratings",
+          namespace: "book",
+          host: "ratings",
+          path: "/ratings/0",
+          port: ":9080",
+          clusterName: "cluster.local",
+        },
+        distance: 1,
+        type: "SERVER",
+      },
+    ],
+    dependBy: [
+      {
+        endpoint: {
+          name: "productpage.book.svc.cluster.local:9080/productpage",
+          version: "v1",
+          service: "productpage",
+          namespace: "book",
+          host: "192.168.39.24",
+          path: "/productpage",
+          port: ":31629",
+          clusterName: "cluster.local",
+        },
+        distance: 1,
+        type: "CLIENT",
+      },
+    ],
+  },
+  {
+    endpoint: {
+      name: "productpage.book.svc.cluster.local:9080/static*",
+      version: "v1",
+      service: "productpage",
+      namespace: "book",
+      host: "192.168.39.24",
+      path: "/static/bootstrap/css/bootstrap.min.css",
+      port: ":31629",
+      clusterName: "cluster.local",
+    },
+    dependsOn: [],
+    dependBy: [],
+  },
+];
+
+export { MockGraphData, MockEndpointDependencies };

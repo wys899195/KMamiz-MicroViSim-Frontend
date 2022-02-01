@@ -2,7 +2,7 @@ import { makeStyles } from "@mui/styles";
 import { useEffect, useRef, useState } from "react";
 import { ForceGraph2D } from "react-force-graph";
 import { MockGraphData } from "../classes/MockData";
-import { DependencyGraphFactory } from "../classes/DependencyGraph";
+import { DependencyGraphFactory } from "../classes/DependencyGraphFactory";
 import {
   useHoverHighlight,
   DependencyGraphUtils,
