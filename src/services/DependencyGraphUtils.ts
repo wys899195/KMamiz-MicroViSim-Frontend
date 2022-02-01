@@ -131,7 +131,6 @@ const paintNode = (node: any, color: string, ctx: CanvasRenderingContext2D) => {
 const paintNodeRing = (
   node: any,
   ctx: CanvasRenderingContext2D,
-  globalScale: number,
   highlight: boolean,
   hoverNode: any
 ) => {
@@ -195,14 +194,8 @@ const CanvasSettingFactory = (
   linkWidth: (link: any) => (highlightLinkStrategy(link) ? 7 : 1),
   linkDirectionalParticleWidth: (link: any) =>
     highlightLinkStrategy(link) ? 6 : 4,
-  nodeCanvasObject: (node: any, ctx: any, globalScale: number) =>
-    paintNodeRing(
-      node,
-      ctx,
-      globalScale,
-      highlightNodeStrategy(node),
-      hoverNode
-    ),
+  nodeCanvasObject: (node: any, ctx: any) =>
+    paintNodeRing(node, ctx, highlightNodeStrategy(node), hoverNode),
 });
 
 export {
