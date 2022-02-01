@@ -53,16 +53,12 @@ const handleNodeHover = (node: any, info: HighlightInfo): HighlightInfo => {
   highlightNodes.clear();
   highlightLinks.clear();
   if (node) {
+    console.log(node);
     highlightNodes.add(node);
     node.neighbors.forEach((neighbor: any) => highlightNodes.add(neighbor));
     node.links.forEach((link: any) => highlightLinks.add(link));
   }
   return { ...info, highlightNodes, highlightLinks, hoverNode: node || null };
-};
-
-const getColor = (id: string) => {
-  const n = [...id].reduce((prev, curr) => prev + curr.charCodeAt(0), 0);
-  return "#" + ((n * 1234567) % Math.pow(2, 24)).toString(16).padStart(6, "0");
 };
 
 const drawHexagon = (
@@ -80,6 +76,24 @@ const drawHexagon = (
   ctx.closePath();
 };
 
+const drawText = (
+  text: string,
+  color: string,
+  node: any,
+  ctx: CanvasRenderingContext2D,
+  offsetUnitY: number = 0,
+  globalScale: number = GraphBasicSettings.nodeRelSize
+) => {
+  const label = text;
+  const fontSize = 12 / globalScale;
+
+  ctx.font = `${fontSize}px Sans-Serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = color;
+  ctx.fillText(label, node.x, node.y + offsetUnitY * globalScale);
+};
+
 const paintNode = (node: any, color: string, ctx: CanvasRenderingContext2D) => {
   ctx.fillStyle = color;
   const r = GraphBasicSettings.nodeRelSize * 0.6;
@@ -93,11 +107,31 @@ const paintNode = (node: any, color: string, ctx: CanvasRenderingContext2D) => {
     ctx.arc(x, y, GraphBasicSettings.nodeRelSize, 0, 2 * Math.PI, false);
   }
   ctx.fill();
+
+  let label = "";
+  if (node.id === "null") {
+    label = "EX";
+  } else if (node.id === node.group) {
+    label = "SRV";
+  } else {
+    label = "EP";
+  }
+
+  drawText(label, Color.fromHex(color)!.decideForeground()!.hex, node, ctx);
+  if (label !== "EP") {
+    drawText(node.name, "#000", node, ctx, 1.5);
+  } else {
+    const idSec = node.id.split("\t");
+    let path = idSec[idSec.length - 1];
+    if (path.length > 15) path = path.substring(0, 15) + "...";
+    drawText(`(${idSec[idSec.length - 2]}) ${path}`, "#000", node, ctx, 1.5);
+  }
 };
 
 const paintNodeRing = (
   node: any,
   ctx: CanvasRenderingContext2D,
+  globalScale: number,
   highlight: boolean,
   hoverNode: any
 ) => {
@@ -139,7 +173,7 @@ const zoomOnClick = (node: any, graphRef: any) => {
 
 const GraphBasicSettings = {
   linkDirectionalArrowColor: () => "dimgray",
-  linkDirectionalParticles: 1,
+  // linkDirectionalParticles: 1,
   linkDirectionalArrowRelPos: 1,
   nodeRelSize: 4,
   // nodeAutoColorBy: "group",
@@ -161,8 +195,14 @@ const CanvasSettingFactory = (
   linkWidth: (link: any) => (highlightLinkStrategy(link) ? 7 : 1),
   linkDirectionalParticleWidth: (link: any) =>
     highlightLinkStrategy(link) ? 6 : 4,
-  nodeCanvasObject: (node: any, ctx: any) =>
-    paintNodeRing(node, ctx, highlightNodeStrategy(node), hoverNode),
+  nodeCanvasObject: (node: any, ctx: any, globalScale: number) =>
+    paintNodeRing(
+      node,
+      ctx,
+      globalScale,
+      highlightNodeStrategy(node),
+      hoverNode
+    ),
 });
 
 export {

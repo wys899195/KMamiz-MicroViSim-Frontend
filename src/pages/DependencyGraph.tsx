@@ -25,10 +25,13 @@ export default function DependencyGraph() {
   const [highlightInfo, setHighlightInfo] = useHoverHighlight();
   const graphRef = useRef<any>();
   const [data, setData] = useState<any>();
+  const [services, setServices] = useState(new Set<string>());
 
   useEffect(() => {
     // TODO: change to api call after backend is ready
-    setData(preprocessData(MockGraphData));
+    const rawData = MockGraphData;
+    setData(preprocessData(rawData));
+    rawData.services.forEach((s) => services.add(s));
   }, []);
 
   return (
