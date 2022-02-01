@@ -1,16 +1,12 @@
 import { makeStyles } from "@mui/styles";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ForceGraph2D } from "react-force-graph";
+import { MockGraphData } from "../classes/MockData";
+import { DependencyGraphFactory } from "../classes/DependencyGraph";
 import {
-  CanvasSettingFactory,
-  GraphBasicSettings,
-  zoomOnClick,
-  handleLinkHover,
-  handleNodeHover,
-  preprocessData,
   useHoverHighlight,
-} from "../services/DependencyGraphUtils";
-import { MockGraphData } from "../services/MockData";
+  DependencyGraphUtils,
+} from "../classes/DependencyGraphUtils";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -30,8 +26,8 @@ export default function DependencyGraph() {
   useEffect(() => {
     // TODO: change to api call after backend is ready
     const rawData = MockGraphData;
-    setData(preprocessData(rawData));
-    rawData.services.forEach((s) => services.add(s));
+    setData(DependencyGraphUtils.ProcessData(rawData));
+    setServices(new Set(rawData.services));
   }, []);
 
   return (
@@ -39,19 +35,11 @@ export default function DependencyGraph() {
       <ForceGraph2D
         ref={graphRef}
         graphData={data}
-        {...GraphBasicSettings}
-        {...CanvasSettingFactory(
-          (link: any) => highlightInfo.highlightLinks.has(link),
-          (node: any) => highlightInfo.highlightNodes.has(node),
-          highlightInfo.hoverNode
+        {...DependencyGraphFactory.Create(
+          highlightInfo,
+          setHighlightInfo,
+          graphRef
         )}
-        onNodeClick={(node) => zoomOnClick(node, graphRef)}
-        onNodeHover={(node) =>
-          setHighlightInfo(handleNodeHover(node, highlightInfo))
-        }
-        onLinkHover={(link) =>
-          setHighlightInfo(handleLinkHover(link, highlightInfo))
-        }
       />
     </div>
   );
