@@ -79,10 +79,17 @@ export class Color {
   }
 
   static generateFromString(str: string) {
+    if (str === "null") return Color.fromHex("#000")!;
     const n = [...str].reduce((prev, curr) => prev + curr.charCodeAt(0), 0);
     return Color.fromHex(
       ((n * 1234567) % Math.pow(2, 24)).toString(16).padStart(6, "0")
     )!;
+  }
+
+  decideForeground() {
+    const { l } = this.hsl;
+    if (l > 50) return Color.fromHex("#000");
+    return Color.fromHex("#fff");
   }
 
   private static isValidRGB(val: number) {
