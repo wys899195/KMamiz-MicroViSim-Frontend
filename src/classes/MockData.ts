@@ -98,12 +98,6 @@ const MockGraphData = {
     { source: "null", target: "productpage\tbook\tv1\t/static*" },
     { source: "ratings\tbook", target: "ratings\tbook\tv1\t/*" },
   ],
-  services: [
-    "details\tbook",
-    "reviews\tbook",
-    "productpage\tbook",
-    "ratings\tbook",
-  ],
 };
 
 export { MockGraphData };
