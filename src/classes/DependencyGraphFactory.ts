@@ -27,10 +27,10 @@ export class DependencyGraphFactory {
         this.OnClick(node, graphRef);
       },
       onNodeHover: (node: any) => {
-        setHighlightInfo(this.HandleNodeHover(node, highlightInfo));
+        setHighlightInfo(this.HighlightOnNodeHover(node, highlightInfo));
       },
       onLinkHover: (link: any) => {
-        setHighlightInfo(this.HandleLinkHover(link, highlightInfo));
+        setHighlightInfo(this.HighlightOnLinkHover(link, highlightInfo));
       },
     };
   }
@@ -39,7 +39,7 @@ export class DependencyGraphFactory {
     DependencyGraphUtils.ZoomOnClick(node, graphRef);
   }
 
-  static HandleLinkHover(link: any, info: HighlightInfo): HighlightInfo {
+  static HighlightOnLinkHover(link: any, info: HighlightInfo): HighlightInfo {
     const { highlightNodes, highlightLinks } = info;
     highlightNodes.clear();
     highlightLinks.clear();
@@ -51,7 +51,7 @@ export class DependencyGraphFactory {
     return { ...info, highlightNodes, highlightLinks };
   }
 
-  static HandleNodeHover(node: any, info: HighlightInfo): HighlightInfo {
+  static HighlightOnNodeHover(node: any, info: HighlightInfo): HighlightInfo {
     const { highlightNodes, highlightLinks } = info;
     highlightNodes.clear();
     highlightLinks.clear();
