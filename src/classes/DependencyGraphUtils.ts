@@ -1,12 +1,11 @@
 import { Dispatch, SetStateAction, useState } from "react";
-import { IEndpointDependency } from "../entites/IEndpointDependency";
 import IGraphData, { ILink, INode } from "../entites/IGraphData";
 import { Color } from "./ColorUtils";
 
 export type HighlightInfo = {
   highlightLinks: Set<any>;
   highlightNodes: Set<any>;
-  hoverNode: any;
+  focusNode: any;
 };
 
 const useHoverHighlight = (): [
@@ -16,7 +15,7 @@ const useHoverHighlight = (): [
   const [highlight, setHighlight] = useState<HighlightInfo>({
     highlightLinks: new Set<any>(),
     highlightNodes: new Set<any>(),
-    hoverNode: null,
+    focusNode: null,
   });
   return [highlight, setHighlight];
 };
@@ -140,11 +139,11 @@ export class DependencyGraphUtils {
     node: any,
     ctx: CanvasRenderingContext2D,
     highlight: boolean,
-    hoverNode: any
+    focusNode: any
   ) {
     // add ring just for highlighted nodes
     if (highlight) {
-      ctx.fillStyle = node === hoverNode ? "navy" : "orange";
+      ctx.fillStyle = node === focusNode ? "navy" : "orange";
       const { x, y } = node;
       ctx.beginPath();
       if (node.id === node.group) {

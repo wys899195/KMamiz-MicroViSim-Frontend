@@ -8,7 +8,7 @@ export class DependencyGraphFactory {
     setHighlightInfo: (info: HighlightInfo) => void,
     graphRef: any
   ) {
-    const { highlightLinks, highlightNodes, hoverNode } = highlightInfo;
+    const { highlightLinks, highlightNodes, focusNode } = highlightInfo;
     return {
       ...DependencyGraphUtils.GraphBasicSettings,
       linkDirectionalArrowLength: (link: any) =>
@@ -21,16 +21,25 @@ export class DependencyGraphFactory {
           node,
           ctx,
           highlightNodes.has(node),
-          hoverNode
+          focusNode
         ),
       onNodeClick: (node: any) => {
-        this.OnClick(node, graphRef);
-      },
-      onNodeHover: (node: any) => {
+        // this.OnClick(node, graphRef);
         setHighlightInfo(this.HighlightOnNodeHover(node, highlightInfo));
       },
-      onLinkHover: (link: any) => {
+      onNodeHover: (node: any) => {},
+      onLinkClick: (link: any) => {
         setHighlightInfo(this.HighlightOnLinkHover(link, highlightInfo));
+      },
+      onLinkHover: (link: any) => {},
+      onNodeRightClick: () => {
+        setHighlightInfo(this.ClearHighlight(highlightInfo));
+      },
+      onLinkRightClick: () => {
+        setHighlightInfo(this.ClearHighlight(highlightInfo));
+      },
+      onBackgroundRightClick: () => {
+        setHighlightInfo(this.ClearHighlight(highlightInfo));
       },
     };
   }
@@ -39,10 +48,18 @@ export class DependencyGraphFactory {
     DependencyGraphUtils.ZoomOnClick(node, graphRef);
   }
 
+  static HighlightOnNodeHover(node: any, info: HighlightInfo): HighlightInfo {
+    const { highlightNodes, highlightLinks } = this.ClearHighlight(info);
+    if (node) {
+      highlightNodes.add(node);
+      node.highlight.forEach((n: any) => highlightNodes.add(n));
+      node.links.forEach((l: any) => highlightLinks.add(l));
+    }
+    return { ...info, highlightNodes, highlightLinks, focusNode: node || null };
+  }
+
   static HighlightOnLinkHover(link: any, info: HighlightInfo): HighlightInfo {
-    const { highlightNodes, highlightLinks } = info;
-    highlightNodes.clear();
-    highlightLinks.clear();
+    const { highlightNodes, highlightLinks } = this.ClearHighlight(info);
     if (link) {
       highlightLinks.add(link);
       highlightNodes.add(link.source);
@@ -51,15 +68,10 @@ export class DependencyGraphFactory {
     return { ...info, highlightNodes, highlightLinks };
   }
 
-  static HighlightOnNodeHover(node: any, info: HighlightInfo): HighlightInfo {
+  static ClearHighlight(info: HighlightInfo): HighlightInfo {
     const { highlightNodes, highlightLinks } = info;
     highlightNodes.clear();
     highlightLinks.clear();
-    if (node) {
-      highlightNodes.add(node);
-      node.highlight.forEach((n: any) => highlightNodes.add(n));
-      node.links.forEach((l: any) => highlightLinks.add(l));
-    }
-    return { ...info, highlightNodes, highlightLinks, hoverNode: node || null };
+    return { ...info, highlightNodes, highlightLinks };
   }
 }
