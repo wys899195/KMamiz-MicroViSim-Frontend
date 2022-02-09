@@ -143,10 +143,10 @@ function displayService(serviceInfo: IAggregateServiceInfo[]) {
     <div>
       Detail:
       <ul>
-        <li>Endpoint Counts: {endpoints}</li>
-        <li>Total Requests: {sumField("totalRequests")}</li>
-        <li>Total 4XX Errors: {sumField("totalRequestErrors")}</li>
-        <li>Total 5XX Errors: {sumField("totalServerErrors")}</li>
+        <li>Endpoints: {endpoints}</li>
+        <li>Requests: {sumField("totalRequests")}</li>
+        <li>4XX Errors: {sumField("totalRequestErrors")}</li>
+        <li>5XX Errors: {sumField("totalServerErrors")}</li>
         <li>
           Combined Risk: {roundNumber(sumField("avgRisk") / serviceInfo.length)}
         </li>
