@@ -1,3 +1,5 @@
+import IAggregateData from "../entites/IAggregateData";
+import IEndpointDataType from "../entites/IEndpointDataType";
 import { IEndpointDependency } from "../entites/IEndpointDependency";
 
 const MockGraphData = {
@@ -623,4 +625,241 @@ const MockEndpointDependencies: IEndpointDependency[] = [
   },
 ];
 
-export { MockGraphData, MockEndpointDependencies };
+const MockEndpointDataType: IEndpointDataType[] = [
+  {
+    service: "details",
+    version: "v1",
+    namespace: "book",
+    endpoint: "details.book.svc.cluster.local:9080/*",
+    schemas: [
+      {
+        time: new Date("2022-02-08T06:49:03.136Z"),
+        sampleObject: {
+          id: 0,
+          author: "William Shakespeare",
+          year: 1595,
+          type: "paperback",
+          pages: 200,
+          publisher: "PublisherA",
+          language: "English",
+          "ISBN-10": "1234567890",
+          "ISBN-13": "123-1234567890",
+        },
+        schema:
+          "interface Root {\n" +
+          "  'ISBN-10': string;\n" +
+          "  'ISBN-13': string;\n" +
+          "  author: string;\n" +
+          "  id: number;\n" +
+          "  language: string;\n" +
+          "  pages: number;\n" +
+          "  publisher: string;\n" +
+          "  type: string;\n" +
+          "  year: number;\n" +
+          "}",
+      },
+    ],
+  },
+  {
+    service: "reviews",
+    version: "v3",
+    namespace: "book",
+    endpoint: "reviews.book.svc.cluster.local:9080/*",
+    schemas: [
+      {
+        time: new Date("2022-02-08T06:49:03.139Z"),
+        sampleObject: {
+          id: "0",
+          reviews: [
+            {
+              reviewer: "Reviewer1",
+              text: "An extremely entertaining play by Shakespeare. The slapstick humour is refreshing!",
+              rating: { stars: 5, color: "red" },
+            },
+            {
+              reviewer: "Reviewer2",
+              text: "Absolutely fun and entertaining. The play lacks thematic depth when compared to other plays by Shakespeare.",
+              rating: { stars: 4, color: "red" },
+            },
+          ],
+        },
+        schema:
+          "interface Root {\n" +
+          "  id: string;\n" +
+          "  reviews: Review[];\n" +
+          "}\n" +
+          "interface Review {\n" +
+          "  rating: Rating;\n" +
+          "  reviewer: string;\n" +
+          "  text: string;\n" +
+          "}\n" +
+          "interface Rating {\n" +
+          "  color: string;\n" +
+          "  stars: number;\n" +
+          "}",
+      },
+    ],
+  },
+  {
+    service: "reviews",
+    version: "v1",
+    namespace: "book",
+    endpoint: "reviews.book.svc.cluster.local:9080/*",
+    schemas: [
+      {
+        time: new Date("2022-02-08T06:49:02.933Z"),
+        sampleObject: {
+          id: "0",
+          reviews: [
+            {
+              reviewer: "Reviewer1",
+              text: "An extremely entertaining play by Shakespeare. The slapstick humour is refreshing!",
+            },
+            {
+              reviewer: "Reviewer2",
+              text: "Absolutely fun and entertaining. The play lacks thematic depth when compared to other plays by Shakespeare.",
+            },
+          ],
+        },
+        schema:
+          "interface Root {\n" +
+          "  id: string;\n" +
+          "  reviews: Review[];\n" +
+          "}\n" +
+          "interface Review {\n" +
+          "  reviewer: string;\n" +
+          "  text: string;\n" +
+          "}",
+      },
+    ],
+  },
+  {
+    service: "reviews",
+    version: "v2",
+    namespace: "book",
+    endpoint: "reviews.book.svc.cluster.local:9080/*",
+    schemas: [
+      {
+        time: new Date("2022-02-08T06:49:02.644Z"),
+        sampleObject: {
+          id: "0",
+          reviews: [
+            {
+              reviewer: "Reviewer1",
+              text: "An extremely entertaining play by Shakespeare. The slapstick humour is refreshing!",
+              rating: { stars: 5, color: "black" },
+            },
+            {
+              reviewer: "Reviewer2",
+              text: "Absolutely fun and entertaining. The play lacks thematic depth when compared to other plays by Shakespeare.",
+              rating: { stars: 4, color: "black" },
+            },
+          ],
+        },
+        schema:
+          "interface Root {\n" +
+          "  id: string;\n" +
+          "  reviews: Review[];\n" +
+          "}\n" +
+          "interface Review {\n" +
+          "  rating: Rating;\n" +
+          "  reviewer: string;\n" +
+          "  text: string;\n" +
+          "}\n" +
+          "interface Rating {\n" +
+          "  color: string;\n" +
+          "  stars: number;\n" +
+          "}",
+      },
+    ],
+  },
+  {
+    service: "ratings",
+    version: "v1",
+    namespace: "book",
+    endpoint: "ratings.book.svc.cluster.local:9080/*",
+    schemas: [
+      {
+        time: new Date("2022-02-08T06:49:02.650Z"),
+        sampleObject: { id: 0, ratings: { Reviewer1: 5, Reviewer2: 4 } },
+        schema:
+          "interface Root {\n" +
+          "  id: number;\n" +
+          "  ratings: Ratings;\n" +
+          "}\n" +
+          "interface Ratings {\n" +
+          "  Reviewer1: number;\n" +
+          "  Reviewer2: number;\n" +
+          "}",
+      },
+    ],
+  },
+];
+
+const MockAggregateData: IAggregateData = {
+  fromDate: new Date("2022-02-08T16:00:00.000Z"),
+  toDate: new Date("2022-02-09T16:00:00.000Z"),
+  services: [
+    {
+      name: "productpage",
+      namespace: "book",
+      version: "v1",
+      totalRequests: 179,
+      totalRequestErrors: 0,
+      totalServerErrors: 0,
+      avgRisk: 1,
+    },
+    {
+      name: "details",
+      namespace: "book",
+      version: "v1",
+      totalRequests: 77,
+      totalRequestErrors: 0,
+      totalServerErrors: 0,
+      avgRisk: 0.11292076335763791,
+    },
+    {
+      name: "ratings",
+      namespace: "book",
+      version: "v1",
+      totalRequests: 51,
+      totalRequestErrors: 0,
+      totalServerErrors: 0,
+      avgRisk: 0.16613534836980265,
+    },
+    {
+      name: "reviews",
+      namespace: "book",
+      version: "v2",
+      totalRequests: 26,
+      totalRequestErrors: 0,
+      totalServerErrors: 0,
+      avgRisk: 0.12449088740327688,
+    },
+    {
+      name: "reviews",
+      namespace: "book",
+      version: "v1",
+      totalRequests: 26,
+      totalRequestErrors: 0,
+      totalServerErrors: 0,
+      avgRisk: 0.1,
+    },
+    {
+      name: "reviews",
+      namespace: "book",
+      version: "v3",
+      totalRequests: 25,
+      totalRequestErrors: 0,
+      totalServerErrors: 0,
+      avgRisk: 0.11734895301121623,
+    },
+  ],
+};
+
+export {
+  MockGraphData,
+  MockEndpointDependencies,
+  MockEndpointDataType,
+  MockAggregateData,
+};
