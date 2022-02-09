@@ -6,11 +6,18 @@ export default interface IAggregateData {
 }
 
 export interface IAggregateServiceInfo {
-  name: string;
+  service: string;
   namespace: string;
   version: string;
   totalRequests: number;
   totalServerErrors: number;
   totalRequestErrors: number;
   avgRisk: number;
+  endpoints: IAggregateEndpointInfo[];
+}
+export interface IAggregateEndpointInfo {
+  name: string;
+  totalRequests: number;
+  totalServerErrors: number;
+  totalRequestErrors: number;
 }
