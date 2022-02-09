@@ -7,6 +7,8 @@ import {
   useHoverHighlight,
   DependencyGraphUtils,
 } from "../classes/DependencyGraphUtils";
+import InformationWindow from "../components/InformationWindow";
+import IDisplayNodeInfo from "../entites/IDisplayNodeInfo";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -19,8 +21,9 @@ const useStyles = makeStyles(() => ({
 export default function DependencyGraph() {
   const classes = useStyles();
   const [highlightInfo, setHighlightInfo] = useHoverHighlight();
-  const graphRef = useRef<any>();
   const [data, setData] = useState<any>();
+  const [displayInfo, setDisplayInfo] = useState<IDisplayNodeInfo | null>(null);
+  const graphRef = useRef<any>();
 
   useEffect(() => {
     // TODO: change to api call after backend is ready
@@ -36,9 +39,11 @@ export default function DependencyGraph() {
         {...DependencyGraphFactory.Create(
           highlightInfo,
           setHighlightInfo,
-          graphRef
+          graphRef,
+          setDisplayInfo
         )}
       />
+      <InformationWindow info={displayInfo} />
     </div>
   );
 }

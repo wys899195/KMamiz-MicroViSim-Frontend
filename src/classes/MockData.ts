@@ -911,9 +911,42 @@ const MockAggregateData: IAggregateData = {
   ],
 };
 
+function GetServiceAggregateDataWithAllVersion(uniqueName: string) {
+  const [service, namespace] = uniqueName.split("\t");
+  return MockAggregateData.services.filter(
+    (s) => s.service === service && s.namespace === namespace
+  );
+}
+function GetServiceAggregateData(uniqueName: string) {
+  const [service, namespace, version] = uniqueName.split("\t");
+  return (
+    MockAggregateData.services.find(
+      (s) =>
+        s.service === service &&
+        s.namespace === namespace &&
+        s.version === version
+    ) || null
+  );
+}
+function GetEndpointDataType(serviceUniqueName: string, endpointName: string) {
+  const [service, namespace, version] = serviceUniqueName.split("\t");
+  return (
+    MockEndpointDataType.find(
+      (e) =>
+        e.service === service &&
+        e.namespace === namespace &&
+        e.version === version &&
+        e.endpoint === endpointName
+    ) || null
+  );
+}
+
 export {
   MockGraphData,
   MockEndpointDependencies,
   MockEndpointDataType,
   MockAggregateData,
+  GetServiceAggregateDataWithAllVersion,
+  GetServiceAggregateData,
+  GetEndpointDataType,
 };

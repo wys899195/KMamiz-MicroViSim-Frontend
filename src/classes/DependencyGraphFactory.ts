@@ -1,3 +1,4 @@
+import IDisplayNodeInfo from "../entites/IDisplayNodeInfo";
 import { DependencyGraphUtils, HighlightInfo } from "./DependencyGraphUtils";
 
 export class DependencyGraphFactory {
@@ -6,7 +7,8 @@ export class DependencyGraphFactory {
   static Create(
     highlightInfo: HighlightInfo,
     setHighlightInfo: (info: HighlightInfo) => void,
-    graphRef: any
+    graphRef: any,
+    setDisplayNodeInfo: (info: IDisplayNodeInfo) => void
   ) {
     const { highlightLinks, highlightNodes, focusNode } = highlightInfo;
     return {
@@ -24,7 +26,7 @@ export class DependencyGraphFactory {
           focusNode
         ),
       onNodeClick: (node: any) => {
-        // this.OnClick(node, graphRef);
+        this.OnClick(node, graphRef, setDisplayNodeInfo);
         setHighlightInfo(this.HighlightOnNodeHover(node, highlightInfo));
       },
       onNodeHover: (node: any) => {},
@@ -44,8 +46,25 @@ export class DependencyGraphFactory {
     };
   }
 
-  static OnClick(node: any, graphRef: any) {
-    DependencyGraphUtils.ZoomOnClick(node, graphRef);
+  static OnClick(
+    node: any,
+    graphRef: any,
+    setDisplayNodeInfo: (info: IDisplayNodeInfo) => void
+  ) {
+    let type: "EX" | "SRV" | "EP" = "EP";
+    if (node.id === "null") type = "EX";
+    else if (node.group === node.id) type = "SRV";
+
+    const [service, namespace, version, endpointName] = node.id.split("\t");
+    console.log(node.id.split("\t"));
+    setDisplayNodeInfo({
+      type,
+      service,
+      namespace,
+      version,
+      endpointName,
+    });
+    // DependencyGraphUtils.ZoomOnClick(node, graphRef);
   }
 
   static HighlightOnNodeHover(node: any, info: HighlightInfo): HighlightInfo {

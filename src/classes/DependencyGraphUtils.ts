@@ -173,8 +173,8 @@ export class DependencyGraphUtils {
 
   static ZoomOnClick(node: any, graphRef: any) {
     if (!graphRef.current) return;
-    graphRef.current.centerAt(node.x, node.y, 1000);
-    graphRef.current.zoom(8, 2000);
+    graphRef.current.centerAt(node.x, node.y, 800);
+    graphRef.current.zoom(4, 1000);
   }
 }
 
