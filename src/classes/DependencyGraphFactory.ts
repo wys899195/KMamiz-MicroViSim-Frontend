@@ -8,7 +8,7 @@ export class DependencyGraphFactory {
     highlightInfo: HighlightInfo,
     setHighlightInfo: (info: HighlightInfo) => void,
     graphRef: any,
-    setDisplayNodeInfo: (info: IDisplayNodeInfo) => void
+    setDisplayNodeInfo: (info: IDisplayNodeInfo | null) => void
   ) {
     const { highlightLinks, highlightNodes, focusNode } = highlightInfo;
     return {
@@ -36,12 +36,15 @@ export class DependencyGraphFactory {
       onLinkHover: (link: any) => {},
       onNodeRightClick: () => {
         setHighlightInfo(this.ClearHighlight(highlightInfo));
+        setDisplayNodeInfo(null);
       },
       onLinkRightClick: () => {
         setHighlightInfo(this.ClearHighlight(highlightInfo));
+        setDisplayNodeInfo(null);
       },
       onBackgroundRightClick: () => {
         setHighlightInfo(this.ClearHighlight(highlightInfo));
+        setDisplayNodeInfo(null);
       },
     };
   }
@@ -49,7 +52,7 @@ export class DependencyGraphFactory {
   static OnClick(
     node: any,
     graphRef: any,
-    setDisplayNodeInfo: (info: IDisplayNodeInfo) => void
+    setDisplayNodeInfo: (info: IDisplayNodeInfo | null) => void
   ) {
     let type: "EX" | "SRV" | "EP" = "EP";
     if (node.id === "null") type = "EX";
