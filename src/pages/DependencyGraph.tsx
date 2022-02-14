@@ -1,5 +1,5 @@
 import { makeStyles } from "@mui/styles";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ForceGraph2D } from "react-force-graph";
 import { MockGraphData } from "../classes/MockData";
 import { DependencyGraphFactory } from "../classes/DependencyGraphFactory";
@@ -8,7 +8,7 @@ import {
   DependencyGraphUtils,
 } from "../classes/DependencyGraphUtils";
 import InformationWindow from "../components/InformationWindow";
-import IDisplayNodeInfo from "../entites/IDisplayNodeInfo";
+import IDisplayNodeInfo from "../entities/IDisplayNodeInfo";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -20,29 +20,49 @@ const useStyles = makeStyles(() => ({
 
 export default function DependencyGraph() {
   const classes = useStyles();
-  const [highlightInfo, setHighlightInfo] = useHoverHighlight();
-  const [data, setData] = useState<any>();
-  const [displayInfo, setDisplayInfo] = useState<IDisplayNodeInfo | null>(null);
   const graphRef = useRef<any>();
+  const [size, setSize] = useState([0, 0]);
+  const [data, setData] = useState<any>();
+  const [highlightInfo, setHighlightInfo] = useHoverHighlight();
+  const [displayInfo, setDisplayInfo] = useState<IDisplayNodeInfo | null>(null);
+
+  useLayoutEffect(() => {
+    function updateSize() {
+      setSize([window.innerWidth, window.innerHeight]);
+    }
+    window.addEventListener("resize", updateSize);
+    updateSize();
+    return () => window.removeEventListener("resize", updateSize);
+  }, []);
 
   useEffect(() => {
+    console.log(highlightInfo);
     // TODO: change to api call after backend is ready
     const rawData = MockGraphData;
-    setData(DependencyGraphUtils.ProcessData(rawData));
+    // make sure data is newly created and not shared
+    const d = JSON.parse(JSON.stringify(rawData));
+    setData(DependencyGraphUtils.ProcessData(d));
+    setTimeout(() => {
+      graphRef.current.zoom(4, 0);
+    }, 10);
   }, []);
 
   return (
     <div className={classes.root}>
-      <ForceGraph2D
-        ref={graphRef}
-        graphData={data}
-        {...DependencyGraphFactory.Create(
-          highlightInfo,
-          setHighlightInfo,
-          graphRef,
-          setDisplayInfo
-        )}
-      />
+      <div>
+        <ForceGraph2D
+          ref={graphRef}
+          width={size[0]}
+          height={size[1]}
+          graphData={data}
+          {...DependencyGraphFactory.Create(
+            highlightInfo,
+            setHighlightInfo,
+            graphRef,
+            setDisplayInfo
+          )}
+        />
+      </div>
       <InformationWindow info={displayInfo} />
     </div>
   );
