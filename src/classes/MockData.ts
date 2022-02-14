@@ -1,6 +1,6 @@
-import IAggregateData from "../entites/IAggregateData";
-import IEndpointDataType from "../entites/IEndpointDataType";
-import { IEndpointDependency } from "../entites/IEndpointDependency";
+import IAggregateData from "../entities/IAggregateData";
+import IEndpointDataType from "../entities/IEndpointDataType";
+import { IEndpointDependency } from "../entities/IEndpointDependency";
 
 const MockGraphData = {
   nodes: [

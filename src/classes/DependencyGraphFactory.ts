@@ -1,4 +1,4 @@
-import IDisplayNodeInfo from "../entites/IDisplayNodeInfo";
+import IDisplayNodeInfo from "../entities/IDisplayNodeInfo";
 import { DependencyGraphUtils, HighlightInfo } from "./DependencyGraphUtils";
 
 export class DependencyGraphFactory {

@@ -8,9 +8,9 @@ import {
 import {
   IAggregateEndpointInfo,
   IAggregateServiceInfo,
-} from "../entites/IAggregateData";
-import IDisplayNodeInfo from "../entites/IDisplayNodeInfo";
-import IEndpointDataType from "../entites/IEndpointDataType";
+} from "../entities/IAggregateData";
+import IDisplayNodeInfo from "../entities/IDisplayNodeInfo";
+import IEndpointDataType from "../entities/IEndpointDataType";
 const useStyles = makeStyles(() => ({
   root: {
     position: "absolute",

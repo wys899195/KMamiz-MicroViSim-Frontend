@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction, useState } from "react";
-import IGraphData, { ILink, INode } from "../entites/IGraphData";
+import IGraphData, { ILink, INode } from "../entities/IGraphData";
 import { Color } from "./ColorUtils";
 
 export type HighlightInfo = {
