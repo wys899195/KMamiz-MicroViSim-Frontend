@@ -4,6 +4,7 @@ import "./index.css";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Header from "./components/Header";
 import DependencyGraph from "./pages/DependencyGraph";
+import Metrics from "./pages/Metrics";
 
 ReactDOM.render(
   <React.StrictMode>
@@ -11,6 +12,7 @@ ReactDOM.render(
       <Header />
       <Routes>
         <Route path="/" element={<DependencyGraph />} />
+        <Route path="/metrics" element={<Metrics />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>,
