@@ -1,6 +1,7 @@
 import IAggregateData from "../entities/IAggregateData";
 import IEndpointDataType from "../entities/IEndpointDataType";
 import { IEndpointDependency } from "../entities/IEndpointDependency";
+import { Color } from "./ColorUtils";
 
 const MockGraphData = {
   nodes: [
@@ -941,6 +942,85 @@ function GetEndpointDataType(serviceUniqueName: string, endpointName: string) {
   );
 }
 
+function GetServiceChordData() {
+  const serviceMap = new Map<string, Map<string, number>>();
+  MockEndpointDependencies.forEach((ep) => {
+    const service = `${ep.endpoint.service}\t${ep.endpoint.namespace}\t${ep.endpoint.version}`;
+    if (!serviceMap.has(service)) serviceMap.set(service, new Map());
+    ep.dependsOn
+      .filter((d) => d.distance === 1)
+      .forEach((s) => {
+        const dependName = `${s.endpoint.service}\t${s.endpoint.namespace}\t${s.endpoint.version}`;
+        serviceMap
+          .get(service)!
+          .set(dependName, (serviceMap.get(service)!.get(dependName) || 0) + 1);
+      });
+  });
+
+  const nodes = [...serviceMap.keys()].map((k) => {
+    const [service, namespace, version] = k.split("\t");
+    return {
+      id: `${service}.${namespace} (${version})`,
+      name: k,
+      fill: Color.generateFromString(k).hex,
+    };
+  });
+  const links = [...serviceMap.entries()]
+    .map(([id, dep]) => {
+      const [service, namespace, version] = id.split("\t");
+      const neoId = `${service}.${namespace} (${version})`;
+      return [...dep.entries()].map(([dId, val]) => {
+        const [dService, dNamespace, dVersion] = dId.split("\t");
+        const neoDId = `${dService}.${dNamespace} (${dVersion})`;
+        return {
+          from: neoId,
+          to: neoDId,
+          value: val,
+        };
+      });
+    })
+    .flat();
+  return { nodes, links };
+}
+function GetIndirectServiceChordData() {
+  const serviceMap = new Map<string, Map<string, number>>();
+  MockEndpointDependencies.forEach((ep) => {
+    const service = `${ep.endpoint.service}\t${ep.endpoint.namespace}\t${ep.endpoint.version}`;
+    if (!serviceMap.has(service)) serviceMap.set(service, new Map());
+    ep.dependsOn.forEach((s) => {
+      const dependName = `${s.endpoint.service}\t${s.endpoint.namespace}\t${s.endpoint.version}`;
+      serviceMap
+        .get(service)!
+        .set(dependName, (serviceMap.get(service)!.get(dependName) || 0) + 1);
+    });
+  });
+
+  const nodes = [...serviceMap.keys()].map((k) => {
+    const [service, namespace, version] = k.split("\t");
+    return {
+      id: `${service}.${namespace} (${version})`,
+      name: k,
+      fill: Color.generateFromString(k).hex,
+    };
+  });
+  const links = [...serviceMap.entries()]
+    .map(([id, dep]) => {
+      const [service, namespace, version] = id.split("\t");
+      const neoId = `${service}.${namespace} (${version})`;
+      return [...dep.entries()].map(([dId, val]) => {
+        const [dService, dNamespace, dVersion] = dId.split("\t");
+        const neoDId = `${dService}.${dNamespace} (${dVersion})`;
+        return {
+          from: neoId,
+          to: neoDId,
+          value: val,
+        };
+      });
+    })
+    .flat();
+  return { nodes, links };
+}
+
 export {
   MockGraphData,
   MockEndpointDependencies,
@@ -949,4 +1029,6 @@ export {
   GetServiceAggregateDataWithAllVersion,
   GetServiceAggregateData,
   GetEndpointDataType,
+  GetServiceChordData,
+  GetIndirectServiceChordData,
 };
