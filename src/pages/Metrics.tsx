@@ -1,3 +1,9 @@
+import { makeStyles } from "@mui/styles";
+const useStyles = makeStyles(() => ({
+  root: {},
+}));
+
 export default function Metrics() {
-  return <div>Metrics Template</div>;
+  const classes = useStyles();
+  return <div className={classes.root}>Metrics Template</div>;
 }
