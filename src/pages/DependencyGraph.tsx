@@ -9,6 +9,7 @@ import {
 } from "../classes/DependencyGraphUtils";
 import InformationWindow from "../components/InformationWindow";
 import IDisplayNodeInfo from "../entities/IDisplayNodeInfo";
+import ViewportUtils from "../classes/ViewportUtils";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -27,12 +28,10 @@ export default function DependencyGraph() {
   const [displayInfo, setDisplayInfo] = useState<IDisplayNodeInfo | null>(null);
 
   useLayoutEffect(() => {
-    function updateSize() {
-      setSize([window.innerWidth, window.innerHeight]);
-    }
-    window.addEventListener("resize", updateSize);
-    updateSize();
-    return () => window.removeEventListener("resize", updateSize);
+    const unsubscribe = ViewportUtils.getInstance().subscribe(([vw, vh]) =>
+      setSize([vw, vh])
+    );
+    return unsubscribe;
   }, []);
 
   useEffect(() => {
