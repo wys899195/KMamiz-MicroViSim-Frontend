@@ -12,7 +12,6 @@ import IChordRadius from "../entities/IChordRadius";
 const useStyles = makeStyles(() => ({
   root: {
     width: "100%",
-    marginTop: "1em",
   },
   chord: {
     padding: "0.5em",
