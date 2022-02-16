@@ -8,6 +8,7 @@ import ViewportUtils from "../classes/ViewportUtils";
 import ChordUtils from "../classes/ChordUtils";
 import IChordRadius from "../entities/IChordRadius";
 import IChordNode from "../entities/IChordNode";
+import { Card } from "@mui/material";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -15,8 +16,6 @@ const useStyles = makeStyles(() => ({
   },
   chart: {
     width: "100%",
-    border: "1px solid darkcyan",
-    boxSizing: "border-box",
   },
 }));
 
@@ -66,28 +65,30 @@ export default function Chord(props: ChordDiagramOptions) {
   return (
     <div className={classes.root}>
       <h3>{props.title}</h3>
-      <div
-        id={divId}
-        className={classes.chart}
-        style={{ height: size }}
-        onWheel={(e) => {
-          const newScale = scale + (e.deltaY > 0 ? 0.2 : -0.2);
-          /**
-           * Make sure scale is always greater than 0
-           * Since `scale = 0` makes the diagram disappear,
-           * and a negative scale value mirrors the diagram.
-           */
-          if (newScale > 0.1) setScale(newScale);
-        }}
-        onMouseDown={(e) => {
-          // reset view on mouse middle click
-          if (e.button !== 1) return;
-          cordRef.current?.set("x", percent(50));
-          cordRef.current?.set("y", percent(50));
-          cordRef.current?.set("startAngle", 80);
-          setScale(0.8);
-        }}
-      ></div>
+      <Card variant="outlined">
+        <div
+          id={divId}
+          className={classes.chart}
+          style={{ height: size }}
+          onWheel={(e) => {
+            const newScale = scale + (e.deltaY > 0 ? 0.2 : -0.2);
+            /**
+             * Make sure scale is always greater than 0
+             * Since `scale = 0` makes the diagram disappear,
+             * and a negative scale value mirrors the diagram.
+             */
+            if (newScale > 0.1) setScale(newScale);
+          }}
+          onMouseDown={(e) => {
+            // reset view on mouse middle click
+            if (e.button !== 1) return;
+            cordRef.current?.set("x", percent(50));
+            cordRef.current?.set("y", percent(50));
+            cordRef.current?.set("startAngle", 80);
+            setScale(1);
+          }}
+        ></div>
+      </Card>
     </div>
   );
 }

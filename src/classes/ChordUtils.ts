@@ -7,7 +7,7 @@ export default class ChordUtils {
   static CreateDefault(root: Root) {
     return ChordDirected.new(root, {
       startAngle: 80,
-      padAngle: 1,
+      padAngle: 2,
       sourceIdField: "from",
       targetIdField: "to",
       valueField: "value",
@@ -18,7 +18,7 @@ export default class ChordUtils {
       centerY: percent(50),
       x: percent(50),
       y: percent(50),
-      scale: 0.8,
+      scale: 1,
     });
   }
 

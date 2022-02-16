@@ -14,6 +14,9 @@ const useStyles = makeStyles(() => ({
     width: "100%",
     marginTop: "1em",
   },
+  chord: {
+    padding: "0.5em",
+  },
 }));
 
 export default function Metrics() {
@@ -38,11 +41,11 @@ export default function Metrics() {
 
   return (
     <Box className={classes.root}>
-      <Grid container rowSpacing={1}>
-        <Grid item xs={6}>
+      <Grid container>
+        <Grid item xs={6} className={classes.chord}>
           <Chord title="Service Dependencies" chordData={serviceChord} />
         </Grid>
-        <Grid item xs={6}>
+        <Grid item xs={6} className={classes.chord}>
           <Chord
             title="Indirect Service Dependencies"
             chordData={indirectServiceChord}
