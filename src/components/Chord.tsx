@@ -80,12 +80,18 @@ export default function Chord(props: ChordDiagramOptions) {
             if (newScale > 0.1) setScale(newScale);
           }}
           onMouseDown={(e) => {
-            // reset view on mouse middle click
-            if (e.button !== 1) return;
+            // reset view on mouse right click
+            if (e.button !== 2) return;
+            e.preventDefault();
+            e.stopPropagation();
             cordRef.current?.set("x", percent(50));
             cordRef.current?.set("y", percent(50));
             cordRef.current?.set("startAngle", 80);
             setScale(1);
+          }}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            return false;
           }}
         ></div>
       </Card>
