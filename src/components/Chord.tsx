@@ -8,7 +8,7 @@ import ViewportUtils from "../classes/ViewportUtils";
 import ChordUtils from "../classes/ChordUtils";
 import IChordRadius from "../entities/IChordRadius";
 import IChordNode from "../entities/IChordNode";
-import { Card } from "@mui/material";
+import { Button, Card } from "@mui/material";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -16,6 +16,13 @@ const useStyles = makeStyles(() => ({
   },
   chart: {
     width: "100%",
+  },
+  reset: {
+    zIndex: "10",
+    position: "absolute",
+    display: "flex",
+    transform: "translateX(50vw) translateX(-9.8em) translateY(-38px)",
+    gap: "0.3em",
   },
 }));
 
@@ -30,6 +37,7 @@ export type ChordDiagramOptions = {
 export default function Chord(props: ChordDiagramOptions) {
   const classes = useStyles();
   const cordRef = useRef<ChordDirected | null>(null);
+  const canvasRootRef = useRef<HTMLDivElement | null>(null);
   const [divId] = useState(`id-${Math.random()}`);
   const [size, setSize] = useState(0);
   const [scale, setScale] = useState(0.8);
@@ -68,6 +76,7 @@ export default function Chord(props: ChordDiagramOptions) {
       <Card variant="outlined">
         <div
           id={divId}
+          ref={canvasRootRef}
           className={classes.chart}
           style={{ height: size }}
           onWheel={(e) => {
@@ -79,22 +88,45 @@ export default function Chord(props: ChordDiagramOptions) {
              */
             if (newScale > 0.1) setScale(newScale);
           }}
-          onMouseDown={(e) => {
-            // reset view on mouse right click
-            if (e.button !== 2) return;
-            e.preventDefault();
-            e.stopPropagation();
-            cordRef.current?.set("x", percent(50));
-            cordRef.current?.set("y", percent(50));
-            cordRef.current?.set("startAngle", 80);
-            setScale(1);
-          }}
           onContextMenu={(e) => {
             e.preventDefault();
             return false;
           }}
         ></div>
       </Card>
+      <div className={classes.reset}>
+        <Button
+          variant="outlined"
+          size="small"
+          color="primary"
+          onClick={() => {
+            const dataUrl = canvasRootRef.current
+              ?.querySelector("canvas")
+              ?.toDataURL("image/png");
+            if (dataUrl) {
+              const link = document.createElement("a");
+              link.setAttribute("download", `${props.title}.png`);
+              link.setAttribute("href", dataUrl);
+              link.click();
+            }
+          }}
+        >
+          Save
+        </Button>
+        <Button
+          variant="outlined"
+          size="small"
+          color="warning"
+          onClick={() => {
+            cordRef.current?.set("x", percent(50));
+            cordRef.current?.set("y", percent(50));
+            cordRef.current?.set("startAngle", 80);
+            setScale(1);
+          }}
+        >
+          Reset
+        </Button>
+      </div>
     </div>
   );
 }
