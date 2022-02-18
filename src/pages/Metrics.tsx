@@ -1,13 +1,10 @@
 import { Box, Grid } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { useEffect, useState } from "react";
-import {
-  GetIndirectServiceChordData,
-  GetServiceChordData,
-} from "../classes/MockData";
 import Chord from "../components/Chord";
 import IChordNode from "../entities/IChordNode";
 import IChordRadius from "../entities/IChordRadius";
+import GraphService from "../services/GraphService";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -30,12 +27,16 @@ export default function Metrics() {
   }>({ links: [], nodes: [] });
 
   useEffect(() => {
-    // TODO: switch to api call later
-    const service = GetServiceChordData();
-    const indirectService = GetIndirectServiceChordData();
-
-    setServiceChord(service);
-    setIndirectServiceChord(indirectService);
+    GraphService.getInstance()
+      .getDirectChord()
+      .then((data) => {
+        if (data) setServiceChord(data);
+      });
+    GraphService.getInstance()
+      .getInDirectChord()
+      .then((data) => {
+        if (data) setIndirectServiceChord(data);
+      });
   }, []);
 
   return (

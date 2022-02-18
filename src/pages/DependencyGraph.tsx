@@ -1,7 +1,6 @@
 import { makeStyles } from "@mui/styles";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ForceGraph2D } from "react-force-graph";
-import { MockGraphData } from "../classes/MockData";
 import { DependencyGraphFactory } from "../classes/DependencyGraphFactory";
 import {
   useHoverHighlight,
@@ -10,6 +9,7 @@ import {
 import InformationWindow from "../components/InformationWindow";
 import IDisplayNodeInfo from "../entities/IDisplayNodeInfo";
 import ViewportUtils from "../classes/ViewportUtils";
+import GraphService from "../services/GraphService";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -35,15 +35,15 @@ export default function DependencyGraph() {
   }, []);
 
   useEffect(() => {
-    console.log(highlightInfo);
-    // TODO: change to api call after backend is ready
-    const rawData = MockGraphData;
-    // make sure data is newly created and not shared
-    const d = JSON.parse(JSON.stringify(rawData));
-    setData(DependencyGraphUtils.ProcessData(d));
-    setTimeout(() => {
-      graphRef.current.zoom(4, 0);
-    }, 10);
+    GraphService.getInstance()
+      .getDependencyGraph()
+      .then((data) => {
+        if (!data) return;
+        setData(DependencyGraphUtils.ProcessData(data));
+        setTimeout(() => {
+          graphRef.current.zoom(4, 0);
+        }, 10);
+      });
   }, []);
 
   return (
