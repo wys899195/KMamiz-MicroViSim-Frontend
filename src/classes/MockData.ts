@@ -1094,14 +1094,12 @@ function GetServiceAggregateData(uniqueName: string) {
 }
 function GetEndpointDataType(serviceUniqueName: string, endpointName: string) {
   const [service, namespace, version] = serviceUniqueName.split("\t");
-  return (
-    MockEndpointDataType.find(
-      (e) =>
-        e.service === service &&
-        e.namespace === namespace &&
-        e.version === version &&
-        e.endpoint === endpointName
-    ) || null
+  return MockEndpointDataType.find(
+    (e) =>
+      e.service === service &&
+      e.namespace === namespace &&
+      e.version === version &&
+      e.endpoint === endpointName
   );
 }
 
