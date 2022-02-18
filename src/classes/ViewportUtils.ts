@@ -4,8 +4,13 @@ export default class ViewportUtils {
 
   private handlers: Map<string, (viewport: number[]) => void>;
   private constructor() {
-    window.addEventListener("resize", this.onViewportSizeChange);
     this.handlers = new Map<string, (viewport: number[]) => void>();
+    setTimeout(() => {
+      window.addEventListener(
+        "resize",
+        ViewportUtils.getInstance().onViewportSizeChange
+      );
+    }, 0);
   }
 
   /**
@@ -16,14 +21,16 @@ export default class ViewportUtils {
   subscribe(onEmit: ([vw, vh]: number[]) => void) {
     const uniqueName = `${Math.random()}`;
     this.handlers.set(uniqueName, onEmit);
-    onEmit([this.vw, this.vh]);
+    onEmit([ViewportUtils.getInstance().vw, ViewportUtils.getInstance().vh]);
     return () => {
-      this.handlers.delete(uniqueName);
+      ViewportUtils.getInstance().handlers.delete(uniqueName);
     };
   }
 
   private onViewportSizeChange() {
-    [...this.handlers.values()].forEach((h) => h([this.vw, this.vh]));
+    [...ViewportUtils.getInstance().handlers.values()].forEach((h) =>
+      h([ViewportUtils.getInstance().vw, ViewportUtils.getInstance().vh])
+    );
   }
 
   private get vw() {
