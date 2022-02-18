@@ -2,10 +2,11 @@ export default class ViewportUtils {
   private static instance?: ViewportUtils;
   static getInstance = () => this.instance || (this.instance = new this());
 
+  private handlers: Map<string, (viewport: number[]) => void>;
   private constructor() {
     window.addEventListener("resize", this.onViewportSizeChange);
+    this.handlers = new Map<string, (viewport: number[]) => void>();
   }
-  private handlers = new Map<string, (viewport: number[]) => void>();
 
   /**
    * Subscribe to viewport change, remember to call the unsubscribe function to avoid side-effects.
