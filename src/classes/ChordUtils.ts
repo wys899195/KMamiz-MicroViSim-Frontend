@@ -1,4 +1,4 @@
-import { color, percent, Root } from "@amcharts/amcharts5";
+import { color, percent, Rectangle, Root } from "@amcharts/amcharts5";
 import { ChordDirected } from "@amcharts/amcharts5/flow";
 import IChordNode from "../entities/IChordNode";
 import IChordRadius from "../entities/IChordRadius";
@@ -24,11 +24,25 @@ export default class ChordUtils {
 
   static FillData(
     root: Root,
-    cord: ChordDirected,
+    chord: ChordDirected,
     links: IChordRadius[],
     nodes?: IChordNode[]
   ) {
-    const series = root.container.children.push(cord);
+    const series = root.container.children.push(chord);
+
+    root.container.setAll({
+      x: percent(50),
+      y: percent(50),
+      centerX: percent(50),
+      centerY: percent(50),
+    });
+
+    chord.set(
+      "background",
+      Rectangle.new(root, {
+        fill: color("#fcfcff"),
+      })
+    );
 
     series.nodes.labels.template.setAll({
       textType: "adjusted",
