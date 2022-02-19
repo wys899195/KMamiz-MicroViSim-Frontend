@@ -21,7 +21,7 @@ const useStyles = makeStyles(() => ({
     zIndex: "10",
     position: "absolute",
     display: "flex",
-    transform: "translateX(50vw) translateX(-9.8em) translateY(-38px)",
+    transform: "translateX(50vw) translateX(-10em) translateY(-38px)",
     gap: "0.3em",
   },
 }));
@@ -80,13 +80,20 @@ export default function Chord(props: ChordDiagramOptions) {
           className={classes.chart}
           style={{ height: size }}
           onWheel={(e) => {
-            const newScale = scale + (e.deltaY > 0 ? 0.2 : -0.2);
-            /**
-             * Make sure scale is always greater than 0
-             * Since `scale = 0` makes the diagram disappear,
-             * and a negative scale value mirrors the diagram.
-             */
-            if (newScale > 0.1) setScale(newScale);
+            if (e.shiftKey) {
+              const newScale = scale + (e.deltaY > 0 ? 0.2 : -0.2);
+              /**
+               * Make sure scale is always greater than 0
+               * Since `scale = 0` makes the diagram disappear,
+               * and a negative scale value mirrors the diagram.
+               */
+              if (newScale > 0.1) setScale(newScale);
+
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            }
+            return true;
           }}
           onContextMenu={(e) => {
             e.preventDefault();
