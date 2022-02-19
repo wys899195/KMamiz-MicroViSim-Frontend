@@ -1,5 +1,7 @@
 import { ApexOptions } from "apexcharts";
-import IMappedHistoryData from "../entities/IMappedHistoryData";
+import IMappedHistoryData, {
+  IMappedHistoryDataAvailableFields,
+} from "../entities/IMappedHistoryData";
 import { Color } from "./ColorUtils";
 
 export default class AreaLineChartUtils {
@@ -37,7 +39,7 @@ export default class AreaLineChartUtils {
 
   static MappedHistoryDataToSeriesData(
     data: IMappedHistoryData[],
-    field: "requests" | "serverErrors" | "requestErrors" | "risk"
+    field: IMappedHistoryDataAvailableFields
   ): ApexAxisChartSeries {
     const serviceMap = new Map<string, IMappedHistoryData[]>();
 

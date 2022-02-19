@@ -2,18 +2,14 @@ import { Box, Grid } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { useEffect, useState } from "react";
 import AreaLineChartUtils from "../classes/AreaLineChartUtils";
-import {
-  GetAreaLineData,
-  MockAggregateData,
-  MockHistoryData,
-} from "../classes/MockData";
+import { GetAreaLineData } from "../classes/MockData";
 import AreaLineChart from "../components/AreaLineChart/AreaLineChart";
 import Chord from "../components/Chord";
-import IAggregateData from "../entities/IAggregateData";
 import IChordNode from "../entities/IChordNode";
 import IChordRadius from "../entities/IChordRadius";
-import IHistoryData from "../entities/IHistoryData";
-import IMappedHistoryData from "../entities/IMappedHistoryData";
+import IMappedHistoryData, {
+  IMappedHistoryDataAvailableFields,
+} from "../entities/IMappedHistoryData";
 import GraphService from "../services/GraphService";
 
 const useStyles = makeStyles(() => ({
@@ -59,7 +55,7 @@ export default function Metrics() {
 
   const areaCharts: {
     name: string;
-    field: "requests" | "serverErrors" | "requestErrors" | "risk";
+    field: IMappedHistoryDataAvailableFields;
     options?: any;
   }[] = [
     { name: "Requests", field: "requests" },
@@ -75,6 +71,7 @@ export default function Metrics() {
     },
     { name: "RequestErrors", field: "requestErrors" },
     { name: "ServerErrors", field: "serverErrors" },
+    { name: "Latency (Coefficient of Variation)", field: "latencyCV" },
   ];
 
   return (

@@ -950,6 +950,7 @@ function HistoryDataToAreaLineData(historyData: IHistoryData[]) {
           requests: s.requests,
           serverErrors: s.serverErrors,
           requestErrors: s.requestErrors,
+          latencyCV: s.latencyCV,
           risk: s.risk,
         };
       });
