@@ -1,7 +1,10 @@
 export default interface IDisplayNodeInfo {
   type: "SRV" | "EP" | "EX";
+  labelName: string;
+  uniqueServiceName?: string;
   service?: string;
   namespace?: string;
   version?: string;
-  endpointName?: string;
+  name?: string;
+  method?: string;
 }

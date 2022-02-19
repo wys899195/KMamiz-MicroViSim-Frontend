@@ -68,7 +68,9 @@ function getTitle(info: IDisplayNodeInfo | null) {
       return <h2>{info.service}</h2>;
     case "EP":
       return (
-        <h2>{info.endpointName!.substring(info.endpointName!.indexOf("/"))}</h2>
+        <h2>
+          {info.method} {info.name?.split(" ")[1]}
+        </h2>
       );
   }
   return <div></div>;
@@ -94,13 +96,12 @@ function getDescription(info: IDisplayNodeInfo | null) {
       );
     case "EP":
       // TODO: change to api call
-      const uniqueName = `${info?.service}\t${info?.namespace}\t${info?.version}`;
-      const endpointInfo = GetServiceAggregateData(uniqueName)?.endpoints.find(
-        (e) => e.name === info.endpointName
-      );
+      const endpointInfo = GetServiceAggregateData(
+        info.uniqueServiceName!
+      )?.endpoints.find((e) => e.labelName === info.labelName!);
       const endpointDataType = GetEndpointDataType(
-        uniqueName,
-        info.endpointName!
+        info.uniqueServiceName!,
+        info.labelName!
       );
       return (
         <div>

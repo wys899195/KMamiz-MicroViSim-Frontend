@@ -1,3 +1,5 @@
+import { IRequestTypeUpper } from "./IRequestType";
+
 export default interface IHistoryData {
   _id?: string;
   date: Date;
@@ -6,6 +8,7 @@ export default interface IHistoryData {
 
 export interface IHistoryServiceInfo {
   _id?: string;
+  uniqueServiceName: string;
   date: Date;
   service: string;
   namespace: string;
@@ -19,8 +22,10 @@ export interface IHistoryServiceInfo {
 }
 
 export interface IHistoryEndpointInfo {
-  name: string;
-  protocol: string;
+  uniqueServiceName: string;
+  uniqueEndpointName: string;
+  labelName: string;
+  method: IRequestTypeUpper;
   requests: number;
   serverErrors: number;
   requestErrors: number;

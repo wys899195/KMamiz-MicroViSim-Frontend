@@ -59,13 +59,17 @@ export class DependencyGraphFactory {
     if (node.id === "null") type = "EX";
     else if (node.group === node.id) type = "SRV";
 
-    const [service, namespace, version, endpointName] = node.id.split("\t");
+    const [service, namespace, version, method, labelName] =
+      node.id.split("\t");
     setDisplayNodeInfo({
+      labelName,
       type,
       service,
       namespace,
       version,
-      endpointName,
+      name: node.name,
+      uniqueServiceName: `${service}\t${namespace}\t${version}`,
+      method,
     });
     // DependencyGraphUtils.ZoomOnClick(node, graphRef);
   }
