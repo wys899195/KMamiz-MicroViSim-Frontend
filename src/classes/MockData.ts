@@ -2,6 +2,7 @@ import IAggregateData from "../entities/IAggregateData";
 import IEndpointDataType from "../entities/IEndpointDataType";
 import { IEndpointDependency } from "../entities/IEndpointDependency";
 import IHistoryData from "../entities/IHistoryData";
+import IMappedHistoryData from "../entities/IMappedHistoryData";
 
 const MockEndpointDependencies: IEndpointDependency[] = [
   {
@@ -481,13 +482,13 @@ const MockEndpointDataType: IEndpointDataType[] = [
 
 const MockAggregateData: IAggregateData = {
   fromDate: new Date("2022-02-17T16:00:00.000Z"),
-  toDate: new Date("2022-02-17T16:00:00.000Z"),
+  toDate: new Date("2022-02-18T16:00:00.000Z"),
   services: [
     {
       service: "productpage",
       namespace: "book",
       version: "v1",
-      totalRequests: 159,
+      totalRequests: 375,
       totalRequestErrors: 0,
       totalServerErrors: 0,
       avgRisk: 1,
@@ -495,126 +496,265 @@ const MockAggregateData: IAggregateData = {
         {
           name: "productpage.book.svc.cluster.local:9080/static*",
           protocol: "GET",
-          totalRequests: 81,
+          totalRequests: 195,
           totalRequestErrors: 0,
           totalServerErrors: 0,
-          avgLatencyCV: 0.3244511162655295,
+          avgLatencyCV: 0.4274904845302312,
         },
         {
           name: "productpage.book.svc.cluster.local:9080/productpage",
           protocol: "GET",
-          totalRequests: 78,
+          totalRequests: 180,
           totalRequestErrors: 0,
           totalServerErrors: 0,
-          avgLatencyCV: 2.2792702153413336,
+          avgLatencyCV: 1.423004543421064,
         },
       ],
-      avgLatencyCV: 1.3018606658034315,
+      avgLatencyCV: 0.9252475139756476,
     },
     {
       service: "details",
       namespace: "book",
       version: "v1",
-      totalRequests: 78,
+      totalRequests: 178,
       totalRequestErrors: 0,
       totalServerErrors: 0,
-      avgRisk: 0.1,
+      avgRisk: 0.32399695630089126,
       endpoints: [
         {
           name: "details.book.svc.cluster.local:9080/*",
           protocol: "GET",
-          totalRequests: 78,
+          totalRequests: 178,
           totalRequestErrors: 0,
           totalServerErrors: 0,
-          avgLatencyCV: 1.478491639752334,
+          avgLatencyCV: 1.689923822402776,
         },
       ],
-      avgLatencyCV: 1.478491639752334,
-    },
-    {
-      service: "ratings",
-      namespace: "book",
-      version: "v1",
-      totalRequests: 52,
-      totalRequestErrors: 0,
-      totalServerErrors: 0,
-      avgRisk: 0.16102181971760718,
-      endpoints: [
-        {
-          name: "ratings.book.svc.cluster.local:9080/*",
-          protocol: "GET",
-          totalRequests: 52,
-          totalRequestErrors: 0,
-          totalServerErrors: 0,
-          avgLatencyCV: 1.2152011199650987,
-        },
-      ],
-      avgLatencyCV: 1.2152011199650987,
-    },
-    {
-      service: "reviews",
-      namespace: "book",
-      version: "v2",
-      totalRequests: 26,
-      totalRequestErrors: 0,
-      totalServerErrors: 0,
-      avgRisk: 0.12578952525566112,
-      endpoints: [
-        {
-          name: "reviews.book.svc.cluster.local:9080/*",
-          protocol: "GET",
-          totalRequests: 26,
-          totalRequestErrors: 0,
-          totalServerErrors: 0,
-          avgLatencyCV: 2.967533146811703,
-        },
-      ],
-      avgLatencyCV: 2.967533146811703,
+      avgLatencyCV: 1.689923822402776,
     },
     {
       service: "reviews",
       namespace: "book",
       version: "v1",
-      totalRequests: 26,
+      totalRequests: 60,
       totalRequestErrors: 0,
       totalServerErrors: 0,
-      avgRisk: 0.10341110368342081,
+      avgRisk: 0.1017055518417104,
       endpoints: [
         {
           name: "reviews.book.svc.cluster.local:9080/*",
           protocol: "GET",
-          totalRequests: 26,
+          totalRequests: 60,
           totalRequestErrors: 0,
           totalServerErrors: 0,
-          avgLatencyCV: 4.122910601754022,
+          avgLatencyCV: 2.1249169376290133,
         },
       ],
-      avgLatencyCV: 4.122910601754022,
+      avgLatencyCV: 2.1249169376290133,
     },
     {
       service: "reviews",
       namespace: "book",
       version: "v3",
-      totalRequests: 26,
+      totalRequests: 60,
       totalRequestErrors: 0,
       totalServerErrors: 0,
-      avgRisk: 0.12704197982594753,
+      avgRisk: 0.1411760147944299,
       endpoints: [
         {
           name: "reviews.book.svc.cluster.local:9080/*",
           protocol: "GET",
-          totalRequests: 26,
+          totalRequests: 60,
           totalRequestErrors: 0,
           totalServerErrors: 0,
-          avgLatencyCV: 2.9986857724896905,
+          avgLatencyCV: 1.660685189021735,
         },
       ],
-      avgLatencyCV: 2.9986857724896905,
+      avgLatencyCV: 1.660685189021735,
+    },
+    {
+      service: "ratings",
+      namespace: "book",
+      version: "v1",
+      totalRequests: 118,
+      totalRequestErrors: 0,
+      totalServerErrors: 0,
+      avgRisk: 0.20158331161482765,
+      endpoints: [
+        {
+          name: "ratings.book.svc.cluster.local:9080/*",
+          protocol: "GET",
+          totalRequests: 118,
+          totalRequestErrors: 0,
+          totalServerErrors: 0,
+          avgLatencyCV: 0.7449306138320116,
+        },
+      ],
+      avgLatencyCV: 0.7449306138320116,
+    },
+    {
+      service: "reviews",
+      namespace: "book",
+      version: "v2",
+      totalRequests: 58,
+      totalRequestErrors: 0,
+      totalServerErrors: 0,
+      avgRisk: 0.13363076154444087,
+      endpoints: [
+        {
+          name: "reviews.book.svc.cluster.local:9080/*",
+          protocol: "GET",
+          totalRequests: 58,
+          totalRequestErrors: 0,
+          totalServerErrors: 0,
+          avgLatencyCV: 1.5994554917313777,
+        },
+      ],
+      avgLatencyCV: 1.5994554917313777,
     },
   ],
 };
 
 const MockHistoryData: IHistoryData[] = [
+  {
+    date: new Date("2022-02-18T16:00:00.000Z"),
+    services: [
+      {
+        date: new Date("2022-02-18T16:00:00.000Z"),
+        service: "productpage",
+        namespace: "book",
+        version: "v1",
+        requests: 216,
+        serverErrors: 0,
+        requestErrors: 0,
+        latencyCV: 0.5667388715007946,
+        risk: 1,
+        endpoints: [
+          {
+            name: "productpage.book.svc.cluster.local:9080/static*",
+            protocol: "GET",
+            requests: 114,
+            requestErrors: 0,
+            serverErrors: 0,
+            latencyCV: 0.5305298527949329,
+          },
+          {
+            name: "productpage.book.svc.cluster.local:9080/productpage",
+            protocol: "GET",
+            requests: 102,
+            requestErrors: 0,
+            serverErrors: 0,
+            latencyCV: 0.5667388715007946,
+          },
+        ],
+      },
+      {
+        date: new Date("2022-02-18T16:00:00.000Z"),
+        service: "details",
+        namespace: "book",
+        version: "v1",
+        requests: 100,
+        serverErrors: 0,
+        requestErrors: 0,
+        latencyCV: 1.901356005053218,
+        risk: 0.5479939126017825,
+        endpoints: [
+          {
+            name: "details.book.svc.cluster.local:9080/*",
+            protocol: "GET",
+            requests: 100,
+            requestErrors: 0,
+            serverErrors: 0,
+            latencyCV: 1.901356005053218,
+          },
+        ],
+      },
+      {
+        date: new Date("2022-02-18T16:00:00.000Z"),
+        service: "reviews",
+        namespace: "book",
+        version: "v1",
+        requests: 34,
+        serverErrors: 0,
+        requestErrors: 0,
+        latencyCV: 0.1269232735040053,
+        risk: 0.1,
+        endpoints: [
+          {
+            name: "reviews.book.svc.cluster.local:9080/*",
+            protocol: "GET",
+            requests: 34,
+            requestErrors: 0,
+            serverErrors: 0,
+            latencyCV: 0.1269232735040053,
+          },
+        ],
+      },
+      {
+        date: new Date("2022-02-18T16:00:00.000Z"),
+        service: "reviews",
+        namespace: "book",
+        version: "v3",
+        requests: 34,
+        serverErrors: 0,
+        requestErrors: 0,
+        latencyCV: 0.3226846055537795,
+        risk: 0.15531004976291227,
+        endpoints: [
+          {
+            name: "reviews.book.svc.cluster.local:9080/*",
+            protocol: "GET",
+            requests: 34,
+            requestErrors: 0,
+            serverErrors: 0,
+            latencyCV: 0.3226846055537795,
+          },
+        ],
+      },
+      {
+        date: new Date("2022-02-18T16:00:00.000Z"),
+        service: "ratings",
+        namespace: "book",
+        version: "v1",
+        requests: 66,
+        serverErrors: 0,
+        requestErrors: 0,
+        latencyCV: 0.2746601076989245,
+        risk: 0.24214480351204812,
+        endpoints: [
+          {
+            name: "ratings.book.svc.cluster.local:9080/*",
+            protocol: "GET",
+            requests: 66,
+            requestErrors: 0,
+            serverErrors: 0,
+            latencyCV: 0.2746601076989245,
+          },
+        ],
+      },
+      {
+        date: new Date("2022-02-18T16:00:00.000Z"),
+        service: "reviews",
+        namespace: "book",
+        version: "v2",
+        requests: 32,
+        serverErrors: 0,
+        requestErrors: 0,
+        latencyCV: 0.23137783665105224,
+        risk: 0.14147199783322062,
+        endpoints: [
+          {
+            name: "reviews.book.svc.cluster.local:9080/*",
+            protocol: "GET",
+            requests: 32,
+            requestErrors: 0,
+            serverErrors: 0,
+            latencyCV: 0.23137783665105224,
+          },
+        ],
+      },
+    ],
+  },
   {
     date: new Date("2022-02-17T16:00:00.000Z"),
     services: [
@@ -784,6 +924,39 @@ function GetEndpointDataType(serviceUniqueName: string, endpointName: string) {
   );
 }
 
+function GetAreaLineData(serviceUniqueName?: string): IMappedHistoryData[] {
+  if (!serviceUniqueName) {
+    return HistoryDataToAreaLineData(MockHistoryData);
+  }
+  const hData = MockHistoryData.map((d) => {
+    return {
+      ...d,
+      services: d.services.filter((s) => {
+        const uniqueName = `${s.service}\t${s.namespace}\t${s.version}`;
+        return uniqueName === serviceUniqueName;
+      }),
+    };
+  });
+  return HistoryDataToAreaLineData(hData);
+}
+function HistoryDataToAreaLineData(historyData: IHistoryData[]) {
+  return historyData
+    .map((h) => {
+      return h.services.map((s) => {
+        const name = `${s.service}.${s.namespace} (${s.version})`;
+        return {
+          name,
+          x: s.date,
+          requests: s.requests,
+          serverErrors: s.serverErrors,
+          requestErrors: s.requestErrors,
+          risk: s.risk,
+        };
+      });
+    })
+    .flat();
+}
+
 export {
   MockEndpointDependencies,
   MockEndpointDataType,
@@ -792,4 +965,5 @@ export {
   GetServiceAggregateDataWithAllVersion,
   GetServiceAggregateData,
   GetEndpointDataType,
+  GetAreaLineData,
 };
