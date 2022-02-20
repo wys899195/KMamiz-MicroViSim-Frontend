@@ -17,7 +17,7 @@ export default function ServiceInfo(props: {
       props.services
         .map((s) => s.endpoints)
         .flat()
-        .map((e) => e.name)
+        .map((e) => e.labelName)
     ),
   ].length;
   return (
@@ -38,7 +38,7 @@ export default function ServiceInfo(props: {
           Active Versions:
           <ul>
             {props.services.map((s) => (
-              <li>{s.version}</li>
+              <li key={s.version}>{s.version}</li>
             ))}
           </ul>
         </li>
@@ -46,7 +46,7 @@ export default function ServiceInfo(props: {
           Risk Per Version:
           <ul>
             {props.services.map((s) => (
-              <li>
+              <li key={s.version}>
                 {s.version}: {roundNumber(s.avgRisk)}
               </li>
             ))}
