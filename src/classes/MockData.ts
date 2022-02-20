@@ -423,7 +423,8 @@ const MockEndpointDataType: IEndpointDataType[] = [
     schemas: [
       {
         time: new Date("2022-02-19T06:42:50.883Z"),
-        sampleObject: {
+        status: "200",
+        responseSample: {
           id: 0,
           author: "William Shakespeare",
           year: 1595,
@@ -434,7 +435,7 @@ const MockEndpointDataType: IEndpointDataType[] = [
           "ISBN-10": "1234567890",
           "ISBN-13": "123-1234567890",
         },
-        schema:
+        responseSchema:
           "interface Root {\n" +
           "  'ISBN-10': string;\n" +
           "  'ISBN-13': string;\n" +
@@ -460,8 +461,9 @@ const MockEndpointDataType: IEndpointDataType[] = [
     schemas: [
       {
         time: new Date("2022-02-19T06:42:50.868Z"),
-        sampleObject: { id: 0, ratings: { Reviewer1: 5, Reviewer2: 4 } },
-        schema:
+        status: "200",
+        responseSample: { id: 0, ratings: { Reviewer1: 5, Reviewer2: 4 } },
+        responseSchema:
           "interface Root {\n" +
           "  id: number;\n" +
           "  ratings: Ratings;\n" +
@@ -484,7 +486,8 @@ const MockEndpointDataType: IEndpointDataType[] = [
     schemas: [
       {
         time: new Date("2022-02-19T06:42:50.817Z"),
-        sampleObject: {
+        status: "200",
+        responseSample: {
           id: "0",
           reviews: [
             {
@@ -497,7 +500,7 @@ const MockEndpointDataType: IEndpointDataType[] = [
             },
           ],
         },
-        schema:
+        responseSchema:
           "interface Root {\n" +
           "  id: string;\n" +
           "  reviews: Review[];\n" +
@@ -520,7 +523,8 @@ const MockEndpointDataType: IEndpointDataType[] = [
     schemas: [
       {
         time: new Date("2022-02-19T06:42:50.759Z"),
-        sampleObject: {
+        status: "200",
+        responseSample: {
           id: "0",
           reviews: [
             {
@@ -535,7 +539,7 @@ const MockEndpointDataType: IEndpointDataType[] = [
             },
           ],
         },
-        schema:
+        responseSchema:
           "interface Root {\n" +
           "  id: string;\n" +
           "  reviews: Review[];\n" +
@@ -563,7 +567,8 @@ const MockEndpointDataType: IEndpointDataType[] = [
     schemas: [
       {
         time: new Date("2022-02-19T06:42:50.682Z"),
-        sampleObject: {
+        status: "200",
+        responseSample: {
           id: "0",
           reviews: [
             {
@@ -578,7 +583,7 @@ const MockEndpointDataType: IEndpointDataType[] = [
             },
           ],
         },
-        schema:
+        responseSchema:
           "interface Root {\n" +
           "  id: string;\n" +
           "  reviews: Review[];\n" +

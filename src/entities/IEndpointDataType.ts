@@ -10,9 +10,20 @@ export default interface IEndpointDataType {
   // trace name
   labelName: string;
   method: IRequestTypeUpper;
-  schemas: {
-    time: Date;
-    sampleObject: any;
-    schema: string;
-  }[];
+  schemas: IEndpointDataSchema[];
+}
+
+export interface IEndpointDataSchema {
+  time: Date;
+  status: string;
+  responseSample: any;
+  responseSchema: string;
+  requestSample?: any;
+  requestSchema?: string;
+  requestParams?: IEndpointRequestParam[];
+}
+
+export interface IEndpointRequestParam {
+  param: string;
+  type: string;
 }

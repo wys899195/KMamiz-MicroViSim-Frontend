@@ -21,7 +21,7 @@ export default function EndpointInfo(props: {
   const classes = useStyles();
   const { endpointInfo, dataType } = props;
   if (!endpointInfo) return <div></div>;
-  const schema = dataType?.schemas[dataType?.schemas.length - 1].schema;
+  const schema = dataType?.schemas[dataType?.schemas.length - 1].responseSchema;
 
   return (
     <div>
