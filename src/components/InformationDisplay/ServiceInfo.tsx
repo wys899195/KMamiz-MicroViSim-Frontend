@@ -15,9 +15,9 @@ export default function ServiceInfo(props: {
   const endpoints = [
     ...new Set<string>(
       props.services
-        .map((s) => s.endpoints)
+        .map((s) => s.endpoints.map((e) => ({ ...e, version: s.version })))
         .flat()
-        .map((e) => e.labelName)
+        .map((e) => `${e.version}\t${e.method}\t${e.labelName}`)
     ),
   ].length;
   return (
