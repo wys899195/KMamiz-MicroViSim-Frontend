@@ -1,7 +1,7 @@
 import { ApexOptions } from "apexcharts";
-import IMappedHistoryData, {
-  IMappedHistoryDataAvailableFields,
-} from "../entities/IMappedHistoryData";
+import IAreaLineChartData, {
+  IAreaLineChartDataFields,
+} from "../entities/IAreaLineChartData";
 import { Color } from "./ColorUtils";
 
 export default class AreaLineChartUtils {
@@ -37,11 +37,11 @@ export default class AreaLineChartUtils {
     };
   }
 
-  static MappedHistoryDataToSeriesData(
-    data: IMappedHistoryData[],
-    field: IMappedHistoryDataAvailableFields
+  static MappedBaseDataToSeriesData(
+    data: IAreaLineChartData[],
+    field: IAreaLineChartDataFields
   ): ApexAxisChartSeries {
-    const serviceMap = new Map<string, IMappedHistoryData[]>();
+    const serviceMap = new Map<string, IAreaLineChartData[]>();
 
     data.forEach((d) => {
       serviceMap.set(d.name, [...(serviceMap.get(d.name) || []), d]);

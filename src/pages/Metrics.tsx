@@ -7,9 +7,9 @@ import AreaLineChart from "../components/AreaLineChart/AreaLineChart";
 import Chord from "../components/Chord";
 import IChordNode from "../entities/IChordNode";
 import IChordRadius from "../entities/IChordRadius";
-import IMappedHistoryData, {
-  IMappedHistoryDataAvailableFields,
-} from "../entities/IMappedHistoryData";
+import IAreaLineChartData, {
+  IAreaLineChartDataFields,
+} from "../entities/IAreaLineChartData";
 import GraphService from "../services/GraphService";
 
 const useStyles = makeStyles(() => ({
@@ -34,7 +34,7 @@ export default function Metrics() {
   }>({ links: [], nodes: [] });
 
   const [mappedHistoryData, setMappedHistoryData] = useState<
-    IMappedHistoryData[]
+    IAreaLineChartData[]
   >([]);
 
   useEffect(() => {
@@ -55,7 +55,7 @@ export default function Metrics() {
 
   const areaCharts: {
     name: string;
-    field: IMappedHistoryDataAvailableFields;
+    field: IAreaLineChartDataFields;
     options?: any;
   }[] = [
     { name: "Requests", field: "requests" },
@@ -91,7 +91,7 @@ export default function Metrics() {
               <Grid key={c.name} item xs={6}>
                 <AreaLineChart
                   title={c.name}
-                  series={AreaLineChartUtils.MappedHistoryDataToSeriesData(
+                  series={AreaLineChartUtils.MappedBaseDataToSeriesData(
                     mappedHistoryData,
                     c.field
                   )}

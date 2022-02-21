@@ -1,11 +1,11 @@
-export type IMappedHistoryDataAvailableFields =
+export type IAreaLineChartDataFields =
   | "requests"
   | "serverErrors"
   | "requestErrors"
   | "risk"
   | "latencyCV";
 
-export default interface IMappedHistoryData {
+export default interface IAreaLineChartData {
   name: string;
   x: Date;
   requests: number;
