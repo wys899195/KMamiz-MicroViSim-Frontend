@@ -1,4 +1,7 @@
+import { IconButton, Tooltip } from "@mui/material";
+import { Article } from "@mui/icons-material";
 import { IAggregateServiceInfo } from "../../entities/IAggregateData";
+import { useNavigate } from "react-router-dom";
 
 function roundNumber(num: number) {
   return Math.round(num * 10000) / 10000;
@@ -10,6 +13,7 @@ function sumField(field: string, obj: any[]) {
 export default function ServiceInfo(props: {
   services: IAggregateServiceInfo[];
 }) {
+  const navigate = useNavigate();
   props.services.sort((a, b) => a.version.localeCompare(b.version));
 
   const endpoints = [
@@ -38,7 +42,21 @@ export default function ServiceInfo(props: {
           Active Versions:
           <ul>
             {props.services.map((s) => (
-              <li key={s.version}>{s.version}</li>
+              <li key={s.version}>
+                {s.version}
+                <Tooltip title="Open SwaggerUI">
+                  <IconButton
+                    color="primary"
+                    onClick={() => {
+                      navigate(
+                        `/swagger/${encodeURIComponent(s.uniqueServiceName)}`
+                      );
+                    }}
+                  >
+                    <Article />
+                  </IconButton>
+                </Tooltip>
+              </li>
             ))}
           </ul>
         </li>

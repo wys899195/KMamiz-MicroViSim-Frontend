@@ -5,6 +5,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Header from "./components/Header";
 import DependencyGraph from "./pages/DependencyGraph";
 import Metrics from "./pages/Metrics";
+import Swagger from "./pages/Swagger";
 
 ReactDOM.render(
   <React.StrictMode>
@@ -13,6 +14,7 @@ ReactDOM.render(
       <Routes>
         <Route path="/" element={<DependencyGraph />} />
         <Route path="/metrics" element={<Metrics />} />
+        <Route path="/swagger/:service" element={<Swagger />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>,

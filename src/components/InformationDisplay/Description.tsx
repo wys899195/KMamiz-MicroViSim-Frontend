@@ -1,4 +1,4 @@
-import { ReactElement, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   IAggregateEndpointInfo,
   IAggregateServiceInfo,
@@ -33,15 +33,12 @@ export default function Description(props: { info: IDisplayNodeInfo | null }) {
       DataService.getInstance()
         .getAggregateData()
         .then((res) => {
-          console.log(info);
           const services = res?.services.find(
             (s) => s.uniqueServiceName === info.uniqueServiceName
           );
-          console.log(services);
           const endpoint = services?.endpoints.find(
             (e) => e.labelName === info.labelName && e.method === info.method
           );
-          console.log(endpoint);
           setEndpointInfo(endpoint);
         });
 
