@@ -1,3 +1,5 @@
+import { FiberManualRecord, Hexagon } from "@mui/icons-material";
+import { Chip, Tooltip } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { useEffect, useRef } from "react";
 import IDisplayNodeInfo from "../entities/IDisplayNodeInfo";
@@ -36,7 +38,13 @@ export default function InformationWindow(props: {
     <div ref={divRef} className={classes.root}>
       {getTitle(props.info)}
       <div>
-        <i>Type: {getTypeName(props.info?.type)}</i>
+        <Tooltip title={`Type: ${getTypeName(props.info?.type)}`}>
+          <Chip
+            label={getTypeName(props.info?.type)}
+            color={getColorOfType(props.info?.type)}
+            icon={getIcon(props.info?.type)}
+          />
+        </Tooltip>
       </div>
       <Description info={props.info} />
     </div>
@@ -54,6 +62,25 @@ function getTypeName(type: "EX" | "SRV" | "EP" | undefined) {
   }
   return "";
 }
+function getColorOfType(type: "EX" | "SRV" | "EP" | undefined) {
+  switch (type) {
+    case "SRV":
+      return "primary";
+    case "EP":
+      return "secondary";
+  }
+  return "success";
+}
+function getIcon(type: "EX" | "SRV" | "EP" | undefined) {
+  switch (type) {
+    case "SRV":
+      return <Hexagon sx={{ transform: "rotate(30deg)" }} />;
+    case "EP":
+      return <FiberManualRecord />;
+  }
+  return undefined;
+}
+
 function getTitle(info: IDisplayNodeInfo | null) {
   switch (info?.type) {
     case "EX":

@@ -1,3 +1,4 @@
+import { Chip, Tooltip } from "@mui/material";
 import { useEffect, useState } from "react";
 import {
   IAggregateEndpointInfo,
@@ -8,8 +9,19 @@ import IEndpointDataType from "../../entities/IEndpointDataType";
 import DataService from "../../services/DataService";
 import EndpointInfo from "./EndpointInfo";
 import ServiceInfo from "./ServiceInfo";
+import { makeStyles } from "@mui/styles";
+
+const useStyles = makeStyles(() => ({
+  info: {
+    margin: "0.5em 0",
+    display: "flex",
+    flexDirection: "row",
+    gap: "0.2em",
+  },
+}));
 
 export default function Description(props: { info: IDisplayNodeInfo | null }) {
+  const classes = useStyles();
   const [serviceInfo, setServiceInfo] = useState<IAggregateServiceInfo[]>();
   const [endpointInfo, setEndpointInfo] = useState<IAggregateEndpointInfo>();
   const [endpointDataType, setEndpointDataType] = useState<IEndpointDataType>();
@@ -55,20 +67,28 @@ export default function Description(props: { info: IDisplayNodeInfo | null }) {
     case "SRV":
       return (
         <div>
-          <ul>
-            <li>Namespace: {props.info.namespace}</li>
-          </ul>
+          <div className={classes.info}>
+            <Tooltip title="Namespace">
+              <Chip color="success" size="small" label={props.info.namespace} />
+            </Tooltip>
+          </div>
           {serviceInfo ? <ServiceInfo services={serviceInfo} /> : null}
         </div>
       );
     case "EP":
       return (
         <div>
-          <ul>
-            <li>Namespace: {props.info.namespace}</li>
-            <li>Service: {props.info.service}</li>
-            <li>Version: {props.info.version}</li>
-          </ul>
+          <div className={classes.info}>
+            <Tooltip title="Namespace">
+              <Chip color="success" size="small" label={props.info.namespace} />
+            </Tooltip>
+            <Tooltip title="Service">
+              <Chip color="info" size="small" label={props.info.service} />
+            </Tooltip>
+            <Tooltip title="Version">
+              <Chip color="warning" size="small" label={props.info.version} />
+            </Tooltip>
+          </div>
           <EndpointInfo
             endpointInfo={endpointInfo}
             dataType={endpointDataType}
@@ -76,6 +96,6 @@ export default function Description(props: { info: IDisplayNodeInfo | null }) {
         </div>
       );
     default:
-      return <div>Root</div>;
+      return <div></div>;
   }
 }
