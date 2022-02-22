@@ -1,13 +1,7 @@
 import { makeStyles } from "@mui/styles";
 import { useEffect, useRef } from "react";
-import {
-  GetEndpointDataType,
-  GetServiceAggregateData,
-  GetServiceAggregateDataWithAllVersion,
-} from "../classes/MockData";
 import IDisplayNodeInfo from "../entities/IDisplayNodeInfo";
-import EndpointInfo from "./InformationDisplay/EndpointInfo";
-import ServiceInfo from "./InformationDisplay/ServiceInfo";
+import Description from "./InformationDisplay/Description";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -44,7 +38,7 @@ export default function InformationWindow(props: {
       <div>
         <i>Type: {getTypeName(props.info?.type)}</i>
       </div>
-      {getDescription(props.info)}
+      <Description info={props.info} />
     </div>
   );
 }
@@ -74,52 +68,4 @@ function getTitle(info: IDisplayNodeInfo | null) {
       );
   }
   return <div></div>;
-}
-
-function getDescription(info: IDisplayNodeInfo | null) {
-  switch (info?.type) {
-    case "EX":
-      return displaySystem();
-    case "SRV":
-      // TODO: change to api call
-      const versionLessUniqueName = `${info?.service}\t${info?.namespace}`;
-      const serviceInfo = GetServiceAggregateDataWithAllVersion(
-        versionLessUniqueName
-      );
-      return (
-        <div>
-          <ul>
-            <li>Namespace: {info.namespace}</li>
-          </ul>
-          <ServiceInfo services={serviceInfo} />
-        </div>
-      );
-    case "EP":
-      // TODO: change to api call
-      const endpointInfo = GetServiceAggregateData(
-        info.uniqueServiceName!
-      )?.endpoints.find((e) => e.labelName === info.labelName!);
-      const endpointDataType = GetEndpointDataType(
-        info.uniqueServiceName!,
-        info.labelName!
-      );
-      return (
-        <div>
-          <ul>
-            <li>Namespace: {info.namespace}</li>
-            <li>Service: {info.service}</li>
-            <li>Version: {info.version}</li>
-          </ul>
-          <EndpointInfo
-            endpointInfo={endpointInfo}
-            dataType={endpointDataType}
-          />
-        </div>
-      );
-  }
-  return <div></div>;
-}
-
-function displaySystem() {
-  return <div>Root</div>;
 }

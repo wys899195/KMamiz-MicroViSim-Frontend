@@ -1,5 +1,6 @@
 import Config from "../../Config";
 import { Color } from "../classes/ColorUtils";
+import IAreaLineChartData from "../entities/IAreaLineChartData";
 import IChordNode from "../entities/IChordNode";
 import IChordRadius from "../entities/IChordRadius";
 import IGraphData from "../entities/IGraphData";
@@ -26,6 +27,15 @@ export default class GraphService {
     const res = await fetch(`${this.prefix}/graph/dependency`);
     if (!res.ok) return null;
     return (await res.json()) as IGraphData;
+  }
+
+  async getAreaLineData(uniqueServiceName?: string) {
+    const postfix = uniqueServiceName
+      ? `/${encodeURIComponent(uniqueServiceName)}`
+      : "";
+    const res = await fetch(`${this.prefix}/graph/line${postfix}`);
+    if (!res.ok) return [];
+    return (await res.json()) as IAreaLineChartData[];
   }
 
   async getDirectChord() {

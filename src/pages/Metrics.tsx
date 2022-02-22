@@ -2,7 +2,6 @@ import { Box, Grid } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { useEffect, useState } from "react";
 import AreaLineChartUtils from "../classes/AreaLineChartUtils";
-import { GetAreaLineData } from "../classes/MockData";
 import AreaLineChart from "../components/AreaLineChart/AreaLineChart";
 import Chord from "../components/Chord";
 import IChordNode from "../entities/IChordNode";
@@ -49,8 +48,9 @@ export default function Metrics() {
         if (data) setIndirectServiceChord(data);
       });
 
-    // TODO: change to api call
-    setMappedHistoryData(GetAreaLineData());
+    GraphService.getInstance()
+      .getAreaLineData()
+      .then((data) => setMappedHistoryData(data));
   }, []);
 
   const areaCharts: {
