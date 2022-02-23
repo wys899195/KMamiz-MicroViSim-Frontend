@@ -79,13 +79,13 @@ export default function Description(props: { info: IDisplayNodeInfo | null }) {
       return (
         <div>
           <div className={classes.info}>
-            <Tooltip title="Namespace">
+            <Tooltip title={`Namespace: ${props.info.namespace}`}>
               <Chip color="success" size="small" label={props.info.namespace} />
             </Tooltip>
-            <Tooltip title="Service">
+            <Tooltip title={`Service: ${props.info.service}`}>
               <Chip color="info" size="small" label={props.info.service} />
             </Tooltip>
-            <Tooltip title="Version">
+            <Tooltip title={`Version: ${props.info.version}`}>
               <Chip color="warning" size="small" label={props.info.version} />
             </Tooltip>
           </div>

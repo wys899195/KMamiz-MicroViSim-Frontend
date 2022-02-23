@@ -18,6 +18,11 @@ const useStyles = makeStyles(() => ({
     padding: "0em 1em 1em 1em",
     display: "none",
   },
+  info: {
+    display: "flex",
+    flexDirection: "row",
+    gap: "0.2em",
+  },
 }));
 
 export default function InformationWindow(props: {
@@ -37,13 +42,16 @@ export default function InformationWindow(props: {
   return (
     <div ref={divRef} className={classes.root}>
       {getTitle(props.info)}
-      <div>
+      <div className={classes.info}>
         <Tooltip title={`Type: ${getTypeName(props.info?.type)}`}>
           <Chip
             label={getTypeName(props.info?.type)}
             color={getColorOfType(props.info?.type)}
             icon={getIcon(props.info?.type)}
           />
+        </Tooltip>
+        <Tooltip title={`HTTP Method: ${props.info?.method}`}>
+          <Chip label={props.info?.method} color="success" />
         </Tooltip>
       </div>
       <Description info={props.info} />
@@ -88,11 +96,7 @@ function getTitle(info: IDisplayNodeInfo | null) {
     case "SRV":
       return <h2>{info.service}</h2>;
     case "EP":
-      return (
-        <h2>
-          {info.method} {info.name?.split(" ")[1]}
-        </h2>
-      );
+      return <h2>{info.name?.split(" ")[2]}</h2>;
   }
   return <div></div>;
 }
