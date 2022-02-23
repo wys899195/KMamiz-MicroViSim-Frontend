@@ -37,12 +37,19 @@ export default function Metrics() {
 
   useEffect(() => {
     const unsubscribe = [
-      GraphService.getInstance().subscribeToDirectChord(
-        (data) => data && setServiceChord(data)
-      ),
-      GraphService.getInstance().subscribeToInDirectChord(
-        (data) => data && setIndirectServiceChord(data)
-      ),
+      GraphService.getInstance().subscribeToDirectChord((data) => {
+        if (data && JSON.stringify(data) !== JSON.stringify(serviceChord)) {
+          setServiceChord(data);
+        }
+      }),
+      GraphService.getInstance().subscribeToInDirectChord((data) => {
+        if (
+          data &&
+          JSON.stringify(data) !== JSON.stringify(indirectServiceChord)
+        ) {
+          setIndirectServiceChord(data);
+        }
+      }),
       GraphService.getInstance().subscribeToAreaLineData(setMappedHistoryData),
     ];
 
