@@ -16,7 +16,6 @@ const useStyles = makeStyles(() => ({
     backgroundColor: "white",
     boxShadow: "2px 2px 4px 1px lightgray",
     padding: "0em 1em 1em 1em",
-    // display: "none",
   },
   info: {
     display: "flex",
