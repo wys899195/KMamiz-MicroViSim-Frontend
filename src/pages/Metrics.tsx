@@ -4,12 +4,11 @@ import { useEffect, useState } from "react";
 import AreaLineChartUtils from "../classes/AreaLineChartUtils";
 import AreaLineChart from "../components/AreaLineChart/AreaLineChart";
 import Chord from "../components/Chord";
-import IChordNode from "../entities/IChordNode";
-import IChordRadius from "../entities/IChordRadius";
 import IAreaLineChartData, {
   IAreaLineChartDataFields,
 } from "../entities/IAreaLineChartData";
 import GraphService from "../services/GraphService";
+import IChordData from "../entities/IChordData";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -23,34 +22,33 @@ const useStyles = makeStyles(() => ({
 
 export default function Metrics() {
   const classes = useStyles();
-  const [serviceChord, setServiceChord] = useState<{
-    links: IChordRadius[];
-    nodes: IChordNode[];
-  }>({ links: [], nodes: [] });
-  const [indirectServiceChord, setIndirectServiceChord] = useState<{
-    links: IChordRadius[];
-    nodes: IChordNode[];
-  }>({ links: [], nodes: [] });
+  const [serviceChord, setServiceChord] = useState<IChordData>({
+    links: [],
+    nodes: [],
+  });
+  const [indirectServiceChord, setIndirectServiceChord] = useState<IChordData>({
+    links: [],
+    nodes: [],
+  });
 
   const [mappedHistoryData, setMappedHistoryData] = useState<
     IAreaLineChartData[]
   >([]);
 
   useEffect(() => {
-    GraphService.getInstance()
-      .getDirectChord()
-      .then((data) => {
-        if (data) setServiceChord(data);
-      });
-    GraphService.getInstance()
-      .getInDirectChord()
-      .then((data) => {
-        if (data) setIndirectServiceChord(data);
-      });
+    const unsubscribe = [
+      GraphService.getInstance().subscribeToDirectChord(
+        (data) => data && setServiceChord(data)
+      ),
+      GraphService.getInstance().subscribeToInDirectChord(
+        (data) => data && setIndirectServiceChord(data)
+      ),
+      GraphService.getInstance().subscribeToAreaLineData(setMappedHistoryData),
+    ];
 
-    GraphService.getInstance()
-      .getAreaLineData()
-      .then((data) => setMappedHistoryData(data));
+    return () => {
+      unsubscribe.forEach((un) => un());
+    };
   }, []);
 
   const areaCharts: {
