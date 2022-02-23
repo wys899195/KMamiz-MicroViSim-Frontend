@@ -50,9 +50,11 @@ export default function InformationWindow(props: {
             icon={getIcon(props.info?.type)}
           />
         </Tooltip>
-        <Tooltip title={`HTTP Method: ${props.info?.method}`}>
-          <Chip label={props.info?.method} color="success" />
-        </Tooltip>
+        {props.info?.method ? (
+          <Tooltip title={`HTTP Method: ${props.info?.method}`}>
+            <Chip label={props.info?.method} color="success" />
+          </Tooltip>
+        ) : null}
       </div>
       <Description info={props.info} />
     </div>
