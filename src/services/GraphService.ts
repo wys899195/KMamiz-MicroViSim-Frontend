@@ -1,22 +1,18 @@
 import Config from "../../Config";
 import { Color } from "../classes/ColorUtils";
 import IAreaLineChartData from "../entities/IAreaLineChartData";
-import IChordNode from "../entities/IChordNode";
+import IChordData from "../entities/IChordData";
 import IChordRadius from "../entities/IChordRadius";
 import IGraphData from "../entities/IGraphData";
+import { DataView } from "./DataView";
 
 type RawChordData = {
   nodes: {
     id: string;
     name: string;
   }[];
-  links: {
-    from: string;
-    to: string;
-    value: number;
-  }[];
+  links: IChordRadius[];
 };
-
 export default class GraphService {
   private static instance?: GraphService;
   static getInstance = () => this.instance || (this.instance = new this());
@@ -46,9 +42,7 @@ export default class GraphService {
     return await this.getChordData("/graph/chord/indirect");
   }
 
-  private async getChordData(
-    path: string
-  ): Promise<{ nodes: IChordNode[]; links: IChordRadius[] } | null> {
+  private async getChordData(path: string): Promise<IChordData | null> {
     const res = await fetch(`${this.prefix}${path}`);
     if (!res.ok) return null;
     const rawData = (await res.json()) as RawChordData;
@@ -59,5 +53,57 @@ export default class GraphService {
         fill: Color.generateFromString(n.id).hex,
       })),
     };
+  }
+
+  subscribeToDependencyGraph(next: (data?: IGraphData) => void) {
+    return DataView.getInstance().subscribe<IGraphData>(
+      `${this.prefix}/graph/dependency`,
+      (_, data) => next(data)
+    );
+  }
+
+  subscribeToAreaLineData(
+    next: (data: IAreaLineChartData[]) => void,
+    uniqueServiceName?: string
+  ) {
+    const postfix = uniqueServiceName
+      ? `/${encodeURIComponent(uniqueServiceName)}`
+      : "";
+
+    return DataView.getInstance().subscribe<IAreaLineChartData[]>(
+      `${this.prefix}/graph/line${postfix}`,
+      (_, data) => next(data || [])
+    );
+  }
+
+  subscribeToDirectChord(next: (data?: IChordData) => void) {
+    return GraphService.getInstance().subscribeToChord(
+      next,
+      "/graph/chord/direct"
+    );
+  }
+  subscribeToInDirectChord(next: (data?: IChordData) => void) {
+    return GraphService.getInstance().subscribeToChord(
+      next,
+      "/graph/chord/indirect"
+    );
+  }
+  private subscribeToChord(next: (data?: IChordData) => void, path: string) {
+    return DataView.getInstance().subscribe<RawChordData>(
+      `${this.prefix}${path}`,
+      (_, data) => {
+        next(
+          data
+            ? {
+                ...data,
+                nodes: data.nodes.map((n) => ({
+                  ...n,
+                  fill: Color.generateFromString(n.id).hex,
+                })),
+              }
+            : data
+        );
+      }
+    );
   }
 }
