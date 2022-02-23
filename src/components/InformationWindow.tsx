@@ -16,7 +16,7 @@ const useStyles = makeStyles(() => ({
     backgroundColor: "white",
     boxShadow: "2px 2px 4px 1px lightgray",
     padding: "0em 1em 1em 1em",
-    display: "none",
+    // display: "none",
   },
   info: {
     display: "flex",
@@ -29,18 +29,8 @@ export default function InformationWindow(props: {
   info: IDisplayNodeInfo | null;
 }) {
   const classes = useStyles();
-  const divRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (props.info && divRef) {
-      divRef.current!.style.display = "block";
-    } else if (divRef) {
-      divRef.current!.style.display = "none";
-    }
-  }, [props.info]);
-
-  return (
-    <div ref={divRef} className={classes.root}>
+  return props.info ? (
+    <div className={classes.root}>
       {getTitle(props.info)}
       <div className={classes.info}>
         <Tooltip title={`Type: ${getTypeName(props.info?.type)}`}>
@@ -58,7 +48,7 @@ export default function InformationWindow(props: {
       </div>
       <Description info={props.info} />
     </div>
-  );
+  ) : null;
 }
 
 function getTypeName(type: "EX" | "SRV" | "EP" | undefined) {
