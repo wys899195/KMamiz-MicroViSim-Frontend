@@ -1,6 +1,6 @@
 import { ApexOptions } from "apexcharts";
 import ReactApexChart from "react-apexcharts";
-import AreaLineChartUtils from "../../classes/AreaLineChartUtils";
+import AreaLineChartUtils from "../classes/AreaLineChartUtils";
 
 export default function AreaLineChart(props: {
   title: string;

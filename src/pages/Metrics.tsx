@@ -2,7 +2,7 @@ import { Box, Grid } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { useEffect, useState } from "react";
 import AreaLineChartUtils from "../classes/AreaLineChartUtils";
-import AreaLineChart from "../components/AreaLineChart/AreaLineChart";
+import AreaLineChart from "../components/AreaLineChart";
 import Chord from "../components/Chord";
 import IAreaLineChartData, {
   IAreaLineChartDataFields,
