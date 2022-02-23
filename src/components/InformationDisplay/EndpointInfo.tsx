@@ -1,14 +1,14 @@
-import { Card } from "@mui/material";
+import { Card, CardContent, Typography } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { IAggregateEndpointInfo } from "../../entities/IAggregateData";
 import IEndpointDataType from "../../entities/IEndpointDataType";
+import RequestDonutChart from "../RequestDonutChart";
 
 const useStyles = makeStyles(() => ({
   code: {
     fontFamily: "monospace",
     overflow: "auto",
     padding: "0 1em",
-    marginTop: "1em",
     backgroundColor: "#262335",
     color: "white",
   },
@@ -23,19 +23,22 @@ export default function EndpointInfo(props: {
   if (!endpointInfo) return <div></div>;
   const schema = dataType?.schemas[dataType?.schemas.length - 1].responseSchema;
 
+  const {
+    totalRequests,
+    totalRequestErrors: reqErrors,
+    totalServerErrors: srvErrors,
+  } = endpointInfo;
+
   return (
     <div>
-      <div>
-        Detail:
-        <ul>
-          <li>Requests: {endpointInfo.totalRequests}</li>
-          <li>4XX Errors: {endpointInfo.totalRequestErrors}</li>
-          <li>5XX Errors: {endpointInfo.totalServerErrors}</li>
-        </ul>
-      </div>
+      <Card variant="outlined">
+        <RequestDonutChart
+          series={[totalRequests - reqErrors - srvErrors, reqErrors, srvErrors]}
+        />
+      </Card>
       {schema ? (
         <div>
-          Schema (Typescript):
+          <h4>Schema (Typescript)</h4>
           <Card variant="outlined" className={classes.code}>
             <pre>
               <code>{schema}</code>

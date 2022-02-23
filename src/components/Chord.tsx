@@ -6,9 +6,8 @@ import { ChordDirected } from "@amcharts/amcharts5/flow";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 import ViewportUtils from "../classes/ViewportUtils";
 import ChordUtils from "../classes/ChordUtils";
-import IChordRadius from "../entities/IChordRadius";
-import IChordNode from "../entities/IChordNode";
 import { Button, Card } from "@mui/material";
+import IChordData from "../entities/IChordData";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -28,10 +27,7 @@ const useStyles = makeStyles(() => ({
 
 export type ChordDiagramOptions = {
   title: string;
-  chordData: {
-    links: IChordRadius[];
-    nodes: IChordNode[];
-  };
+  chordData: IChordData;
 };
 
 export default function Chord(props: ChordDiagramOptions) {
