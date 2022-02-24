@@ -36,7 +36,7 @@ export default function Chord(props: ChordDiagramOptions) {
   const canvasRootRef = useRef<HTMLDivElement | null>(null);
   const [divId] = useState(`id-${Math.random()}`);
   const [size, setSize] = useState(0);
-  const [scale, setScale] = useState(0.8);
+  const [scale, setScale] = useState(1);
 
   useLayoutEffect(() => {
     // register to viewport resize

@@ -1,6 +1,6 @@
 import { Box, Grid } from "@mui/material";
 import { makeStyles } from "@mui/styles";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AreaLineChartUtils from "../classes/AreaLineChartUtils";
 import AreaLineChart from "../components/AreaLineChart";
 import Chord from "../components/Chord";
@@ -22,14 +22,8 @@ const useStyles = makeStyles(() => ({
 
 export default function Metrics() {
   const classes = useStyles();
-  const [serviceChord, setServiceChord] = useState<IChordData>({
-    links: [],
-    nodes: [],
-  });
-  const [indirectServiceChord, setIndirectServiceChord] = useState<IChordData>({
-    links: [],
-    nodes: [],
-  });
+  const sChordRef = useRef<IChordData>();
+  const iChordRef = useRef<IChordData>();
 
   const [mappedHistoryData, setMappedHistoryData] = useState<
     IAreaLineChartData[]
@@ -38,16 +32,19 @@ export default function Metrics() {
   useEffect(() => {
     const unsubscribe = [
       GraphService.getInstance().subscribeToDirectChord((data) => {
-        if (data && JSON.stringify(data) !== JSON.stringify(serviceChord)) {
-          setServiceChord(data);
+        if (
+          data &&
+          JSON.stringify(data) !== JSON.stringify(sChordRef.current)
+        ) {
+          sChordRef.current = data;
         }
       }),
       GraphService.getInstance().subscribeToInDirectChord((data) => {
         if (
           data &&
-          JSON.stringify(data) !== JSON.stringify(indirectServiceChord)
+          JSON.stringify(data) !== JSON.stringify(iChordRef.current)
         ) {
-          setIndirectServiceChord(data);
+          iChordRef.current = data;
         }
       }),
       GraphService.getInstance().subscribeToAreaLineData(setMappedHistoryData),
@@ -83,13 +80,17 @@ export default function Metrics() {
     <Box className={classes.root}>
       <Grid container>
         <Grid item xs={6} className={classes.chord}>
-          <Chord title="Service Dependencies" chordData={serviceChord} />
+          {sChordRef.current && (
+            <Chord title="Service Dependencies" chordData={sChordRef.current} />
+          )}
         </Grid>
         <Grid item xs={6} className={classes.chord}>
-          <Chord
-            title="Indirect Service Dependencies"
-            chordData={indirectServiceChord}
-          />
+          {iChordRef.current && (
+            <Chord
+              title="Indirect Service Dependencies"
+              chordData={iChordRef.current}
+            />
+          )}
         </Grid>
         {mappedHistoryData
           ? areaCharts.map((c) => (
