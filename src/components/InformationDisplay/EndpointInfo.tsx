@@ -21,7 +21,10 @@ export default function EndpointInfo(props: {
   const classes = useStyles();
   const { endpointInfo, dataType } = props;
   if (!endpointInfo) return <div></div>;
-  const schema = dataType?.schemas[dataType?.schemas.length - 1].responseSchema;
+  const resSchema =
+    dataType?.schemas[dataType?.schemas.length - 1].responseSchema;
+  const reqSchema =
+    dataType?.schemas[dataType?.schemas.length - 1].requestSchema;
 
   const {
     totalRequests,
@@ -36,12 +39,22 @@ export default function EndpointInfo(props: {
           series={[totalRequests - reqErrors - srvErrors, reqErrors, srvErrors]}
         />
       </Card>
-      {schema ? (
+      {reqSchema ? (
         <div>
-          <h4>Schema (Typescript)</h4>
+          <h4>Request Schema (Typescript)</h4>
           <Card variant="outlined" className={classes.code}>
             <pre>
-              <code>{schema}</code>
+              <code>{reqSchema}</code>
+            </pre>
+          </Card>
+        </div>
+      ) : null}
+      {resSchema ? (
+        <div>
+          <h4>Response Schema (Typescript)</h4>
+          <Card variant="outlined" className={classes.code}>
+            <pre>
+              <code>{resSchema}</code>
             </pre>
           </Card>
         </div>
