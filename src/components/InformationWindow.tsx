@@ -22,6 +22,9 @@ const useStyles = makeStyles(() => ({
     flexDirection: "row",
     gap: "0.2em",
   },
+  title: {
+    wordWrap: "break-word",
+  },
 }));
 
 export default function InformationWindow(props: {
@@ -30,7 +33,7 @@ export default function InformationWindow(props: {
   const classes = useStyles();
   return props.info ? (
     <div className={classes.root}>
-      {getTitle(props.info)}
+      <h2 className={classes.title}>{getTitle(props.info)}</h2>
       <div className={classes.info}>
         <Tooltip title={`Type: ${getTypeName(props.info?.type)}`}>
           <Chip
@@ -83,11 +86,11 @@ function getIcon(type: "EX" | "SRV" | "EP" | undefined) {
 function getTitle(info: IDisplayNodeInfo | null) {
   switch (info?.type) {
     case "EX":
-      return <h2>External System</h2>;
+      return "External System";
     case "SRV":
-      return <h2>{info.service}</h2>;
+      return info.service;
     case "EP":
-      return <h2>{info.name?.split(" ")[2]}</h2>;
+      return info.name?.split(" ")[2];
   }
-  return <div></div>;
+  return "";
 }
