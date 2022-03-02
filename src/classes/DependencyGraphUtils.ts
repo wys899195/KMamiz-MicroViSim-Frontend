@@ -163,11 +163,7 @@ export class DependencyGraphUtils {
     }
 
     // paint underlying style on top of ring
-    let color = Color.generateFromString(node.group);
-    const { h, s, l } = color.hsl;
-    if (node.id !== node.group) {
-      color = Color.fromHSL(h, s - 10, l + 10)!;
-    }
+    const color = Color.generateFromString(node.group);
     DependencyGraphUtils.PaintNode(node, color.hex, ctx);
   }
 
