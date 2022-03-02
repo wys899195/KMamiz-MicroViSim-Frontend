@@ -88,6 +88,10 @@ export class DependencyGraphFactory {
     const { highlightNodes, highlightLinks } = this.ClearHighlight(info);
     if (link) {
       highlightLinks.add(link);
+      const reversed = link.target.links.find(
+        (l: any) => l.target === link.source
+      );
+      if (reversed) highlightLinks.add(reversed);
       highlightNodes.add(link.source);
       highlightNodes.add(link.target);
     }
