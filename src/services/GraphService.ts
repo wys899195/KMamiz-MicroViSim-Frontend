@@ -19,8 +19,10 @@ export default class GraphService {
 
   private readonly prefix = `${Config.ApiHost}${Config.ApiPrefix}`;
 
-  async getDependencyGraph() {
-    const res = await fetch(`${this.prefix}/graph/dependency`);
+  async getDependencyGraph(showEndpoint: boolean) {
+    const res = await fetch(
+      `${this.prefix}/graph/dependency/${showEndpoint ? "endpoint" : "service"}`
+    );
     if (!res.ok) return null;
     return (await res.json()) as IGraphData;
   }

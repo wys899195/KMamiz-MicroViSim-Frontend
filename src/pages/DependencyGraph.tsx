@@ -10,12 +10,19 @@ import InformationWindow from "../components/InformationWindow";
 import IDisplayNodeInfo from "../entities/IDisplayNodeInfo";
 import ViewportUtils from "../classes/ViewportUtils";
 import GraphService from "../services/GraphService";
+import { Card, FormControlLabel, FormGroup, Switch } from "@mui/material";
 
 const useStyles = makeStyles(() => ({
   root: {
     width: "100%",
     height: "calc(100vh - 64px)",
     overflow: "hidden",
+  },
+  switch: {
+    position: "absolute",
+    top: "5em",
+    right: "1em",
+    paddingLeft: "0.8em",
   },
 }));
 
@@ -26,6 +33,7 @@ export default function DependencyGraph() {
   const [data, setData] = useState<any>();
   const [highlightInfo, setHighlightInfo] = useHoverHighlight();
   const [displayInfo, setDisplayInfo] = useState<IDisplayNodeInfo | null>(null);
+  const [showEndpoint, setShowEndpoint] = useState(true);
 
   useLayoutEffect(() => {
     const unsubscribe = ViewportUtils.getInstance().subscribe(([vw, vh]) =>
@@ -36,7 +44,7 @@ export default function DependencyGraph() {
 
   useEffect(() => {
     GraphService.getInstance()
-      .getDependencyGraph()
+      .getDependencyGraph(showEndpoint)
       .then((data) => {
         if (!data) return;
         setData(DependencyGraphUtils.ProcessData(data));
@@ -44,7 +52,7 @@ export default function DependencyGraph() {
           graphRef.current.zoom(4, 0);
         }, 10);
       });
-  }, []);
+  }, [showEndpoint]);
 
   return (
     <div className={classes.root}>
@@ -63,6 +71,19 @@ export default function DependencyGraph() {
         />
       </div>
       <InformationWindow info={displayInfo} />
+      <Card className={classes.switch}>
+        <FormGroup>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={showEndpoint}
+                onChange={(e) => setShowEndpoint(e.target.checked)}
+              />
+            }
+            label="Show endpoints"
+          />
+        </FormGroup>
+      </Card>
     </div>
   );
 }
