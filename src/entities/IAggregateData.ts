@@ -21,6 +21,7 @@ export interface IAggregateServiceInfo {
 }
 export interface IAggregateEndpointInfo {
   uniqueServiceName: string;
+  uniqueEndpointName: string;
   labelName: string;
   method: IRequestTypeUpper;
   totalRequests: number;
