@@ -63,9 +63,17 @@ export default function Description(props: { info: IDisplayNodeInfo | null }) {
       const services = aggDataSnap?.services.find(
         (s) => s.uniqueServiceName === info.uniqueServiceName
       );
-      const endpoint = services?.endpoints.find(
+      const endpoints = services?.endpoints.filter(
         (e) => e.labelName === info.labelName && e.method === info.method
       );
+      const endpoint = endpoints?.reduce((prev, curr) => {
+        prev.totalRequests += curr.totalRequests;
+        prev.totalRequestErrors += curr.totalRequestErrors;
+        prev.totalServerErrors += curr.totalServerErrors;
+        prev.avgLatencyCV += curr.avgLatencyCV;
+        return prev;
+      });
+      if (endpoint) endpoint.avgLatencyCV /= endpoints!.length;
       setEndpointInfo(endpoint);
     }
   }, [aggDataSnap, endpointDataType]);
