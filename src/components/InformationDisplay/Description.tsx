@@ -1,5 +1,5 @@
 import { Chip, Tooltip } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import IAggregateData, {
   IAggregateEndpointInfo,
   IAggregateServiceInfo,
@@ -27,6 +27,32 @@ export default function Description(props: { info: IDisplayNodeInfo | null }) {
   const [endpointInfo, setEndpointInfo] = useState<IAggregateEndpointInfo>();
   const [endpointDataType, setEndpointDataType] = useState<IEndpointDataType>();
   const [aggDataSnap, setAggDataSnap] = useState<IAggregateData>();
+  const combinedMap = useMemo(() => {
+    const service = aggDataSnap?.services.find(
+      (s) => s.uniqueServiceName === props.info?.uniqueServiceName
+    );
+    if (!service) return;
+    const endpointMap = new Map<string, IAggregateEndpointInfo[]>();
+    service.endpoints.forEach((e) => {
+      endpointMap.set(
+        e.labelName,
+        (endpointMap.get(e.labelName) || []).concat([e])
+      );
+    });
+
+    const combinedMap = new Map<string, IAggregateEndpointInfo>();
+    [...endpointMap.entries()].map(([label, endpoints]) => {
+      const combined = endpoints.reduce((prev, curr) => {
+        prev.totalRequests += curr.totalRequests;
+        prev.totalRequestErrors += curr.totalRequestErrors;
+        prev.totalServerErrors += curr.totalServerErrors;
+        prev.avgLatencyCV += curr.avgLatencyCV;
+        return prev;
+      });
+      combinedMap.set(label, combined);
+    });
+    return combinedMap;
+  }, [aggDataSnap]);
 
   useEffect(() => {
     const { info } = props;
@@ -59,24 +85,15 @@ export default function Description(props: { info: IDisplayNodeInfo | null }) {
         )
       );
     }
-    if (info.type === "EP") {
-      const services = aggDataSnap?.services.find(
-        (s) => s.uniqueServiceName === info.uniqueServiceName
-      );
-      const endpoints = services?.endpoints.filter(
-        (e) => e.labelName === info.labelName && e.method === info.method
-      );
-      const endpoint = endpoints?.reduce((prev, curr) => {
-        prev.totalRequests += curr.totalRequests;
-        prev.totalRequestErrors += curr.totalRequestErrors;
-        prev.totalServerErrors += curr.totalServerErrors;
-        prev.avgLatencyCV += curr.avgLatencyCV;
-        return prev;
-      });
-      if (endpoint) endpoint.avgLatencyCV /= endpoints!.length;
-      setEndpointInfo(endpoint);
-    }
   }, [aggDataSnap, endpointDataType]);
+
+  useEffect(() => {
+    const { info } = props;
+    if (!info) return;
+    if (info.type === "EP") {
+      setEndpointInfo(combinedMap?.get(info.labelName));
+    }
+  }, [combinedMap]);
 
   switch (props.info?.type) {
     case "SRV":
