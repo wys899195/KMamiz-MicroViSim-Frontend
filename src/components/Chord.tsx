@@ -7,7 +7,7 @@ import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 import ViewportUtils from "../classes/ViewportUtils";
 import ChordUtils from "../classes/ChordUtils";
 import { Button, Card } from "@mui/material";
-import IChordData from "../entities/IChordData";
+import { TChordData } from "../entities/TChordData";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -27,7 +27,7 @@ const useStyles = makeStyles(() => ({
 
 export type ChordDiagramOptions = {
   title: string;
-  chordData: IChordData;
+  chordData: TChordData;
 };
 
 export default function Chord(props: ChordDiagramOptions) {

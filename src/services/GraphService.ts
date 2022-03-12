@@ -1,9 +1,8 @@
 import Config from "../../Config";
 import { Color } from "../classes/ColorUtils";
-import IAreaLineChartData from "../entities/IAreaLineChartData";
-import IChordData from "../entities/IChordData";
-import IChordRadius from "../entities/IChordRadius";
-import IGraphData from "../entities/IGraphData";
+import { TAreaLineChartData } from "../entities/TAreaLineChartData";
+import { TChordData, TChordRadius } from "../entities/TChordData";
+import { TGraphData } from "../entities/TGraphData";
 import { DataView } from "./DataView";
 
 type RawChordData = {
@@ -11,7 +10,7 @@ type RawChordData = {
     id: string;
     name: string;
   }[];
-  links: IChordRadius[];
+  links: TChordRadius[];
 };
 export default class GraphService {
   private static instance?: GraphService;
@@ -24,7 +23,7 @@ export default class GraphService {
       `${this.prefix}/graph/dependency/${showEndpoint ? "endpoint" : "service"}`
     );
     if (!res.ok) return null;
-    return (await res.json()) as IGraphData;
+    return (await res.json()) as TGraphData;
   }
 
   async getAreaLineData(uniqueServiceName?: string) {
@@ -33,7 +32,7 @@ export default class GraphService {
       : "";
     const res = await fetch(`${this.prefix}/graph/line${postfix}`);
     if (!res.ok) return [];
-    return (await res.json()) as IAreaLineChartData[];
+    return (await res.json()) as TAreaLineChartData[];
   }
 
   async getDirectChord() {
@@ -44,7 +43,7 @@ export default class GraphService {
     return await this.getChordData("/graph/chord/indirect");
   }
 
-  private async getChordData(path: string): Promise<IChordData | null> {
+  private async getChordData(path: string): Promise<TChordData | null> {
     const res = await fetch(`${this.prefix}${path}`);
     if (!res.ok) return null;
     const rawData = (await res.json()) as RawChordData;
@@ -57,40 +56,40 @@ export default class GraphService {
     };
   }
 
-  subscribeToDependencyGraph(next: (data?: IGraphData) => void) {
-    return DataView.getInstance().subscribe<IGraphData>(
+  subscribeToDependencyGraph(next: (data?: TGraphData) => void) {
+    return DataView.getInstance().subscribe<TGraphData>(
       `${this.prefix}/graph/dependency`,
       (_, data) => next(data)
     );
   }
 
   subscribeToAreaLineData(
-    next: (data: IAreaLineChartData[]) => void,
+    next: (data: TAreaLineChartData[]) => void,
     uniqueServiceName?: string
   ) {
     const postfix = uniqueServiceName
       ? `/${encodeURIComponent(uniqueServiceName)}`
       : "";
 
-    return DataView.getInstance().subscribe<IAreaLineChartData[]>(
+    return DataView.getInstance().subscribe<TAreaLineChartData[]>(
       `${this.prefix}/graph/line${postfix}`,
       (_, data) => next(data || [])
     );
   }
 
-  subscribeToDirectChord(next: (data?: IChordData) => void) {
+  subscribeToDirectChord(next: (data?: TChordData) => void) {
     return GraphService.getInstance().subscribeToChord(
       next,
       "/graph/chord/direct"
     );
   }
-  subscribeToInDirectChord(next: (data?: IChordData) => void) {
+  subscribeToInDirectChord(next: (data?: TChordData) => void) {
     return GraphService.getInstance().subscribeToChord(
       next,
       "/graph/chord/indirect"
     );
   }
-  private subscribeToChord(next: (data?: IChordData) => void, path: string) {
+  private subscribeToChord(next: (data?: TChordData) => void, path: string) {
     return DataView.getInstance().subscribe<RawChordData>(
       `${this.prefix}${path}`,
       (_, data) => {

@@ -1,7 +1,7 @@
 import Config from "../../Config";
-import IAggregateData from "../entities/IAggregateData";
-import IEndpointDataType from "../entities/IEndpointDataType";
-import IHistoryData from "../entities/IHistoryData";
+import { TAggregateData } from "../entities/TAggregateData";
+import IEndpointDataType from "../entities/TEndpointDataType";
+import { THistoryData } from "../entities/THistoryData";
 import { DataView } from "./DataView";
 
 export default class DataService {
@@ -15,7 +15,7 @@ export default class DataService {
       `${this.prefix}/data/aggregate${namespace ? "/" + namespace : ""}`
     );
     if (!res.ok) return null;
-    return (await res.json()) as IAggregateData;
+    return (await res.json()) as TAggregateData;
   }
 
   async getHistoryData(namespace?: string) {
@@ -23,7 +23,7 @@ export default class DataService {
       `${this.prefix}/data/history${namespace ? "/" + namespace : ""}`
     );
     if (!res.ok) return [];
-    return (await res.json()) as IHistoryData[];
+    return (await res.json()) as THistoryData[];
   }
 
   async getEndpointDataType(uniqueLabelName: string) {
@@ -35,25 +35,25 @@ export default class DataService {
   }
 
   subscribeToAggregateData(
-    next: (data?: IAggregateData) => void,
+    next: (data?: TAggregateData) => void,
     namespace?: string
   ) {
     const url = `${this.prefix}/data/aggregate${
       namespace ? "/" + namespace : ""
     }`;
-    return DataView.getInstance().subscribe<IAggregateData>(url, (_, data) => {
+    return DataView.getInstance().subscribe<TAggregateData>(url, (_, data) => {
       next(data);
     });
   }
 
   subscribeToHistoryData(
-    next: (data: IHistoryData[]) => void,
+    next: (data: THistoryData[]) => void,
     namespace?: string
   ) {
     const url = `${this.prefix}/data/history${
       namespace ? "/" + namespace : ""
     }`;
-    return DataView.getInstance().subscribe<IHistoryData[]>(url, (_, data) => {
+    return DataView.getInstance().subscribe<THistoryData[]>(url, (_, data) => {
       next(data || []);
     });
   }

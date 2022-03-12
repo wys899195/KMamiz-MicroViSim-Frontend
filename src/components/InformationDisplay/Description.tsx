@@ -1,11 +1,12 @@
 import { Chip, Tooltip } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
-import IAggregateData, {
-  IAggregateEndpointInfo,
-  IAggregateServiceInfo,
-} from "../../entities/IAggregateData";
-import IDisplayNodeInfo from "../../entities/IDisplayNodeInfo";
-import IEndpointDataType from "../../entities/IEndpointDataType";
+import {
+  TAggregateData,
+  TAggregateEndpointInfo,
+  TAggregateServiceInfo,
+} from "../../entities/TAggregateData";
+import { TDisplayNodeInfo } from "../../entities/TDisplayNodeInfo";
+import IEndpointDataType from "../../entities/TEndpointDataType";
 import DataService from "../../services/DataService";
 import EndpointInfo from "./EndpointInfo";
 import ServiceInfo from "./ServiceInfo";
@@ -21,18 +22,18 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-export default function Description(props: { info: IDisplayNodeInfo | null }) {
+export default function Description(props: { info: TDisplayNodeInfo | null }) {
   const classes = useStyles();
-  const [serviceInfo, setServiceInfo] = useState<IAggregateServiceInfo[]>();
-  const [endpointInfo, setEndpointInfo] = useState<IAggregateEndpointInfo>();
+  const [serviceInfo, setServiceInfo] = useState<TAggregateServiceInfo[]>();
+  const [endpointInfo, setEndpointInfo] = useState<TAggregateEndpointInfo>();
   const [endpointDataType, setEndpointDataType] = useState<IEndpointDataType>();
-  const [aggDataSnap, setAggDataSnap] = useState<IAggregateData>();
+  const [aggDataSnap, setAggDataSnap] = useState<TAggregateData>();
   const combinedMap = useMemo(() => {
     const service = aggDataSnap?.services.find(
       (s) => s.uniqueServiceName === props.info?.uniqueServiceName
     );
     if (!service) return;
-    const endpointMap = new Map<string, IAggregateEndpointInfo[]>();
+    const endpointMap = new Map<string, TAggregateEndpointInfo[]>();
     service.endpoints.forEach((e) => {
       endpointMap.set(
         e.labelName,
@@ -40,7 +41,7 @@ export default function Description(props: { info: IDisplayNodeInfo | null }) {
       );
     });
 
-    const combinedMap = new Map<string, IAggregateEndpointInfo>();
+    const combinedMap = new Map<string, TAggregateEndpointInfo>();
     [...endpointMap.entries()].map(([label, endpoints]) => {
       const combined = endpoints.reduce((prev, curr) => {
         prev.totalRequests += curr.totalRequests;

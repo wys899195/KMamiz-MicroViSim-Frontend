@@ -1,4 +1,4 @@
-import IDisplayNodeInfo from "../entities/IDisplayNodeInfo";
+import { TDisplayNodeInfo } from "../entities/TDisplayNodeInfo";
 import { DependencyGraphUtils, HighlightInfo } from "./DependencyGraphUtils";
 
 export class DependencyGraphFactory {
@@ -8,7 +8,7 @@ export class DependencyGraphFactory {
     highlightInfo: HighlightInfo,
     setHighlightInfo: (info: HighlightInfo) => void,
     graphRef: any,
-    setDisplayNodeInfo: (info: IDisplayNodeInfo | null) => void
+    setDisplayNodeInfo: (info: TDisplayNodeInfo | null) => void
   ) {
     const { highlightLinks, highlightNodes, focusNode } = highlightInfo;
     return {
@@ -53,7 +53,7 @@ export class DependencyGraphFactory {
   static OnClick(
     node: any,
     graphRef: any,
-    setDisplayNodeInfo: (info: IDisplayNodeInfo | null) => void
+    setDisplayNodeInfo: (info: TDisplayNodeInfo | null) => void
   ) {
     let type: "EX" | "SRV" | "EP" = "EP";
     if (node.id === "null") type = "EX";

@@ -1,7 +1,7 @@
 import { FiberManualRecord, Hexagon } from "@mui/icons-material";
 import { Card, Chip, Tooltip } from "@mui/material";
 import { makeStyles } from "@mui/styles";
-import IDisplayNodeInfo from "../entities/IDisplayNodeInfo";
+import { TDisplayNodeInfo } from "../entities/TDisplayNodeInfo";
 import Description from "./InformationDisplay/Description";
 
 const useStyles = makeStyles(() => ({
@@ -25,7 +25,7 @@ const useStyles = makeStyles(() => ({
 }));
 
 export default function InformationWindow(props: {
-  info: IDisplayNodeInfo | null;
+  info: TDisplayNodeInfo | null;
 }) {
   const classes = useStyles();
   return props.info ? (
@@ -80,7 +80,7 @@ function getIcon(type: "EX" | "SRV" | "EP" | undefined) {
   return undefined;
 }
 
-function getTitle(info: IDisplayNodeInfo | null) {
+function getTitle(info: TDisplayNodeInfo | null) {
   switch (info?.type) {
     case "EX":
       return "External System";

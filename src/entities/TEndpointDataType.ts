@@ -1,4 +1,4 @@
-import { IRequestTypeUpper } from "./IRequestType";
+import { TRequestTypeUpper } from "./TRequestType";
 
 export default interface IEndpointDataType {
   _id?: string;
@@ -9,7 +9,7 @@ export default interface IEndpointDataType {
   version: string;
   // trace name
   labelName: string;
-  method: IRequestTypeUpper;
+  method: TRequestTypeUpper;
   schemas: IEndpointDataSchema[];
 }
 

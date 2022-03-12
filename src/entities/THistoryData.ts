@@ -1,12 +1,12 @@
-import { IRequestTypeUpper } from "./IRequestType";
+import { TRequestTypeUpper } from "./TRequestType";
 
-export default interface IHistoryData {
+export type THistoryData = {
   _id?: string;
   date: Date;
-  services: IHistoryServiceInfo[];
-}
+  services: THistoryServiceInfo[];
+};
 
-export interface IHistoryServiceInfo {
+export type THistoryServiceInfo = {
   _id?: string;
   uniqueServiceName: string;
   date: Date;
@@ -18,16 +18,16 @@ export interface IHistoryServiceInfo {
   requestErrors: number;
   risk?: number;
   latencyCV: number;
-  endpoints: IHistoryEndpointInfo[];
-}
+  endpoints: THistoryEndpointInfo[];
+};
 
-export interface IHistoryEndpointInfo {
+export type THistoryEndpointInfo = {
   uniqueServiceName: string;
   uniqueEndpointName: string;
   labelName: string;
-  method: IRequestTypeUpper;
+  method: TRequestTypeUpper;
   requests: number;
   serverErrors: number;
   requestErrors: number;
   latencyCV: number;
-}
+};

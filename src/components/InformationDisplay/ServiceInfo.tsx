@@ -15,7 +15,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import { Article, FiberManualRecord, Warning } from "@mui/icons-material";
-import { IAggregateServiceInfo } from "../../entities/IAggregateData";
+import { TAggregateServiceInfo } from "../../entities/TAggregateData";
 import RequestDonutChart from "../RequestDonutChart";
 
 function roundNumber(num: number) {
@@ -26,7 +26,7 @@ function sumField(field: string, obj: any[]) {
 }
 
 export default function ServiceInfo(props: {
-  services: IAggregateServiceInfo[];
+  services: TAggregateServiceInfo[];
 }) {
   props.services.sort((a, b) => a.version.localeCompare(b.version));
 

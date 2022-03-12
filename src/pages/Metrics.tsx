@@ -4,11 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import AreaLineChartUtils from "../classes/AreaLineChartUtils";
 import AreaLineChart from "../components/AreaLineChart";
 import Chord from "../components/Chord";
-import IAreaLineChartData, {
-  IAreaLineChartDataFields,
-} from "../entities/IAreaLineChartData";
+import {
+  TAreaLineChartData,
+  TAreaLineChartDataFields,
+} from "../entities/TAreaLineChartData";
 import GraphService from "../services/GraphService";
-import IChordData from "../entities/IChordData";
+import { TChordData } from "../entities/TChordData";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -22,11 +23,11 @@ const useStyles = makeStyles(() => ({
 
 export default function Metrics() {
   const classes = useStyles();
-  const sChordRef = useRef<IChordData>();
-  const iChordRef = useRef<IChordData>();
+  const sChordRef = useRef<TChordData>();
+  const iChordRef = useRef<TChordData>();
 
   const [mappedHistoryData, setMappedHistoryData] = useState<
-    IAreaLineChartData[]
+    TAreaLineChartData[]
   >([]);
 
   useEffect(() => {
@@ -57,7 +58,7 @@ export default function Metrics() {
 
   const areaCharts: {
     name: string;
-    field: IAreaLineChartDataFields;
+    field: TAreaLineChartDataFields;
     options?: any;
   }[] = [
     { name: "Requests", field: "requests" },

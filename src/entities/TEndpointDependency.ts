@@ -1,19 +1,19 @@
-import { IRequestTypeUpper } from "./IRequestType";
+import { TRequestTypeUpper } from "./TRequestType";
 
-export interface IEndpointDependency {
-  endpoint: IEndpointInfo;
+export type TEndpointDependency = {
+  endpoint: TEndpointInfo;
   dependsOn: {
-    endpoint: IEndpointInfo;
+    endpoint: TEndpointInfo;
     distance: number;
     type: "SERVER";
   }[];
   dependBy: {
-    endpoint: IEndpointInfo;
+    endpoint: TEndpointInfo;
     distance: number;
     type: "CLIENT";
   }[];
-}
-export interface IEndpointInfo {
+};
+export type TEndpointInfo = {
   uniqueServiceName: string;
   uniqueEndpointName: string;
   // trace name, label
@@ -27,12 +27,12 @@ export interface IEndpointInfo {
   host: string;
   path: string;
   port: string;
-  method: IRequestTypeUpper;
+  method: TRequestTypeUpper;
   clusterName: string;
-}
+};
 
-export type TEndpointDependency = {
-  endpoint: IEndpointInfo;
+export type TEndpointDependencyCombined = {
+  endpoint: TEndpointInfo;
   distance: number;
   type: "SERVER" | "CLIENT";
 };

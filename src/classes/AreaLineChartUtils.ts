@@ -1,7 +1,8 @@
 import { ApexOptions } from "apexcharts";
-import IAreaLineChartData, {
-  IAreaLineChartDataFields,
-} from "../entities/IAreaLineChartData";
+import {
+  TAreaLineChartData,
+  TAreaLineChartDataFields,
+} from "../entities/TAreaLineChartData";
 import { Color } from "./ColorUtils";
 
 export default class AreaLineChartUtils {
@@ -38,10 +39,10 @@ export default class AreaLineChartUtils {
   }
 
   static MappedBaseDataToSeriesData(
-    data: IAreaLineChartData[],
-    field: IAreaLineChartDataFields
+    data: TAreaLineChartData[],
+    field: TAreaLineChartDataFields
   ): ApexAxisChartSeries {
-    const serviceMap = new Map<string, IAreaLineChartData[]>();
+    const serviceMap = new Map<string, TAreaLineChartData[]>();
 
     data.forEach((d) => {
       serviceMap.set(d.name, [...(serviceMap.get(d.name) || []), d]);

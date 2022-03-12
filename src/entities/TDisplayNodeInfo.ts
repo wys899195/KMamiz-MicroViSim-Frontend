@@ -1,4 +1,4 @@
-export default interface IDisplayNodeInfo {
+export type TDisplayNodeInfo = {
   type: "SRV" | "EP" | "EX";
   labelName: string;
   uniqueServiceName?: string;
@@ -7,4 +7,4 @@ export default interface IDisplayNodeInfo {
   version?: string;
   name?: string;
   method?: string;
-}
+};

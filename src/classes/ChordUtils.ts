@@ -1,7 +1,6 @@
 import { color, percent, Rectangle, Root } from "@amcharts/amcharts5";
 import { ChordDirected } from "@amcharts/amcharts5/flow";
-import IChordNode from "../entities/IChordNode";
-import IChordRadius from "../entities/IChordRadius";
+import { TChordNode, TChordRadius } from "../entities/TChordData";
 
 export default class ChordUtils {
   static CreateDefault(root: Root) {
@@ -25,8 +24,8 @@ export default class ChordUtils {
   static FillData(
     root: Root,
     chord: ChordDirected,
-    links: IChordRadius[],
-    nodes?: IChordNode[]
+    links: TChordRadius[],
+    nodes?: TChordNode[]
   ) {
     const series = root.container.children.push(chord);
 

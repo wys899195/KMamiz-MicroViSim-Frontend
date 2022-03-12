@@ -1,7 +1,7 @@
 import { Card, CardContent, Typography } from "@mui/material";
 import { makeStyles } from "@mui/styles";
-import { IAggregateEndpointInfo } from "../../entities/IAggregateData";
-import IEndpointDataType from "../../entities/IEndpointDataType";
+import { TAggregateEndpointInfo } from "../../entities/TAggregateData";
+import IEndpointDataType from "../../entities/TEndpointDataType";
 import RequestDonutChart from "../RequestDonutChart";
 
 const useStyles = makeStyles(() => ({
@@ -15,7 +15,7 @@ const useStyles = makeStyles(() => ({
 }));
 
 export default function EndpointInfo(props: {
-  endpointInfo?: IAggregateEndpointInfo;
+  endpointInfo?: TAggregateEndpointInfo;
   dataType?: IEndpointDataType;
 }) {
   const classes = useStyles();

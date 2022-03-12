@@ -7,7 +7,7 @@ import {
   DependencyGraphUtils,
 } from "../classes/DependencyGraphUtils";
 import InformationWindow from "../components/InformationWindow";
-import IDisplayNodeInfo from "../entities/IDisplayNodeInfo";
+import { TDisplayNodeInfo } from "../entities/TDisplayNodeInfo";
 import ViewportUtils from "../classes/ViewportUtils";
 import GraphService from "../services/GraphService";
 import { Card, FormControlLabel, FormGroup, Switch } from "@mui/material";
@@ -32,7 +32,7 @@ export default function DependencyGraph() {
   const [size, setSize] = useState([0, 0]);
   const [data, setData] = useState<any>();
   const [highlightInfo, setHighlightInfo] = useHoverHighlight();
-  const [displayInfo, setDisplayInfo] = useState<IDisplayNodeInfo | null>(null);
+  const [displayInfo, setDisplayInfo] = useState<TDisplayNodeInfo | null>(null);
   const [showEndpoint, setShowEndpoint] = useState(true);
 
   useLayoutEffect(() => {

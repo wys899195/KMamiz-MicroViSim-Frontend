@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction, useState } from "react";
-import IGraphData, { ILink, INode } from "../entities/IGraphData";
+import { TGraphData, TLink, TNode } from "../entities/TGraphData";
 import { Color } from "./ColorUtils";
 
 export type HighlightInfo = {
@@ -33,10 +33,10 @@ export class DependencyGraphUtils {
     linkLabel: (d: any) => `${d.source.name} ➔ ${d.target.name}`,
   };
 
-  static ProcessData(data: IGraphData) {
+  static ProcessData(data: TGraphData) {
     const graphData: {
-      nodes: (INode & { highlight: INode[]; links: ILink[] })[];
-      links: ILink[];
+      nodes: (TNode & { highlight: TNode[]; links: TLink[] })[];
+      links: TLink[];
     } = {
       nodes: data.nodes.map((n) => ({
         ...n,
