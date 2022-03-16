@@ -14,7 +14,6 @@ export default class AreaLineChartUtils {
       },
       chart: {
         type: "area",
-        height: 350,
       },
       dataLabels: {
         enabled: false,
