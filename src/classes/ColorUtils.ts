@@ -92,6 +92,11 @@ export class Color {
     return Color.fromHex("#fff");
   }
 
+  darker(maxLightness: number) {
+    const { h, s, l } = this.hsl;
+    return Color.fromHSL(h, s, l > maxLightness ? maxLightness : l);
+  }
+
   private static isValidRGB(val: number) {
     return val >= 0 && val <= 255;
   }

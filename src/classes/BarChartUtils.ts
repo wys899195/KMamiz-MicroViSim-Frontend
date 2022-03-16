@@ -1,5 +1,6 @@
 import { ApexOptions } from "apexcharts";
 import { TTotalServiceInterfaceCohesion } from "../entities/TTotalServiceInterfaceCohesion";
+import { Color } from "./ColorUtils";
 
 export default class BarChartUtils {
   static DefaultOptions(title: string, categories: any[]): ApexOptions {
@@ -37,6 +38,9 @@ export default class BarChartUtils {
         intersect: false,
       },
       xaxis: { categories },
+      legend: {
+        position: "top",
+      },
     };
   }
 
@@ -56,6 +60,7 @@ export default class BarChartUtils {
     ];
     return fields.map(({ f, name }) => ({
       name,
+      color: Color.generateFromString(name).darker(40).hex,
       data: cohesions.map((c) => Math.floor((c as any)[f] * 100) / 100),
     }));
   }

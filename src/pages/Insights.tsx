@@ -8,6 +8,8 @@ import { Unsubscribe } from "../services/DataView";
 import ReactApexChart from "react-apexcharts";
 import BarChartUtils from "../classes/BarChartUtils";
 import { TTotalServiceInterfaceCohesion } from "../entities/TTotalServiceInterfaceCohesion";
+import { TServiceInstability } from "../entities/TServiceInstability";
+import StackedLineChartUtils from "../classes/StackedLineChartUtils";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -42,6 +44,7 @@ export default function Insights() {
   const [cohesion, setCohesion] = useState<TTotalServiceInterfaceCohesion[]>(
     []
   );
+  const [instability, setInstability] = useState<TServiceInstability[]>([]);
 
   useEffect(() => {
     const unsubscribe = [
@@ -56,6 +59,7 @@ export default function Insights() {
         iChordRef
       ),
       GraphService.getInstance().subscribeToServiceCohesion(setCohesion),
+      GraphService.getInstance().subscribeToServiceInstability(setInstability),
     ];
 
     return () => {
@@ -74,17 +78,33 @@ export default function Insights() {
             <Chord title="Indirect Service Dependencies" chordData={iChord} />
           )}
         </Grid>
-      </Grid>
-      <Grid item xs={12}>
-        <ReactApexChart
-          type="bar"
-          height={600}
-          options={BarChartUtils.DefaultOptions(
-            "Service Cohesion",
-            cohesion.map((c) => c.name)
-          )}
-          series={BarChartUtils.SerialFromServiceCohesion(cohesion)}
-        ></ReactApexChart>
+        <Grid item xs={6}>
+          <ReactApexChart
+            type="bar"
+            height={600}
+            options={BarChartUtils.DefaultOptions(
+              "Service Cohesion",
+              cohesion.map(({ name }) => name)
+            )}
+            series={BarChartUtils.SerialFromServiceCohesion(cohesion)}
+          ></ReactApexChart>
+        </Grid>
+        <Grid item xs={6}>
+          <ReactApexChart
+            type="line"
+            height={600}
+            options={{
+              ...StackedLineChartUtils.DefaultOptions(
+                "Service Instability (SDP)",
+                instability.map(({ name }) => name)
+              ),
+              yaxis: StackedLineChartUtils.YAxisForServiceInstability(),
+            }}
+            series={StackedLineChartUtils.SerialFromServiceInstability(
+              instability
+            )}
+          ></ReactApexChart>
+        </Grid>
       </Grid>
     </Box>
   );
