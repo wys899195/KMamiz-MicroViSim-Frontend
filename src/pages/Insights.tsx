@@ -5,11 +5,15 @@ import { TChordData } from "../entities/TChordData";
 import GraphService from "../services/GraphService";
 import Chord from "../components/Chord";
 import { Unsubscribe } from "../services/DataView";
+import ReactApexChart from "react-apexcharts";
+import BarChartUtils from "../classes/BarChartUtils";
+import { TTotalServiceInterfaceCohesion } from "../entities/TTotalServiceInterfaceCohesion";
 
 const useStyles = makeStyles(() => ({
   root: {
     width: "100%",
     overflowX: "clip",
+    marginBottom: "5em",
   },
   chord: {
     padding: "0.5em",
@@ -35,6 +39,9 @@ export default function Insights() {
   const iChordRef = useRef<TChordData>();
   const [sChord, setSChord] = useState<TChordData>();
   const [iChord, setIChord] = useState<TChordData>();
+  const [cohesion, setCohesion] = useState<TTotalServiceInterfaceCohesion[]>(
+    []
+  );
 
   useEffect(() => {
     const unsubscribe = [
@@ -48,6 +55,7 @@ export default function Insights() {
         setIChord,
         iChordRef
       ),
+      GraphService.getInstance().subscribeToServiceCohesion(setCohesion),
     ];
 
     return () => {
@@ -66,6 +74,17 @@ export default function Insights() {
             <Chord title="Indirect Service Dependencies" chordData={iChord} />
           )}
         </Grid>
+      </Grid>
+      <Grid item xs={12}>
+        <ReactApexChart
+          type="bar"
+          height={600}
+          options={BarChartUtils.DefaultOptions(
+            "Service Cohesion",
+            cohesion.map((c) => c.name)
+          )}
+          series={BarChartUtils.SerialFromServiceCohesion(cohesion)}
+        ></ReactApexChart>
       </Grid>
     </Box>
   );

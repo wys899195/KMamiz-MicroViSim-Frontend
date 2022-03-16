@@ -3,6 +3,8 @@ import { Color } from "../classes/ColorUtils";
 import { TAreaLineChartData } from "../entities/TAreaLineChartData";
 import { TChordData, TChordRadius } from "../entities/TChordData";
 import { TGraphData } from "../entities/TGraphData";
+import { TServiceInstability } from "../entities/TServiceInstability";
+import { TTotalServiceInterfaceCohesion } from "../entities/TTotalServiceInterfaceCohesion";
 import { DataView } from "./DataView";
 
 type RawChordData = {
@@ -105,6 +107,26 @@ export default class GraphService {
             : data
         );
       }
+    );
+  }
+
+  subscribeToServiceCohesion(
+    next: (data: TTotalServiceInterfaceCohesion[]) => void,
+    namespace?: string
+  ) {
+    return DataView.getInstance().subscribe<TTotalServiceInterfaceCohesion[]>(
+      `${this.prefix}/graph/cohesion${namespace ? `/${namespace}` : ""}`,
+      (_, data) => next(data || [])
+    );
+  }
+
+  subscribeToServiceInstability(
+    next: (data: TServiceInstability[]) => void,
+    namespace?: string
+  ) {
+    return DataView.getInstance().subscribe<TServiceInstability[]>(
+      `${this.prefix}/graph/instability${namespace ? `/${namespace}` : ""}`,
+      (_, data) => next(data || [])
     );
   }
 }
