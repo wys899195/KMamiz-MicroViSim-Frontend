@@ -58,8 +58,16 @@ export default function Insights() {
         setIChord,
         iChordRef
       ),
-      GraphService.getInstance().subscribeToServiceCohesion(setCohesion),
-      GraphService.getInstance().subscribeToServiceInstability(setInstability),
+      GraphService.getInstance().subscribeToServiceCohesion((data) => {
+        if (JSON.stringify(data) !== JSON.stringify(cohesion)) {
+          setCohesion(data);
+        }
+      }),
+      GraphService.getInstance().subscribeToServiceInstability((data) => {
+        if (JSON.stringify(data) !== JSON.stringify(instability)) {
+          setInstability(data);
+        }
+      }),
     ];
 
     return () => {
