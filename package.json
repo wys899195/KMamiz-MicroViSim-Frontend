@@ -1,5 +1,5 @@
 {
-  "name": "monitoring-k8s-front",
+  "name": "kmamiz-web",
   "version": "0.0.0",
   "scripts": {
     "dev": "vite",
