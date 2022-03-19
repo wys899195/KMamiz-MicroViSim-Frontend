@@ -7,31 +7,38 @@ import { DataView } from "./DataView";
 export default class DataService {
   private static instance?: DataService;
   static getInstance = () => this.instance || (this.instance = new this());
+  private constructor() {}
 
   private readonly prefix = `${Config.ApiHost}${Config.ApiPrefix}`;
 
-  async getAggregateData(namespace?: string) {
-    const res = await fetch(
-      `${this.prefix}/data/aggregate${namespace ? "/" + namespace : ""}`
-    );
+  private async get<T>(path: string) {
+    const res = await fetch(path);
     if (!res.ok) return null;
-    return (await res.json()) as TAggregateData;
+    return (await res.json()) as T;
+  }
+
+  async getAggregateData(namespace?: string) {
+    const path = `${this.prefix}/data/aggregate${
+      namespace ? "/" + namespace : ""
+    }`;
+    return await DataService.getInstance().get<TAggregateData>(path);
   }
 
   async getHistoryData(namespace?: string) {
-    const res = await fetch(
-      `${this.prefix}/data/history${namespace ? "/" + namespace : ""}`
-    );
-    if (!res.ok) return [];
-    return (await res.json()) as THistoryData[];
+    const path = `${this.prefix}/data/history${
+      namespace ? "/" + namespace : ""
+    }`;
+    return await DataService.getInstance().get<THistoryData[]>(path);
   }
 
   async getEndpointDataType(uniqueLabelName: string) {
-    const res = await fetch(
-      `${this.prefix}/data/datatype/${encodeURIComponent(uniqueLabelName)}`
+    const path = `${this.prefix}/data/datatype/${encodeURIComponent(
+      uniqueLabelName
+    )}`;
+    return (
+      (await DataService.getInstance().get<IEndpointDataType>(path)) ||
+      undefined
     );
-    if (!res.ok) return undefined;
-    return (await res.json()) as IEndpointDataType;
   }
 
   subscribeToAggregateData(

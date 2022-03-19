@@ -18,80 +18,10 @@ type RawChordData = {
 export default class GraphService {
   private static instance?: GraphService;
   static getInstance = () => this.instance || (this.instance = new this());
+  private constructor() {}
 
   private readonly prefix = `${Config.ApiHost}${Config.ApiPrefix}`;
 
-  async getDependencyGraph(showEndpoint: boolean) {
-    const res = await fetch(
-      `${this.prefix}/graph/dependency/${showEndpoint ? "endpoint" : "service"}`
-    );
-    if (!res.ok) return null;
-    return (await res.json()) as TGraphData;
-  }
-
-  async getAreaLineData(uniqueServiceName?: string) {
-    const postfix = uniqueServiceName
-      ? `/${encodeURIComponent(uniqueServiceName)}`
-      : "";
-    const res = await fetch(`${this.prefix}/graph/line${postfix}`);
-    if (!res.ok) return [];
-    return (await res.json()) as TAreaLineChartData[];
-  }
-
-  async getDirectChord() {
-    return await this.getChordData("/graph/chord/direct");
-  }
-
-  async getInDirectChord() {
-    return await this.getChordData("/graph/chord/indirect");
-  }
-
-  private async getChordData(path: string): Promise<TChordData | null> {
-    const res = await fetch(`${this.prefix}${path}`);
-    if (!res.ok) return null;
-    const rawData = (await res.json()) as RawChordData;
-    return {
-      ...rawData,
-      nodes: rawData.nodes.map((n) => ({
-        ...n,
-        fill: Color.generateFromString(n.id).hex,
-      })),
-    };
-  }
-
-  subscribeToDependencyGraph(next: (data?: TGraphData) => void) {
-    return DataView.getInstance().subscribe<TGraphData>(
-      `${this.prefix}/graph/dependency`,
-      (_, data) => next(data)
-    );
-  }
-
-  subscribeToAreaLineData(
-    next: (data: TAreaLineChartData[]) => void,
-    uniqueServiceName?: string
-  ) {
-    const postfix = uniqueServiceName
-      ? `/${encodeURIComponent(uniqueServiceName)}`
-      : "";
-
-    return DataView.getInstance().subscribe<TAreaLineChartData[]>(
-      `${this.prefix}/graph/line${postfix}`,
-      (_, data) => next(data || [])
-    );
-  }
-
-  subscribeToDirectChord(next: (data?: TChordData) => void) {
-    return GraphService.getInstance().subscribeToChord(
-      next,
-      "/graph/chord/direct"
-    );
-  }
-  subscribeToInDirectChord(next: (data?: TChordData) => void) {
-    return GraphService.getInstance().subscribeToChord(
-      next,
-      "/graph/chord/indirect"
-    );
-  }
   private subscribeToChord(next: (data?: TChordData) => void, path: string) {
     return DataView.getInstance().subscribe<RawChordData>(
       `${this.prefix}${path}`,
@@ -111,9 +41,104 @@ export default class GraphService {
     );
   }
 
-  subscribeToArray<T>(path: string, next: (data: T[]) => void) {
+  private subscribeToArray<T>(path: string, next: (data: T[]) => void) {
     return DataView.getInstance().subscribe<T[]>(path, (_, data) =>
       next(data || [])
+    );
+  }
+
+  private async get<T>(path: string) {
+    const res = await fetch(path);
+    if (!res.ok) return null;
+    return (await res.json()) as T;
+  }
+  private async getChordData(path: string): Promise<TChordData | null> {
+    const rawData = await GraphService.getInstance().get<RawChordData>(
+      `${this.prefix}${path}`
+    );
+    if (!rawData) return null;
+    return {
+      ...rawData,
+      nodes: rawData.nodes.map((n) => ({
+        ...n,
+        fill: Color.generateFromString(n.id).hex,
+      })),
+    };
+  }
+
+  async getDependencyGraph(showEndpoint: boolean) {
+    const path = `${this.prefix}/graph/dependency/${
+      showEndpoint ? "endpoint" : "service"
+    }`;
+    return await GraphService.getInstance().get<TGraphData>(path);
+  }
+
+  async getAreaLineData(uniqueServiceName?: string) {
+    const postfix = uniqueServiceName
+      ? `/${encodeURIComponent(uniqueServiceName)}`
+      : "";
+    const path = `${this.prefix}/graph/line${postfix}`;
+    return await GraphService.getInstance().get<TAreaLineChartData[]>(path);
+  }
+
+  async getDirectChord() {
+    return await this.getChordData("/graph/chord/direct");
+  }
+
+  async getInDirectChord() {
+    return await this.getChordData("/graph/chord/indirect");
+  }
+
+  async getServiceCohesion(namespace?: string) {
+    const path = `${this.prefix}/graph/cohesion${
+      namespace ? `/${namespace}` : ""
+    }`;
+    return await GraphService.getInstance().get<
+      TTotalServiceInterfaceCohesion[]
+    >(path);
+  }
+  async getServiceInstability(namespace?: string) {
+    const path = `${this.prefix}/graph/instability${
+      namespace ? `/${namespace}` : ""
+    }`;
+    return await GraphService.getInstance().get<TServiceInstability[]>(path);
+  }
+  async getServiceCoupling(namespace?: string) {
+    const path = `${this.prefix}/graph/coupling${
+      namespace ? `/${namespace}` : ""
+    }`;
+    return await GraphService.getInstance().get<TServiceCoupling[]>(path);
+  }
+
+  subscribeToDependencyGraph(next: (data?: TGraphData) => void) {
+    return DataView.getInstance().subscribe<TGraphData>(
+      `${this.prefix}/graph/dependency`,
+      (_, data) => next(data)
+    );
+  }
+
+  subscribeToAreaLineData(
+    next: (data: TAreaLineChartData[]) => void,
+    uniqueServiceName?: string
+  ) {
+    const postfix = uniqueServiceName
+      ? `/${encodeURIComponent(uniqueServiceName)}`
+      : "";
+    const path = `${this.prefix}/graph/line${postfix}`;
+
+    return GraphService.getInstance().subscribeToArray(path, next);
+  }
+
+  subscribeToDirectChord(next: (data?: TChordData) => void) {
+    return GraphService.getInstance().subscribeToChord(
+      next,
+      "/graph/chord/direct"
+    );
+  }
+  subscribeToInDirectChord(next: (data?: TChordData) => void) {
+    return GraphService.getInstance().subscribeToChord(
+      next,
+      "/graph/chord/indirect"
     );
   }
 
