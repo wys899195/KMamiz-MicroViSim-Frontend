@@ -44,7 +44,7 @@ export default class StackedLineChartUtils {
       type,
       color: Color.generateFromString(name).darker(30).hex,
       data: instability.map(
-        ({ [f]: field }: any) => Math.floor(field * 100) / 100
+        ({ [f]: field }: any) => Math.round(field * 1000) / 1000
       ),
     }));
   }

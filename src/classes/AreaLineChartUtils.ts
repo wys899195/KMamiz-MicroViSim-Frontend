@@ -53,7 +53,7 @@ export default class AreaLineChartUtils {
         color: Color.generateFromString(name).hex,
         data: data.map((d) => ({
           x: d.x,
-          y: d[field] || 0,
+          y: Math.round((d[field] || 0) * 1000) / 1000,
           fillColor: Color.generateFromString(name).hex,
         })),
       };

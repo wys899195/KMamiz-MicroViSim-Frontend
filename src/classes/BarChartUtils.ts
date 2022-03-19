@@ -69,7 +69,7 @@ export default class BarChartUtils {
     return fields.map(({ f, name }) => ({
       name,
       color: Color.generateFromString(name).darker(40).hex,
-      data: data.map((c) => Math.floor(c[f] * 100) / 100),
+      data: data.map((c) => Math.round(c[f] * 1000) / 1000),
     }));
   }
 
