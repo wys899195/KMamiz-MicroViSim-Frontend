@@ -17,7 +17,9 @@ export default class StackedLineChartUtils {
         enabled: false,
       },
       stroke: {
-        width: [1, 1, 4],
+        show: true,
+        width: 1,
+        colors: ["#fff"],
       },
       tooltip: {
         shared: true,
@@ -30,11 +32,11 @@ export default class StackedLineChartUtils {
     };
   }
 
-  static SerialFromServiceInstability(instability: TServiceInstability[]) {
+  static SeriesFromServiceInstability(instability: TServiceInstability[]) {
     const fields = [
       { f: "dependsOn", name: "FanOut (DependsOn)", type: "column" },
       { f: "dependBy", name: "FanIn (DependBy)", type: "column" },
-      { f: "instability", name: "Instability (SDP)", type: "line" },
+      { f: "instability", name: "Instability (SDP)", type: "column" },
     ];
 
     return fields.map(({ f, type, name }) => ({
@@ -47,7 +49,7 @@ export default class StackedLineChartUtils {
     }));
   }
 
-  static YAxisForServiceInstability() {
+  static YAxisForServiceInstability(): ApexYAxis[] {
     return [
       {
         ...StackedLineChartUtils.createBasicAxisSetting("FanOut (DependsOn)"),
@@ -57,15 +59,24 @@ export default class StackedLineChartUtils {
       },
       {
         ...StackedLineChartUtils.createBasicAxisSetting("FanIn (DependBy)"),
+        tooltip: {
+          enabled: true,
+        },
         opposite: true,
+        labels: {
+          offsetX: -7,
+        },
       },
       {
         ...StackedLineChartUtils.createBasicAxisSetting("Instability (SDP)"),
+        tooltip: {
+          enabled: true,
+        },
         opposite: true,
       },
     ];
   }
-  private static createBasicAxisSetting(name: string) {
+  private static createBasicAxisSetting(name: string): ApexYAxis {
     const color = Color.generateFromString(name).darker(30).hex;
     return {
       seriesName: name,

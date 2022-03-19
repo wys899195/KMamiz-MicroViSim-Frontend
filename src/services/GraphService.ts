@@ -3,6 +3,7 @@ import { Color } from "../classes/ColorUtils";
 import { TAreaLineChartData } from "../entities/TAreaLineChartData";
 import { TChordData, TChordRadius } from "../entities/TChordData";
 import { TGraphData } from "../entities/TGraphData";
+import { TServiceCoupling } from "../entities/TServiceCoupling";
 import { TServiceInstability } from "../entities/TServiceInstability";
 import { TTotalServiceInterfaceCohesion } from "../entities/TTotalServiceInterfaceCohesion";
 import { DataView } from "./DataView";
@@ -110,23 +111,39 @@ export default class GraphService {
     );
   }
 
+  subscribeToArray<T>(path: string, next: (data: T[]) => void) {
+    return DataView.getInstance().subscribe<T[]>(path, (_, data) =>
+      next(data || [])
+    );
+  }
+
   subscribeToServiceCohesion(
     next: (data: TTotalServiceInterfaceCohesion[]) => void,
     namespace?: string
   ) {
-    return DataView.getInstance().subscribe<TTotalServiceInterfaceCohesion[]>(
-      `${this.prefix}/graph/cohesion${namespace ? `/${namespace}` : ""}`,
-      (_, data) => next(data || [])
-    );
+    const path = `${this.prefix}/graph/cohesion${
+      namespace ? `/${namespace}` : ""
+    }`;
+    return GraphService.getInstance().subscribeToArray(path, next);
   }
 
   subscribeToServiceInstability(
     next: (data: TServiceInstability[]) => void,
     namespace?: string
   ) {
-    return DataView.getInstance().subscribe<TServiceInstability[]>(
-      `${this.prefix}/graph/instability${namespace ? `/${namespace}` : ""}`,
-      (_, data) => next(data || [])
-    );
+    const path = `${this.prefix}/graph/instability${
+      namespace ? `/${namespace}` : ""
+    }`;
+    return GraphService.getInstance().subscribeToArray(path, next);
+  }
+
+  subscribeToServiceCoupling(
+    next: (data: TServiceCoupling[]) => void,
+    namespace?: string
+  ) {
+    const path = `${this.prefix}/graph/coupling${
+      namespace ? `/${namespace}` : ""
+    }`;
+    return GraphService.getInstance().subscribeToArray(path, next);
   }
 }

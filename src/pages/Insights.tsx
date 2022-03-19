@@ -10,6 +10,7 @@ import BarChartUtils from "../classes/BarChartUtils";
 import { TTotalServiceInterfaceCohesion } from "../entities/TTotalServiceInterfaceCohesion";
 import { TServiceInstability } from "../entities/TServiceInstability";
 import StackedLineChartUtils from "../classes/StackedLineChartUtils";
+import { TServiceCoupling } from "../entities/TServiceCoupling";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -44,6 +45,7 @@ export default function Insights() {
   const [cohesion, setCohesion] = useState<TTotalServiceInterfaceCohesion[]>(
     []
   );
+  const [coupling, setCoupling] = useState<TServiceCoupling[]>([]);
   const [instability, setInstability] = useState<TServiceInstability[]>([]);
 
   useEffect(() => {
@@ -59,6 +61,7 @@ export default function Insights() {
         iChordRef
       ),
       GraphService.getInstance().subscribeToServiceCohesion(setCohesion),
+      GraphService.getInstance().subscribeToServiceCoupling(setCoupling),
       GraphService.getInstance().subscribeToServiceInstability(setInstability),
     ];
 
@@ -80,16 +83,23 @@ export default function Insights() {
         </Grid>
         <Grid item xs={6}>
           <ReactApexChart
-            type="bar"
-            height={600}
-            options={BarChartUtils.DefaultOptions(
+            {...BarChartUtils.CreateBarChart(
               "Service Cohesion",
-              cohesion.map(({ name }) => name)
+              cohesion,
+              BarChartUtils.SeriesFromServiceCohesion
             )}
-            series={BarChartUtils.SerialFromServiceCohesion(cohesion)}
           ></ReactApexChart>
         </Grid>
         <Grid item xs={6}>
+          <ReactApexChart
+            {...BarChartUtils.CreateBarChart(
+              "Service Coupling",
+              coupling,
+              BarChartUtils.SeriesFromServiceCoupling
+            )}
+          ></ReactApexChart>
+        </Grid>
+        <Grid item xs={12}>
           <ReactApexChart
             type="line"
             height={600}
@@ -100,7 +110,7 @@ export default function Insights() {
               ),
               yaxis: StackedLineChartUtils.YAxisForServiceInstability(),
             }}
-            series={StackedLineChartUtils.SerialFromServiceInstability(
+            series={StackedLineChartUtils.SeriesFromServiceInstability(
               instability
             )}
           ></ReactApexChart>
