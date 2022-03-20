@@ -28,6 +28,7 @@ const useStyles = makeStyles(() => ({
 export type ChordDiagramOptions = {
   title: string;
   chordData: TChordData;
+  hideControls?: boolean;
 };
 
 export default function Chord(props: ChordDiagramOptions) {
@@ -47,7 +48,7 @@ export default function Chord(props: ChordDiagramOptions) {
     // create the chord diagram
     const root = Root.new(divId);
     root.setThemes([am5themes_Animated.new(root)]);
-    cordRef.current = ChordUtils.CreateDefault(root);
+    cordRef.current = ChordUtils.CreateDefault(root, !props.hideControls);
     ChordUtils.FillData(
       root,
       cordRef.current!,
@@ -76,6 +77,7 @@ export default function Chord(props: ChordDiagramOptions) {
           className={classes.chart}
           style={{ height: size }}
           onWheel={(e) => {
+            if (props.hideControls) return false;
             if (e.shiftKey) {
               const newScale = scale + (e.deltaY > 0 ? 0.2 : -0.2);
               /**
@@ -92,44 +94,47 @@ export default function Chord(props: ChordDiagramOptions) {
             return true;
           }}
           onContextMenu={(e) => {
+            if (props.hideControls) return true;
             e.preventDefault();
             return false;
           }}
         ></div>
       </Card>
-      <div className={classes.reset}>
-        <Button
-          variant="outlined"
-          size="small"
-          color="primary"
-          onClick={() => {
-            const dataUrl = canvasRootRef.current
-              ?.querySelector("canvas")
-              ?.toDataURL("image/png");
-            if (dataUrl) {
-              const link = document.createElement("a");
-              link.setAttribute("download", `${props.title}.png`);
-              link.setAttribute("href", dataUrl);
-              link.click();
-            }
-          }}
-        >
-          Save
-        </Button>
-        <Button
-          variant="outlined"
-          size="small"
-          color="warning"
-          onClick={() => {
-            cordRef.current?.set("x", percent(50));
-            cordRef.current?.set("y", percent(50));
-            cordRef.current?.set("startAngle", 80);
-            setScale(1);
-          }}
-        >
-          Reset
-        </Button>
-      </div>
+      {!props.hideControls && (
+        <div className={classes.reset}>
+          <Button
+            variant="outlined"
+            size="small"
+            color="primary"
+            onClick={() => {
+              const dataUrl = canvasRootRef.current
+                ?.querySelector("canvas")
+                ?.toDataURL("image/png");
+              if (dataUrl) {
+                const link = document.createElement("a");
+                link.setAttribute("download", `${props.title}.png`);
+                link.setAttribute("href", dataUrl);
+                link.click();
+              }
+            }}
+          >
+            Save
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            color="warning"
+            onClick={() => {
+              cordRef.current?.set("x", percent(50));
+              cordRef.current?.set("y", percent(50));
+              cordRef.current?.set("startAngle", 80);
+              setScale(1);
+            }}
+          >
+            Reset
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

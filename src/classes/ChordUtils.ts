@@ -3,7 +3,7 @@ import { ChordDirected } from "@amcharts/amcharts5/flow";
 import { TChordNode, TChordRadius } from "../entities/TChordData";
 
 export default class ChordUtils {
-  static CreateDefault(root: Root) {
+  static CreateDefault(root: Root, draggable = true) {
     return ChordDirected.new(root, {
       startAngle: 80,
       padAngle: 2,
@@ -12,7 +12,7 @@ export default class ChordUtils {
       valueField: "value",
       paddingTop: 20,
       paddingBottom: 20,
-      draggable: true,
+      draggable,
       centerX: percent(50),
       centerY: percent(50),
       x: percent(50),
