@@ -12,7 +12,12 @@ import {
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useState } from "react";
-import { BarChart, BubbleChart, Insights } from "@mui/icons-material";
+import {
+  BarChart,
+  BubbleChart,
+  Insights,
+  LocalOffer,
+} from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 
 export default function Header() {
@@ -23,6 +28,7 @@ export default function Header() {
     { name: "Dependency Graph", path: "/", icon: <BubbleChart /> },
     { name: "Metrics", path: "/metrics", icon: <BarChart /> },
     { name: "Insights", path: "/insights", icon: <Insights /> },
+    { name: "Labels", path: "/labels", icon: <LocalOffer /> },
   ];
 
   return (

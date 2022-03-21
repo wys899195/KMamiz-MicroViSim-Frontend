@@ -1,6 +1,7 @@
 import Config from "../../Config";
 import { TAggregateData } from "../entities/TAggregateData";
 import IEndpointDataType from "../entities/TEndpointDataType";
+import { TEndpointLabel, TEndpointLabelType } from "../entities/TEndpointLabel";
 import { THistoryData } from "../entities/THistoryData";
 import { DataView } from "./DataView";
 
@@ -39,6 +40,40 @@ export default class DataService {
       (await DataService.getInstance().get<IEndpointDataType>(path)) ||
       undefined
     );
+  }
+
+  async getLabelMap() {
+    const path = `${this.prefix}/data/label`;
+    return (
+      (await DataService.getInstance().get<[string, string][]>(path)) || []
+    );
+  }
+
+  async getUserDefinedLabels() {
+    const path = `${this.prefix}/data/label/user`;
+    return await DataService.getInstance().get<TEndpointLabel>(path);
+  }
+  async updateUserDefinedLabels(labels: TEndpointLabel) {
+    const path = `${this.prefix}/data/label/user`;
+    const res = await fetch(path, {
+      method: "POST",
+      body: JSON.stringify(labels),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return res.status === 201;
+  }
+  async deleteUserDefinedLabels(label: TEndpointLabelType) {
+    const path = `${this.prefix}/data/label/user`;
+    const res = await fetch(path, {
+      method: "DELETE",
+      body: JSON.stringify(label),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return res.status === 204;
   }
 
   subscribeToAggregateData(

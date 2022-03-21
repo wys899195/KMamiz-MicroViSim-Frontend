@@ -7,6 +7,7 @@ import DependencyGraph from "./pages/DependencyGraph";
 import Metrics from "./pages/Metrics";
 import Swagger from "./pages/Swagger";
 import Insights from "./pages/Insights";
+import Labels from "./pages/Labels";
 
 ReactDOM.render(
   <React.StrictMode>
@@ -16,6 +17,7 @@ ReactDOM.render(
         <Route path="/" element={<DependencyGraph />} />
         <Route path="/metrics" element={<Metrics />} />
         <Route path="/insights" element={<Insights />} />
+        <Route path="/labels" element={<Labels />} />
         <Route path="/swagger/:service" element={<Swagger />} />
       </Routes>
     </BrowserRouter>

@@ -19,3 +19,16 @@ export type TRequestTypeUpper =
   | "OPTIONS"
   | "CONNECT"
   | "TRACE";
+
+const RequestTypesUpper: TRequestTypeUpper[] = [
+  "GET",
+  "POST",
+  "PUT",
+  "DELETE",
+  "PATCH",
+  "HEAD",
+  "OPTIONS",
+  "CONNECT",
+  "TRACE",
+];
+export { RequestTypesUpper };
