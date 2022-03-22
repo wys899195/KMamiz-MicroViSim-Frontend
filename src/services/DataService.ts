@@ -3,6 +3,8 @@ import { TAggregateData } from "../entities/TAggregateData";
 import IEndpointDataType from "../entities/TEndpointDataType";
 import { TEndpointLabel, TEndpointLabelType } from "../entities/TEndpointLabel";
 import { THistoryData } from "../entities/THistoryData";
+import { TRequestTypeUpper } from "../entities/TRequestType";
+import { TTaggedInterface } from "../entities/TTaggedInterface";
 import { DataView } from "./DataView";
 
 export default class DataService {
@@ -69,6 +71,38 @@ export default class DataService {
     const res = await fetch(path, {
       method: "DELETE",
       body: JSON.stringify(label),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return res.status === 204;
+  }
+
+  async getTaggedInterface(uniqueLabelName: string) {
+    const path = `${
+      this.prefix
+    }/data/interface?uniqueLabelName=${encodeURIComponent(uniqueLabelName)}`;
+    return (
+      (await DataService.getInstance().get<TTaggedInterface[]>(path)) || []
+    );
+  }
+  async addTaggedInterface(tagged: TTaggedInterface) {
+    const path = `${this.prefix}/data/interface`;
+    const res = await fetch(path, {
+      method: "POST",
+      body: JSON.stringify(tagged),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return res.status === 201;
+  }
+  async deleteTaggedInterface(tagged: TTaggedInterface) {
+    if (!tagged._id) return false;
+    const path = `${this.prefix}/data/interface`;
+    const res = await fetch(path, {
+      method: "DELETE",
+      body: JSON.stringify({ id: tagged._id }),
       headers: {
         "Content-Type": "application/json",
       },

@@ -8,6 +8,7 @@ import Metrics from "./pages/Metrics";
 import Swagger from "./pages/Swagger";
 import Insights from "./pages/Insights";
 import Labels from "./pages/Labels";
+import Interfaces from "./pages/Interfaces";
 
 ReactDOM.render(
   <React.StrictMode>
@@ -18,6 +19,7 @@ ReactDOM.render(
         <Route path="/metrics" element={<Metrics />} />
         <Route path="/insights" element={<Insights />} />
         <Route path="/labels" element={<Labels />} />
+        <Route path="/interfaces" element={<Interfaces />} />
         <Route path="/swagger/:service" element={<Swagger />} />
       </Routes>
     </BrowserRouter>

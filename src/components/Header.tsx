@@ -15,6 +15,7 @@ import { useState } from "react";
 import {
   BarChart,
   BubbleChart,
+  CompareArrows,
   Insights,
   LocalOffer,
 } from "@mui/icons-material";
@@ -29,6 +30,7 @@ export default function Header() {
     { name: "Metrics", path: "/metrics", icon: <BarChart /> },
     { name: "Insights", path: "/insights", icon: <Insights /> },
     { name: "Labels", path: "/labels", icon: <LocalOffer /> },
+    { name: "Interfaces", path: "/interfaces", icon: <CompareArrows /> },
   ];
 
   return (
