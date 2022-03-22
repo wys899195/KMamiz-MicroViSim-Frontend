@@ -1,7 +1,8 @@
-import { Card, CardContent, Typography } from "@mui/material";
+import { Card } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { TAggregateEndpointInfo } from "../../entities/TAggregateData";
 import IEndpointDataType from "../../entities/TEndpointDataType";
+import CodeDisplay from "../CodeDisplay";
 import RequestDonutChart from "../RequestDonutChart";
 
 const useStyles = makeStyles(() => ({
@@ -42,21 +43,13 @@ export default function EndpointInfo(props: {
       {reqSchema ? (
         <div>
           <h4>Request Schema (Typescript)</h4>
-          <Card variant="outlined" className={classes.code}>
-            <pre>
-              <code>{reqSchema}</code>
-            </pre>
-          </Card>
+          <CodeDisplay code={reqSchema} />
         </div>
       ) : null}
       {resSchema ? (
         <div>
           <h4>Response Schema (Typescript)</h4>
-          <Card variant="outlined" className={classes.code}>
-            <pre>
-              <code>{resSchema}</code>
-            </pre>
-          </Card>
+          <CodeDisplay code={resSchema} />
         </div>
       ) : null}
     </div>
