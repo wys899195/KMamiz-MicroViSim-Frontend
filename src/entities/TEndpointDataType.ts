@@ -14,7 +14,7 @@ export default interface IEndpointDataType {
 }
 
 export interface IEndpointDataSchema {
-  time: Date;
+  time: string;
   status: string;
   responseSample: any;
   responseSchema: string;
