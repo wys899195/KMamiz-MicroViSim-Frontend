@@ -98,11 +98,11 @@ export default class DataService {
     return res.status === 201;
   }
   async deleteTaggedInterface(tagged: TTaggedInterface) {
-    if (!tagged._id) return false;
+    const { uniqueLabelName, userLabel } = tagged;
     const path = `${this.prefix}/data/interface`;
     const res = await fetch(path, {
       method: "DELETE",
-      body: JSON.stringify({ id: tagged._id }),
+      body: JSON.stringify({ uniqueLabelName, userLabel }),
       headers: {
         "Content-Type": "application/json",
       },
