@@ -34,8 +34,8 @@ export default class StackedLineChartUtils {
 
   static SeriesFromServiceInstability(instability: TServiceInstability[]) {
     const fields = [
-      { f: "dependsOn", name: "FanOut (DependsOn)", type: "column" },
-      { f: "dependBy", name: "FanIn (DependBy)", type: "column" },
+      { f: "dependsOn", name: "FanOut", type: "column" },
+      { f: "dependBy", name: "FanIn", type: "column" },
       { f: "instability", name: "Instability (SDP)", type: "column" },
     ];
 
@@ -52,13 +52,13 @@ export default class StackedLineChartUtils {
   static YAxisForServiceInstability(): ApexYAxis[] {
     return [
       {
-        ...StackedLineChartUtils.createBasicAxisSetting("FanOut (DependsOn)"),
+        ...StackedLineChartUtils.createBasicAxisSetting("FanOut"),
         tooltip: {
           enabled: true,
         },
       },
       {
-        ...StackedLineChartUtils.createBasicAxisSetting("FanIn (DependBy)"),
+        ...StackedLineChartUtils.createBasicAxisSetting("FanIn"),
         tooltip: {
           enabled: true,
         },

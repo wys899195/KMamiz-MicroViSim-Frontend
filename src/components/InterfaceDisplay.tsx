@@ -240,9 +240,7 @@ export default function InterfaceDisplay(props: InterfaceDisplayProps) {
           {(addable || deleteAble) && (
             <div className={classes.action}>
               <Typography variant="h6">
-                {addable
-                  ? "Create Tag from a selected schema"
-                  : "Delete a selected tag"}
+                {addable ? "Create a tag from schema" : "Delete a selected tag"}
               </Typography>
               {addable && (
                 <TextField
