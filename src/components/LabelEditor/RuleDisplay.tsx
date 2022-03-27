@@ -16,6 +16,7 @@ import {
   TableContainer,
   TableRow,
   TableHead,
+  Tooltip,
 } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { TEndpointLabel } from "../../entities/TEndpointLabel";
@@ -72,30 +73,34 @@ export default function RuleDisplay(props: BaseProps) {
             {display.map((l, id) => (
               <TableRow key={`row-${id}`}>
                 <TableCell>
-                  <Chip
-                    label={l.block ? "Block" : "Add"}
-                    color={l.block ? "error" : "success"}
-                    title={`Rule type: ${l.block ? "Block" : "Add"}`}
-                  />
+                  <Tooltip title={`Rule type: ${l.block ? "Block" : "Add"}`}>
+                    <Chip
+                      label={l.block ? "Block" : "Add"}
+                      color={l.block ? "error" : "success"}
+                    />
+                  </Tooltip>
                 </TableCell>
                 <TableCell>
-                  <Chip label={l.method} title={`Method: ${l.method}`} />
+                  <Tooltip title={`Method: ${l.method}`}>
+                    <Chip label={l.method} />
+                  </Tooltip>
                 </TableCell>
                 <TableCell>{l.label}</TableCell>
                 <TableCell>
-                  <IconButton
-                    color="error"
-                    title="Delete Rule"
-                    onClick={() => {
-                      DataService.getInstance()
-                        .deleteUserDefinedLabels(l)
-                        .then(() => {
-                          props.triggerUpdate();
-                        });
-                    }}
-                  >
-                    <Delete />
-                  </IconButton>
+                  <Tooltip title="Delete Rule">
+                    <IconButton
+                      color="error"
+                      onClick={() => {
+                        DataService.getInstance()
+                          .deleteUserDefinedLabels(l)
+                          .then(() => {
+                            props.triggerUpdate();
+                          });
+                      }}
+                    >
+                      <Delete />
+                    </IconButton>
+                  </Tooltip>
                 </TableCell>
               </TableRow>
             ))}

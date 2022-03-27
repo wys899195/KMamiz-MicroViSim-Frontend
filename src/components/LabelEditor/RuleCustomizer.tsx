@@ -12,6 +12,7 @@ import {
   ListItemIcon,
   ListItemText,
   Button,
+  Tooltip,
 } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { useEffect, useState } from "react";
@@ -123,13 +124,14 @@ export default function RuleCustomizer(props: BaseProps) {
     <div className={classes.card}>
       <Typography variant="h6">Create Rule</Typography>
       <FormGroup className={classes.form}>
-        <FormControlLabel
-          control={
-            <Checkbox checked={block} onClick={() => setBlock(!block)} />
-          }
-          label="Block"
-          title="Check to block an automatically generated label."
-        />
+        <Tooltip title="Check to block an automatically generated label.">
+          <FormControlLabel
+            control={
+              <Checkbox checked={block} onClick={() => setBlock(!block)} />
+            }
+            label="Block"
+          />
+        </Tooltip>
         <TextField
           label="Custom Label"
           value={customLabel}
@@ -167,19 +169,21 @@ export default function RuleCustomizer(props: BaseProps) {
                 {paths
                   ?.filter((p) => p.path.includes(filter))
                   .map((p, id) => (
-                    <ListItem key={`item-${id}`} title={p.path} disablePadding>
-                      <ListItemButton onClick={() => toggleSelect(p)}>
-                        <ListItemIcon>
-                          <Checkbox
-                            checked={p.selected}
-                            edge="start"
-                            tabIndex={-1}
-                            disableRipple
-                          />
-                        </ListItemIcon>
-                        <ListItemText primary={p.path} />
-                      </ListItemButton>
-                    </ListItem>
+                    <Tooltip key={`item-${id}`} title={p.path}>
+                      <ListItem disablePadding>
+                        <ListItemButton onClick={() => toggleSelect(p)}>
+                          <ListItemIcon>
+                            <Checkbox
+                              checked={p.selected}
+                              edge="start"
+                              tabIndex={-1}
+                              disableRipple
+                            />
+                          </ListItemIcon>
+                          <ListItemText primary={p.path} />
+                        </ListItemButton>
+                      </ListItem>
+                    </Tooltip>
                   ))}
               </List>
             </Card>

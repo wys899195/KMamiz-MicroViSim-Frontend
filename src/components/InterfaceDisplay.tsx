@@ -11,6 +11,7 @@ import {
   RadioGroup,
   Select,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { makeStyles } from "@mui/styles";
@@ -197,13 +198,16 @@ export default function InterfaceDisplay(props: InterfaceDisplayProps) {
             <Card variant="outlined" className={classes.radio}>
               <FormControl>
                 {existing?.map((s, id) => (
-                  <FormControlLabel
+                  <Tooltip
                     key={`label-${id}`}
-                    value={id}
-                    control={<Radio />}
-                    label={id === 0 ? "Latest" : s.time.toLocaleString()}
                     title={`Created at: ${s.time.toLocaleString()}`}
-                  />
+                  >
+                    <FormControlLabel
+                      value={id}
+                      control={<Radio />}
+                      label={id === 0 ? "Latest" : s.time.toLocaleString()}
+                    />
+                  </Tooltip>
                 ))}
               </FormControl>
             </Card>
@@ -213,15 +217,18 @@ export default function InterfaceDisplay(props: InterfaceDisplayProps) {
               <FormControl>
                 {existing &&
                   tagged?.map((t, id) => (
-                    <FormControlLabel
+                    <Tooltip
                       key={`label-${existing.length + id}`}
-                      value={`${existing.length + id}`}
-                      control={<Radio />}
-                      label={t.userLabel}
                       title={`Created at: ${new Date(
                         t.timestamp!
                       ).toLocaleString()}`}
-                    />
+                    >
+                      <FormControlLabel
+                        value={`${existing.length + id}`}
+                        control={<Radio />}
+                        label={t.userLabel}
+                      />
+                    </Tooltip>
                   ))}
               </FormControl>
             </Card>
