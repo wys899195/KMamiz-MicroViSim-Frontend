@@ -24,6 +24,7 @@ import DiffDisplay from "./DiffDisplay";
 type InterfaceDisplayProps = {
   uniqueLabelName: string;
 };
+type SchemaItem = { req: string; res: string; id: number; bounded?: boolean };
 
 const useStyles = makeStyles(() => ({
   grid: {
@@ -53,8 +54,7 @@ export default function InterfaceDisplay(props: InterfaceDisplayProps) {
   const [existing, setExisting] =
     useState<{ req?: string; res?: string; time: Date }[]>();
   const [tagged, setTagged] = useState<TTaggedInterface[]>();
-  const [selected, setSelected] =
-    useState<{ req: string; res: string; id: number }>();
+  const [selected, setSelected] = useState<SchemaItem>();
   const [addable, setAddable] = useState<boolean>();
   const [deleteAble, setDeleteAble] = useState<boolean>();
   const [userLabel, setUserLabel] = useState<string>("");
@@ -144,6 +144,7 @@ export default function InterfaceDisplay(props: InterfaceDisplayProps) {
         req: tagged[id].requestSchema,
         res: tagged[id].responseSchema,
         id: idx - existing.length,
+        bounded: tagged[id].boundToSwagger,
       });
       nextDeleteAble = true;
     }
@@ -199,6 +200,7 @@ export default function InterfaceDisplay(props: InterfaceDisplayProps) {
               <FormControl>
                 {existing?.map((s, id) => (
                   <Tooltip
+                    placement="right"
                     key={`label-${id}`}
                     title={`Created at: ${s.time.toLocaleString()}`}
                   >
@@ -218,6 +220,7 @@ export default function InterfaceDisplay(props: InterfaceDisplayProps) {
                 {existing &&
                   tagged?.map((t, id) => (
                     <Tooltip
+                      placement="right"
                       key={`label-${existing.length + id}`}
                       title={`Created at: ${new Date(
                         t.timestamp!
@@ -252,6 +255,7 @@ export default function InterfaceDisplay(props: InterfaceDisplayProps) {
                 variant="contained"
                 color={addable ? "primary" : "error"}
                 onClick={() => (addable ? addTag() : deleteTag())}
+                disabled={deleteAble && selected?.bounded}
               >
                 {addable ? "Add" : "Delete"}
               </Button>

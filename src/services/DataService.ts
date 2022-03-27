@@ -3,7 +3,6 @@ import { TAggregateData } from "../entities/TAggregateData";
 import IEndpointDataType from "../entities/TEndpointDataType";
 import { TEndpointLabel, TEndpointLabelType } from "../entities/TEndpointLabel";
 import { THistoryData } from "../entities/THistoryData";
-import { TRequestTypeUpper } from "../entities/TRequestType";
 import { TTaggedInterface } from "../entities/TTaggedInterface";
 import { DataView } from "./DataView";
 

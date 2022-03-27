@@ -8,7 +8,8 @@ import {
   MenuItem,
 } from "@mui/material";
 import { makeStyles } from "@mui/styles";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import InterfaceDisplay from "../components/InterfaceDisplay";
 import DataService from "../services/DataService";
 
@@ -36,6 +37,9 @@ const useStyles = makeStyles(() => ({
 }));
 export default function Interfaces() {
   const classes = useStyles();
+  const navigate = useNavigate();
+  const { search } = useLocation();
+  const query = useMemo(() => new URLSearchParams(search), [search]);
   const [labelMap, setLabelMap] = useState<MultiLevelMap>();
   const [namespace, setNamespace] = useState<string>("");
   const [service, setService] = useState<string>("");
@@ -45,6 +49,18 @@ export default function Interfaces() {
   const [uniqueLabelName, setUniqueLabelName] = useState<string>("");
 
   useEffect(() => {
+    const q = query.get("q");
+    if (q) {
+      const [namespace, service, version, label, method] = decodeURIComponent(
+        atob(q)
+      ).split("\t");
+      setNamespace(namespace || "");
+      setService(service || "");
+      setVersion(version || "");
+      setLabel(label || "");
+      setMethod(method || "");
+    }
+
     DataService.getInstance()
       .getLabelMap()
       .then((res) => {
@@ -68,6 +84,15 @@ export default function Interfaces() {
     } else setUniqueLabelName("");
   }, [method]);
   useEffect(() => {}, [uniqueLabelName]);
+  useEffect(() => {
+    const url = `${namespace}${service && `\t${service}`}${
+      version && `\t${version}`
+    }${label && `\t${label}`}${method && `\t${method}`}`;
+    const encoded = btoa(encodeURIComponent(url));
+    navigate(`/interfaces${encoded && `?q=${encoded}`}`, {
+      replace: true,
+    });
+  }, [namespace, service, version, label, method]);
 
   const getMenuItemLevel = (level: number) => {
     if (!labelMap) return [];
