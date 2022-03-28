@@ -58,7 +58,7 @@ export default function Header() {
             </List>
           </Drawer>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Monitoring Kubernetes w/ Istio
+            KMamiz
           </Typography>
         </Toolbar>
       </AppBar>
