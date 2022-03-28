@@ -51,8 +51,8 @@ export default function Interfaces() {
   useEffect(() => {
     const q = query.get("q");
     if (q) {
-      const [namespace, service, version, label, method] = decodeURIComponent(
-        atob(q)
+      const [namespace, service, version, label, method] = atob(
+        decodeURIComponent(q)
       ).split("\t");
       setNamespace(namespace || "");
       setService(service || "");
@@ -88,7 +88,7 @@ export default function Interfaces() {
     const url = `${namespace}${service && `\t${service}`}${
       version && `\t${version}`
     }${label && `\t${label}`}${method && `\t${method}`}`;
-    const encoded = btoa(encodeURIComponent(url));
+    const encoded = encodeURIComponent(btoa(url));
     navigate(`/interfaces${encoded && `?q=${encoded}`}`, {
       replace: true,
     });
