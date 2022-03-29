@@ -11,6 +11,7 @@ import { TDisplayNodeInfo } from "../entities/TDisplayNodeInfo";
 import ViewportUtils from "../classes/ViewportUtils";
 import GraphService from "../services/GraphService";
 import { Card, FormControlLabel, FormGroup, Switch } from "@mui/material";
+import { TGraphData } from "../entities/TGraphData";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -29,6 +30,7 @@ const useStyles = makeStyles(() => ({
 export default function DependencyGraph() {
   const classes = useStyles();
   const graphRef = useRef<any>();
+  const rawDataRef = useRef<string>();
   const [size, setSize] = useState([0, 0]);
   const [data, setData] = useState<any>();
   const [highlightInfo, setHighlightInfo] = useHoverHighlight();
@@ -43,15 +45,24 @@ export default function DependencyGraph() {
   }, []);
 
   useEffect(() => {
-    GraphService.getInstance()
-      .getDependencyGraph(showEndpoint)
-      .then((data) => {
-        if (!data) return;
-        setData(DependencyGraphUtils.ProcessData(data));
+    const next = (nextData?: TGraphData) => {
+      const nextRawData = JSON.stringify(nextData);
+      if (rawDataRef.current === nextRawData) return;
+      if (!rawDataRef.current) {
         setTimeout(() => {
           graphRef.current.zoom(4, 0);
         }, 10);
-      });
+      }
+      rawDataRef.current = nextRawData;
+      setData(nextData && DependencyGraphUtils.ProcessData(nextData));
+    };
+
+    const unSub = showEndpoint
+      ? GraphService.getInstance().subscribeToEndpointDependencyGraph(next)
+      : GraphService.getInstance().subscribeToServiceDependencyGraph(next);
+    return () => {
+      unSub();
+    };
   }, [showEndpoint]);
 
   return (

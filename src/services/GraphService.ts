@@ -110,9 +110,16 @@ export default class GraphService {
     return await GraphService.getInstance().get<TServiceCoupling[]>(path);
   }
 
-  subscribeToDependencyGraph(next: (data?: TGraphData) => void) {
+  subscribeToEndpointDependencyGraph(next: (data?: TGraphData) => void) {
     return DataView.getInstance().subscribe<TGraphData>(
-      `${this.prefix}/graph/dependency`,
+      `${this.prefix}/graph/dependency/endpoint`,
+      (_, data) => next(data)
+    );
+  }
+
+  subscribeToServiceDependencyGraph(next: (data?: TGraphData) => void) {
+    return DataView.getInstance().subscribe<TGraphData>(
+      `${this.prefix}/graph/dependency/service`,
       (_, data) => next(data)
     );
   }
