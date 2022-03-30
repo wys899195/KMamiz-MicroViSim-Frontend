@@ -93,7 +93,6 @@ export default function InterfaceDisplay(props: InterfaceDisplayProps) {
         >();
         res.schemas
           .map((s) => ({ ...s, time: new Date(s.time) }))
-          .sort((a, b) => b.time.getTime() - a.time.getTime())
           .forEach((s) =>
             map.set(`${s.requestSchema || ""}\t${s.responseSchema || ""}`, {
               req: s.requestSchema,
@@ -101,7 +100,9 @@ export default function InterfaceDisplay(props: InterfaceDisplayProps) {
               time: s.time,
             })
           );
-        setExisting([...map.values()]);
+        setExisting(
+          [...map.values()].sort((a, b) => b.time.getTime() - a.time.getTime())
+        );
       });
     DataService.getInstance()
       .getTaggedInterface(props.uniqueLabelName)
@@ -119,7 +120,9 @@ export default function InterfaceDisplay(props: InterfaceDisplayProps) {
       existing?.map((e, id) => ({
         req: e.req || "",
         res: e.res || "",
-        name: id === 0 ? "Latest" : e.time.toLocaleString(),
+        name: `${
+          id === 0 ? "Latest" : e.time.toLocaleString()
+        } - (Auto: ${id})`,
       })) || []
     );
   }, [tagged, existing]);
@@ -207,7 +210,9 @@ export default function InterfaceDisplay(props: InterfaceDisplayProps) {
                     <FormControlLabel
                       value={id}
                       control={<Radio />}
-                      label={id === 0 ? "Latest" : s.time.toLocaleString()}
+                      label={`${
+                        id === 0 ? "Latest" : s.time.toLocaleString()
+                      } - (Auto: ${id})`}
                     />
                   </Tooltip>
                 ))}
