@@ -2,8 +2,8 @@ import { TRequestTypeUpper } from "./TRequestType";
 
 export type TAggregatedData = {
   _id?: string;
-  fromDate: Date;
-  toDate: Date;
+  fromDate: string;
+  toDate: string;
   services: TAggregatedServiceInfo[];
 };
 

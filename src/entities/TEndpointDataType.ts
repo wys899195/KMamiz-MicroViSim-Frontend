@@ -7,23 +7,24 @@ export default interface IEndpointDataType {
   service: string;
   namespace: string;
   version: string;
-  // trace name
   labelName: string;
   method: TRequestTypeUpper;
-  schemas: IEndpointDataSchema[];
+  schemas: TEndpointDataSchema[];
 }
 
-export interface IEndpointDataSchema {
+export type TEndpointDataSchema = {
   time: string;
   status: string;
-  responseSample: any;
-  responseSchema: string;
+  responseSample?: any;
+  responseSchema?: string;
+  responseContentType?: string;
   requestSample?: any;
   requestSchema?: string;
-  requestParams?: IEndpointRequestParam[];
-}
+  requestContentType?: string;
+  requestParams?: TEndpointRequestParam[];
+};
 
-export interface IEndpointRequestParam {
+export type TEndpointRequestParam = {
   param: string;
   type: string;
-}
+};

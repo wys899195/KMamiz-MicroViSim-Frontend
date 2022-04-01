@@ -1,12 +1,12 @@
 import { Card } from "@mui/material";
 import { TAggregatedEndpointInfo } from "../../entities/TAggregatedData";
-import IEndpointDataType from "../../entities/TEndpointDataType";
+import TEndpointDataType from "../../entities/TEndpointDataType";
 import CodeDisplay from "../CodeDisplay";
 import RequestDonutChart from "../RequestDonutChart";
 
 export default function EndpointInfo(props: {
   endpointInfo?: TAggregatedEndpointInfo;
-  dataType?: IEndpointDataType;
+  dataType?: TEndpointDataType;
 }) {
   const { endpointInfo, dataType } = props;
   if (!endpointInfo) return <div></div>;
@@ -34,18 +34,22 @@ export default function EndpointInfo(props: {
       {reqSchema && (
         <div>
           <h4>Request Schema (Typescript)</h4>
-          <small>
-            <i>Schema from: {reqTime}</i>
-          </small>
+          {reqTime && (
+            <small>
+              <i>Schema from: {reqTime}</i>
+            </small>
+          )}
           <CodeDisplay code={reqSchema} />
         </div>
       )}
       {resSchema && (
         <div>
           <h4>Response Schema (Typescript)</h4>
-          <small>
-            <i>Schema from: {reqTime}</i>
-          </small>
+          {reqTime && (
+            <small>
+              <i>Schema from: {reqTime}</i>
+            </small>
+          )}
           <CodeDisplay code={resSchema} />
         </div>
       )}
