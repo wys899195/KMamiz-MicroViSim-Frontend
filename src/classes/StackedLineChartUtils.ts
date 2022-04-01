@@ -34,8 +34,8 @@ export default class StackedLineChartUtils {
 
   static SeriesFromServiceInstability(instability: TServiceInstability[]) {
     const fields = [
-      { f: "dependsOn", name: "FanOut", type: "column" },
-      { f: "dependBy", name: "FanIn", type: "column" },
+      { f: "dependingOn", name: "FanOut", type: "column" },
+      { f: "dependingBy", name: "FanIn", type: "column" },
       { f: "instability", name: "Instability (SDP)", type: "column" },
     ];
 

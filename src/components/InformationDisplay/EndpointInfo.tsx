@@ -1,5 +1,5 @@
 import { Card } from "@mui/material";
-import { TAggregateEndpointInfo } from "../../entities/TAggregateData";
+import { TAggregateEndpointInfo } from "../../entities/TAggregatedData";
 import IEndpointDataType from "../../entities/TEndpointDataType";
 import CodeDisplay from "../CodeDisplay";
 import RequestDonutChart from "../RequestDonutChart";

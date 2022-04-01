@@ -1,7 +1,7 @@
 export type TServiceInstability = {
   uniqueServiceName: string;
   name: string;
-  dependBy: number;
-  dependsOn: number;
+  dependingBy: number;
+  dependingOn: number;
   instability: number;
 };

@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import "./index.css";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Header from "./components/Header";
-import { CircularProgress } from "@mui/material";
+import Loading from "./components/Loading";
 
 const DependencyGraph = lazy(() => import("./pages/DependencyGraph"));
 const Metrics = lazy(() => import("./pages/Metrics"));
@@ -16,7 +16,7 @@ ReactDOM.render(
   <React.StrictMode>
     <BrowserRouter>
       <Header />
-      <Suspense fallback={<CircularProgress />}>
+      <Suspense fallback={<Loading />}>
         <Routes>
           <Route path="/" element={<DependencyGraph />} />
           <Route path="/metrics" element={<Metrics />} />

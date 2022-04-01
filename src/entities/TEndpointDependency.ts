@@ -2,12 +2,12 @@ import { TRequestTypeUpper } from "./TRequestType";
 
 export type TEndpointDependency = {
   endpoint: TEndpointInfo;
-  dependsOn: {
+  dependingOn: {
     endpoint: TEndpointInfo;
     distance: number;
     type: "SERVER";
   }[];
-  dependBy: {
+  dependingBy: {
     endpoint: TEndpointInfo;
     distance: number;
     type: "CLIENT";

@@ -1,12 +1,12 @@
 import { TRequestTypeUpper } from "./TRequestType";
 
-export type THistoryData = {
+export type THistoricalData = {
   _id?: string;
   date: Date;
-  services: THistoryServiceInfo[];
+  services: THistoricalServiceInfo[];
 };
 
-export type THistoryServiceInfo = {
+export type THistoricalServiceInfo = {
   _id?: string;
   uniqueServiceName: string;
   date: Date;
@@ -18,10 +18,10 @@ export type THistoryServiceInfo = {
   requestErrors: number;
   risk?: number;
   latencyCV: number;
-  endpoints: THistoryEndpointInfo[];
+  endpoints: THistoricalEndpointInfo[];
 };
 
-export type THistoryEndpointInfo = {
+export type THistoricalEndpointInfo = {
   uniqueServiceName: string;
   uniqueEndpointName: string;
   labelName: string;

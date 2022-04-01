@@ -15,7 +15,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import { Article, FiberManualRecord, Warning } from "@mui/icons-material";
-import { TAggregateServiceInfo } from "../../entities/TAggregateData";
+import { TAggregateServiceInfo } from "../../entities/TAggregatedData";
 import RequestDonutChart from "../RequestDonutChart";
 
 function roundNumber(num: number) {

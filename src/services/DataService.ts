@@ -1,8 +1,8 @@
 import Config from "../../Config";
-import { TAggregateData } from "../entities/TAggregateData";
+import { TAggregatedData } from "../entities/TAggregatedData";
 import IEndpointDataType from "../entities/TEndpointDataType";
 import { TEndpointLabel, TEndpointLabelType } from "../entities/TEndpointLabel";
-import { THistoryData } from "../entities/THistoryData";
+import { THistoricalData } from "../entities/THistoricalData";
 import { TTaggedInterface } from "../entities/TTaggedInterface";
 import { DataView } from "./DataView";
 
@@ -19,18 +19,18 @@ export default class DataService {
     return (await res.json()) as T;
   }
 
-  async getAggregateData(namespace?: string) {
+  async getAggregatedData(namespace?: string) {
     const path = `${this.prefix}/data/aggregate${
       namespace ? "/" + namespace : ""
     }`;
-    return await DataService.getInstance().get<TAggregateData>(path);
+    return await DataService.getInstance().get<TAggregatedData>(path);
   }
 
-  async getHistoryData(namespace?: string) {
+  async getHistoricalData(namespace?: string) {
     const path = `${this.prefix}/data/history${
       namespace ? "/" + namespace : ""
     }`;
-    return await DataService.getInstance().get<THistoryData[]>(path);
+    return await DataService.getInstance().get<THistoricalData[]>(path);
   }
 
   async getEndpointDataType(uniqueLabelName: string) {
@@ -109,28 +109,31 @@ export default class DataService {
     return res.status === 204;
   }
 
-  subscribeToAggregateData(
-    next: (data?: TAggregateData) => void,
+  subscribeToAggregatedData(
+    next: (data?: TAggregatedData) => void,
     namespace?: string
   ) {
     const url = `${this.prefix}/data/aggregate${
       namespace ? "/" + namespace : ""
     }`;
-    return DataView.getInstance().subscribe<TAggregateData>(url, (_, data) => {
+    return DataView.getInstance().subscribe<TAggregatedData>(url, (_, data) => {
       next(data);
     });
   }
 
-  subscribeToHistoryData(
-    next: (data: THistoryData[]) => void,
+  subscribeToHistoricalData(
+    next: (data: THistoricalData[]) => void,
     namespace?: string
   ) {
     const url = `${this.prefix}/data/history${
       namespace ? "/" + namespace : ""
     }`;
-    return DataView.getInstance().subscribe<THistoryData[]>(url, (_, data) => {
-      next(data || []);
-    });
+    return DataView.getInstance().subscribe<THistoricalData[]>(
+      url,
+      (_, data) => {
+        next(data || []);
+      }
+    );
   }
 
   subscribeToEndpointDataType(

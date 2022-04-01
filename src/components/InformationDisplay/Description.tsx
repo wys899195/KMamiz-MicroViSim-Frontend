@@ -1,10 +1,10 @@
 import { Chip, Tooltip } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
 import {
-  TAggregateData,
+  TAggregatedData,
   TAggregateEndpointInfo,
   TAggregateServiceInfo,
-} from "../../entities/TAggregateData";
+} from "../../entities/TAggregatedData";
 import { TDisplayNodeInfo } from "../../entities/TDisplayNodeInfo";
 import IEndpointDataType from "../../entities/TEndpointDataType";
 import DataService from "../../services/DataService";
@@ -27,7 +27,7 @@ export default function Description(props: { info: TDisplayNodeInfo | null }) {
   const [serviceInfo, setServiceInfo] = useState<TAggregateServiceInfo[]>();
   const [endpointInfo, setEndpointInfo] = useState<TAggregateEndpointInfo>();
   const [endpointDataType, setEndpointDataType] = useState<IEndpointDataType>();
-  const [aggDataSnap, setAggDataSnap] = useState<TAggregateData>();
+  const [aggDataSnap, setAggDataSnap] = useState<TAggregatedData>();
   const combinedMap = useMemo(() => {
     const service = aggDataSnap?.services.find(
       (s) => s.uniqueServiceName === props.info?.uniqueServiceName
@@ -59,7 +59,7 @@ export default function Description(props: { info: TDisplayNodeInfo | null }) {
     const { info } = props;
     if (!info || info.type === "EX") return;
     const aggUnSub =
-      DataService.getInstance().subscribeToAggregateData(setAggDataSnap);
+      DataService.getInstance().subscribeToAggregatedData(setAggDataSnap);
 
     let dataTypeUnSub: Unsubscribe;
     if (info.type === "EP") {

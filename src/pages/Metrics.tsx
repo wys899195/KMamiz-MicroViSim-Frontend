@@ -19,13 +19,15 @@ const useStyles = makeStyles(() => ({
 
 export default function Metrics() {
   const classes = useStyles();
-  const [mappedHistoryData, setMappedHistoryData] = useState<
+  const [mappedHistoricalData, setMappedHistoricalData] = useState<
     TAreaLineChartData[]
   >([]);
 
   useEffect(() => {
     const unsubscribe = [
-      GraphService.getInstance().subscribeToAreaLineData(setMappedHistoryData),
+      GraphService.getInstance().subscribeToAreaLineData(
+        setMappedHistoricalData
+      ),
     ];
 
     return () => {
@@ -57,13 +59,13 @@ export default function Metrics() {
   return (
     <Box className={classes.root}>
       <Grid container>
-        {mappedHistoryData
+        {mappedHistoricalData
           ? areaCharts.map((c) => (
               <Grid key={c.name} item xs={6}>
                 <AreaLineChart
                   title={c.name}
                   series={AreaLineChartUtils.MappedBaseDataToSeriesData(
-                    mappedHistoryData,
+                    mappedHistoricalData,
                     c.field
                   )}
                   overrideOptions={c.options}
