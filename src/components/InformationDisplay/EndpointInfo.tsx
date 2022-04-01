@@ -1,11 +1,11 @@
 import { Card } from "@mui/material";
-import { TAggregateEndpointInfo } from "../../entities/TAggregatedData";
+import { TAggregatedEndpointInfo } from "../../entities/TAggregatedData";
 import IEndpointDataType from "../../entities/TEndpointDataType";
 import CodeDisplay from "../CodeDisplay";
 import RequestDonutChart from "../RequestDonutChart";
 
 export default function EndpointInfo(props: {
-  endpointInfo?: TAggregateEndpointInfo;
+  endpointInfo?: TAggregatedEndpointInfo;
   dataType?: IEndpointDataType;
 }) {
   const { endpointInfo, dataType } = props;

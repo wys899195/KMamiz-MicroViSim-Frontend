@@ -2,8 +2,8 @@ import { Chip, Tooltip } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
 import {
   TAggregatedData,
-  TAggregateEndpointInfo,
-  TAggregateServiceInfo,
+  TAggregatedEndpointInfo,
+  TAggregatedServiceInfo,
 } from "../../entities/TAggregatedData";
 import { TDisplayNodeInfo } from "../../entities/TDisplayNodeInfo";
 import IEndpointDataType from "../../entities/TEndpointDataType";
@@ -24,8 +24,8 @@ const useStyles = makeStyles(() => ({
 
 export default function Description(props: { info: TDisplayNodeInfo | null }) {
   const classes = useStyles();
-  const [serviceInfo, setServiceInfo] = useState<TAggregateServiceInfo[]>();
-  const [endpointInfo, setEndpointInfo] = useState<TAggregateEndpointInfo>();
+  const [serviceInfo, setServiceInfo] = useState<TAggregatedServiceInfo[]>();
+  const [endpointInfo, setEndpointInfo] = useState<TAggregatedEndpointInfo>();
   const [endpointDataType, setEndpointDataType] = useState<IEndpointDataType>();
   const [aggDataSnap, setAggDataSnap] = useState<TAggregatedData>();
   const combinedMap = useMemo(() => {
@@ -33,7 +33,7 @@ export default function Description(props: { info: TDisplayNodeInfo | null }) {
       (s) => s.uniqueServiceName === props.info?.uniqueServiceName
     );
     if (!service) return;
-    const endpointMap = new Map<string, TAggregateEndpointInfo[]>();
+    const endpointMap = new Map<string, TAggregatedEndpointInfo[]>();
     service.endpoints.forEach((e) => {
       endpointMap.set(
         e.labelName,
@@ -41,7 +41,7 @@ export default function Description(props: { info: TDisplayNodeInfo | null }) {
       );
     });
 
-    const combinedMap = new Map<string, TAggregateEndpointInfo>();
+    const combinedMap = new Map<string, TAggregatedEndpointInfo>();
     [...endpointMap.entries()].map(([label, endpoints]) => {
       const combined = endpoints.reduce((prev, curr) => {
         prev.totalRequests += curr.totalRequests;
