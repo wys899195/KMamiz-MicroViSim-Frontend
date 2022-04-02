@@ -1,17 +1,18 @@
 import { makeStyles } from "@mui/styles";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { lazy, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ForceGraph2D } from "react-force-graph";
 import { DependencyGraphFactory } from "../classes/DependencyGraphFactory";
 import {
   useHoverHighlight,
   DependencyGraphUtils,
 } from "../classes/DependencyGraphUtils";
-import InformationWindow from "../components/InformationWindow";
 import { TDisplayNodeInfo } from "../entities/TDisplayNodeInfo";
 import ViewportUtils from "../classes/ViewportUtils";
 import GraphService from "../services/GraphService";
 import { Card, FormControlLabel, FormGroup, Switch } from "@mui/material";
 import { TGraphData } from "../entities/TGraphData";
+
+const InformationWindow = lazy(() => import("../components/InformationWindow"));
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -81,7 +82,7 @@ export default function DependencyGraph() {
           )}
         />
       </div>
-      <InformationWindow info={displayInfo} />
+      {displayInfo && <InformationWindow info={displayInfo} />}
       <Card className={classes.switch}>
         <FormGroup>
           <FormControlLabel
