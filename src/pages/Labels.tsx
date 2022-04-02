@@ -8,12 +8,13 @@ import {
   MenuItem,
 } from "@mui/material";
 import { makeStyles } from "@mui/styles";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { TEndpointLabel } from "../entities/TEndpointLabel";
 import DataService from "../services/DataService";
 import LabelTable from "../components/LabelEditor/LabelTable";
 import RuleCustomizer from "../components/LabelEditor/RuleCustomizer";
 import RuleDisplay from "../components/LabelEditor/RuleDisplay";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export type EndpointRowType = {
   id: number;
@@ -38,6 +39,9 @@ const useStyles = makeStyles(() => ({
 }));
 export default function Labels() {
   const classes = useStyles();
+  const navigate = useNavigate();
+  const { search } = useLocation();
+  const query = useMemo(() => new URLSearchParams(search), [search]);
   const [namespace, setNamespace] = useState<string>("");
   const [service, setService] = useState<string>("");
   const [version, setVersion] = useState<string>("");
@@ -88,7 +92,29 @@ export default function Labels() {
       .getUserDefinedLabels()
       .then(processUserDefinedLabel);
   };
-  useEffect(() => loadData(), []);
+
+  useEffect(() => {
+    loadData();
+
+    const q = query.get("q");
+    if (q) {
+      const [namespace, service, version] = atob(decodeURIComponent(q)).split(
+        "\t"
+      );
+      setNamespace(namespace);
+      setService(service);
+      setVersion(version);
+    }
+  }, []);
+  useEffect(() => {
+    const url = `${namespace}${service && `\t${service}`}${
+      version && `\t${version}`
+    }`;
+    const encoded = encodeURIComponent(btoa(url));
+    navigate(`/labels${encoded && `?q=${encoded}`}`, {
+      replace: true,
+    });
+  }, [namespace, service, version]);
 
   return (
     <Box className={classes.root}>
