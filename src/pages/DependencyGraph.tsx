@@ -1,17 +1,25 @@
 import { makeStyles } from "@mui/styles";
-import { lazy, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ForceGraph2D } from "react-force-graph";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import { Card, FormControlLabel, FormGroup, Switch } from "@mui/material";
 import { DependencyGraphFactory } from "../classes/DependencyGraphFactory";
 import {
   useHoverHighlight,
   DependencyGraphUtils,
 } from "../classes/DependencyGraphUtils";
-import { TDisplayNodeInfo } from "../entities/TDisplayNodeInfo";
 import ViewportUtils from "../classes/ViewportUtils";
 import GraphService from "../services/GraphService";
-import { Card, FormControlLabel, FormGroup, Switch } from "@mui/material";
 import { TGraphData } from "../entities/TGraphData";
+import { TDisplayNodeInfo } from "../entities/TDisplayNodeInfo";
+import Loading from "../components/Loading";
 
+const ForceGraph2D = lazy(() => import("react-force-graph-2d"));
 const InformationWindow = lazy(() => import("../components/InformationWindow"));
 
 const useStyles = makeStyles(() => ({
@@ -69,20 +77,24 @@ export default function DependencyGraph() {
   return (
     <div className={classes.root}>
       <div>
-        <ForceGraph2D
-          ref={graphRef}
-          width={size[0]}
-          height={size[1]}
-          graphData={data}
-          {...DependencyGraphFactory.Create(
-            highlightInfo,
-            setHighlightInfo,
-            graphRef,
-            setDisplayInfo
-          )}
-        />
+        <Suspense fallback={<Loading />}>
+          <ForceGraph2D
+            ref={graphRef}
+            width={size[0]}
+            height={size[1]}
+            graphData={data}
+            {...DependencyGraphFactory.Create(
+              highlightInfo,
+              setHighlightInfo,
+              graphRef,
+              setDisplayInfo
+            )}
+          />
+        </Suspense>
       </div>
-      {displayInfo && <InformationWindow info={displayInfo} />}
+      <Suspense fallback={<Loading />}>
+        {displayInfo && <InformationWindow info={displayInfo} />}
+      </Suspense>
       <Card className={classes.switch}>
         <FormGroup>
           <FormControlLabel

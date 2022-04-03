@@ -15,11 +15,20 @@ import {
   Typography,
 } from "@mui/material";
 import { makeStyles } from "@mui/styles";
-import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import {
+  ChangeEvent,
+  lazy,
+  Suspense,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { TTaggedInterface } from "../entities/TTaggedInterface";
 import DataService from "../services/DataService";
-import CodeDisplay from "./CodeDisplay";
-import DiffDisplay from "./DiffDisplay";
+import Loading from "./Loading";
+
+const CodeDisplay = lazy(() => import("./CodeDisplay"));
+const DiffDisplay = lazy(() => import("./DiffDisplay"));
 
 type InterfaceDisplayProps = {
   uniqueLabelName: string;
@@ -270,13 +279,17 @@ export default function InterfaceDisplay(props: InterfaceDisplayProps) {
       <Grid item xs={4}>
         <Typography variant="h6">Request Schema</Typography>
         <div className={classes.grid}>
-          {selected?.req && <CodeDisplay code={selected.req} />}
+          <Suspense fallback={<Loading />}>
+            {selected?.req && <CodeDisplay code={selected.req} />}
+          </Suspense>
         </div>
       </Grid>
       <Grid item xs={4}>
         <Typography variant="h6">Response Schema</Typography>
         <div className={classes.grid}>
-          {selected?.res && <CodeDisplay code={selected.res} />}
+          <Suspense fallback={<Loading />}>
+            {selected?.res && <CodeDisplay code={selected.res} />}
+          </Suspense>
         </div>
       </Grid>
 
@@ -308,13 +321,15 @@ export default function InterfaceDisplay(props: InterfaceDisplayProps) {
       ))}
 
       <Grid item xs={12}>
-        {firstSchema && secondSchema && (
-          <DiffDisplay
-            name={getLabelName()}
-            oldStr={firstSchema}
-            newStr={secondSchema}
-          />
-        )}
+        <Suspense fallback={<Loading />}>
+          {firstSchema && secondSchema && (
+            <DiffDisplay
+              name={getLabelName()}
+              oldStr={firstSchema}
+              newStr={secondSchema}
+            />
+          )}
+        </Suspense>
       </Grid>
     </>
   );
