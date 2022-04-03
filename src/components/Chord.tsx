@@ -103,7 +103,7 @@ export default function Chord(props: ChordDiagramOptions) {
       {!props.hideControls && (
         <div className={classes.reset}>
           <Button
-            variant="outlined"
+            variant="contained"
             size="small"
             color="primary"
             onClick={() => {
@@ -121,7 +121,7 @@ export default function Chord(props: ChordDiagramOptions) {
             Save
           </Button>
           <Button
-            variant="outlined"
+            variant="contained"
             size="small"
             color="warning"
             onClick={() => {
