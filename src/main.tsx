@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from "react";
-import { createRoot } from "react-dom/client";
+import ReactDOM from "react-dom";
 import "./index.css";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Header from "./components/Header";
@@ -12,8 +12,7 @@ const Labels = lazy(() => import("./pages/Labels"));
 const Interfaces = lazy(() => import("./pages/Interfaces"));
 const Swagger = lazy(() => import("./pages/Swagger"));
 
-const root = createRoot(document.getElementById("root")!);
-root.render(
+ReactDOM.render(
   <React.StrictMode>
     <BrowserRouter>
       <Header />
@@ -28,5 +27,6 @@ root.render(
         </Routes>
       </Suspense>
     </BrowserRouter>
-  </React.StrictMode>
+  </React.StrictMode>,
+  document.getElementById("root")
 );
