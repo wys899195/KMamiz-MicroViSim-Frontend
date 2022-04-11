@@ -9,7 +9,6 @@ import ReactApexChart from "react-apexcharts";
 import BarChartUtils from "../classes/BarChartUtils";
 import { TTotalServiceInterfaceCohesion } from "../entities/TTotalServiceInterfaceCohesion";
 import { TServiceInstability } from "../entities/TServiceInstability";
-import StackedLineChartUtils from "../classes/StackedLineChartUtils";
 import { TServiceCoupling } from "../entities/TServiceCoupling";
 import ViewportUtils from "../classes/ViewportUtils";
 
@@ -109,31 +108,28 @@ export default function Insights() {
         </Grid>
         <Grid item xs={size}>
           <ReactApexChart
-            type="line"
-            height={600}
-            options={{
-              ...StackedLineChartUtils.DefaultOptions(
-                "Service Coupling",
-                coupling.map(({ name }) => name)
-              ),
-              yaxis: StackedLineChartUtils.YAxisForServiceCoupling(),
-            }}
-            series={StackedLineChartUtils.SeriesFromServiceCoupling(coupling)}
+            {...BarChartUtils.CreateBarChart(
+              "Service Coupling",
+              coupling,
+              BarChartUtils.SeriesFromServiceCoupling
+            )}
           ></ReactApexChart>
         </Grid>
-        <Grid item xs={12}>
+        <Grid item xs={size}>
           <ReactApexChart
-            type="line"
-            height={600}
-            options={{
-              ...StackedLineChartUtils.DefaultOptions(
-                "Service Instability (SDP)",
-                instability.map(({ name }) => name)
-              ),
-              yaxis: StackedLineChartUtils.YAxisForServiceInstability(),
-            }}
-            series={StackedLineChartUtils.SeriesFromServiceInstability(
-              instability
+            {...BarChartUtils.CreateBarChart(
+              "Service Instability (FanIn / FanOut)",
+              instability,
+              BarChartUtils.FanSeriesFromServiceInstability
+            )}
+          ></ReactApexChart>
+        </Grid>
+        <Grid item xs={size}>
+          <ReactApexChart
+            {...BarChartUtils.CreateBarChart(
+              "Service Instability (SDP)",
+              instability,
+              BarChartUtils.InstabilitySeriesFromServiceInstability
             )}
           ></ReactApexChart>
         </Grid>

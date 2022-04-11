@@ -1,6 +1,7 @@
 import { ApexOptions } from "apexcharts";
 import { Props } from "react-apexcharts";
 import { TServiceCoupling } from "../entities/TServiceCoupling";
+import { TServiceInstability } from "../entities/TServiceInstability";
 import { TTotalServiceInterfaceCohesion } from "../entities/TTotalServiceInterfaceCohesion";
 import { Color } from "./ColorUtils";
 
@@ -8,11 +9,12 @@ export default class BarChartUtils {
   static CreateBarChart<T extends { name: string }>(
     title: string,
     data: T[],
-    toSeriesStrategy: (_: T[]) => any[]
+    toSeriesStrategy: (_: T[]) => any[],
+    height = 600
   ): Props {
     return {
       type: "bar",
-      height: 600,
+      height,
       options: BarChartUtils.DefaultOptions(
         title,
         data.map(({ name }) => name)
@@ -50,15 +52,21 @@ export default class BarChartUtils {
       stroke: {
         show: true,
         width: 1,
-        colors: ["#fff"],
+        colors: ["transparent"],
       },
       tooltip: {
         shared: true,
         intersect: false,
       },
-      xaxis: { categories },
+      xaxis: {
+        categories,
+        labels: {
+          trim: true,
+        },
+      },
       legend: {
         position: "top",
+        showForSingleSeries: true,
       },
     };
   }
@@ -101,5 +109,20 @@ export default class BarChartUtils {
       { f: "acs", name: "Absolute Criticality (ACS)" },
     ];
     return BarChartUtils.MapFieldsToSeries(fields, coupling);
+  }
+
+  static FanSeriesFromServiceInstability(instability: TServiceInstability[]) {
+    const fields = [
+      { f: "dependingOn", name: "FanOut" },
+      { f: "dependingBy", name: "FanIn" },
+    ];
+    return BarChartUtils.MapFieldsToSeries(fields, instability);
+  }
+
+  static InstabilitySeriesFromServiceInstability(
+    instability: TServiceInstability[]
+  ) {
+    const fields = [{ f: "instability", name: "Instability (SDP)" }];
+    return BarChartUtils.MapFieldsToSeries(fields, instability);
   }
 }
