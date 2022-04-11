@@ -1,5 +1,7 @@
 import { ApexOptions } from "apexcharts";
+import { TServiceCoupling } from "../entities/TServiceCoupling";
 import { TServiceInstability } from "../entities/TServiceInstability";
+import BarChartUtils from "./BarChartUtils";
 import { Color } from "./ColorUtils";
 
 export default class StackedLineChartUtils {
@@ -14,7 +16,7 @@ export default class StackedLineChartUtils {
         stacked: false,
       },
       dataLabels: {
-        enabled: false,
+        enabled: true,
       },
       stroke: {
         show: true,
@@ -34,18 +36,21 @@ export default class StackedLineChartUtils {
 
   static SeriesFromServiceInstability(instability: TServiceInstability[]) {
     const fields = [
-      { f: "dependingOn", name: "FanOut", type: "column" },
-      { f: "dependingBy", name: "FanIn", type: "column" },
-      { f: "instability", name: "Instability (SDP)", type: "column" },
+      { f: "dependingOn", name: "FanOut" },
+      { f: "dependingBy", name: "FanIn" },
+      { f: "instability", name: "Instability (SDP)" },
     ];
 
-    return fields.map(({ f, type, name }) => ({
-      name,
-      type,
-      color: Color.generateFromString(name).darker(30).hex,
-      data: instability.map(
-        ({ [f]: field }: any) => Math.round(field * 1000) / 1000
-      ),
+    return BarChartUtils.MapFieldsToSeries(fields, instability).map((f) => ({
+      ...f,
+      type: "column",
+    }));
+  }
+
+  static SeriesFromServiceCoupling(coupling: TServiceCoupling[]) {
+    return BarChartUtils.SeriesFromServiceCoupling(coupling).map((f) => ({
+      ...f,
+      type: "column",
     }));
   }
 
@@ -76,6 +81,35 @@ export default class StackedLineChartUtils {
       },
     ];
   }
+
+  static YAxisForServiceCoupling(): ApexYAxis[] {
+    return [
+      {
+        ...StackedLineChartUtils.createBasicAxisSetting("AIS"),
+        tooltip: {
+          enabled: true,
+        },
+      },
+      {
+        ...StackedLineChartUtils.createBasicAxisSetting("ADS"),
+        tooltip: {
+          enabled: true,
+        },
+        opposite: true,
+        labels: {
+          offsetX: -7,
+        },
+      },
+      {
+        ...StackedLineChartUtils.createBasicAxisSetting("ACS"),
+        tooltip: {
+          enabled: true,
+        },
+        opposite: true,
+      },
+    ];
+  }
+
   private static createBasicAxisSetting(name: string): ApexYAxis {
     const color = Color.generateFromString(name).darker(30).hex;
     return {

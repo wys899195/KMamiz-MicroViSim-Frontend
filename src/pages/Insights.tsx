@@ -11,6 +11,7 @@ import { TTotalServiceInterfaceCohesion } from "../entities/TTotalServiceInterfa
 import { TServiceInstability } from "../entities/TServiceInstability";
 import StackedLineChartUtils from "../classes/StackedLineChartUtils";
 import { TServiceCoupling } from "../entities/TServiceCoupling";
+import ViewportUtils from "../classes/ViewportUtils";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -47,6 +48,7 @@ export default function Insights() {
   );
   const [coupling, setCoupling] = useState<TServiceCoupling[]>([]);
   const [instability, setInstability] = useState<TServiceInstability[]>([]);
+  const [size, setSize] = useState(12);
 
   useEffect(() => {
     const unsubscribe = [
@@ -75,6 +77,9 @@ export default function Insights() {
           setInstability(data);
         }
       }),
+      ViewportUtils.getInstance().subscribe(([vw]) =>
+        setSize(vw > 1500 ? 6 : 12)
+      ),
     ];
 
     return () => {
@@ -93,7 +98,7 @@ export default function Insights() {
             <Chord title="Indirect Service Dependencies" chordData={iChord} />
           )}
         </Grid>
-        <Grid item xs={6}>
+        <Grid item xs={size}>
           <ReactApexChart
             {...BarChartUtils.CreateBarChart(
               "Service Cohesion",
@@ -102,13 +107,18 @@ export default function Insights() {
             )}
           ></ReactApexChart>
         </Grid>
-        <Grid item xs={6}>
+        <Grid item xs={size}>
           <ReactApexChart
-            {...BarChartUtils.CreateBarChart(
-              "Service Coupling",
-              coupling,
-              BarChartUtils.SeriesFromServiceCoupling
-            )}
+            type="line"
+            height={600}
+            options={{
+              ...StackedLineChartUtils.DefaultOptions(
+                "Service Coupling",
+                coupling.map(({ name }) => name)
+              ),
+              yaxis: StackedLineChartUtils.YAxisForServiceCoupling(),
+            }}
+            series={StackedLineChartUtils.SeriesFromServiceCoupling(coupling)}
           ></ReactApexChart>
         </Grid>
         <Grid item xs={12}>

@@ -29,10 +29,12 @@ export default class BarChartUtils {
       },
       chart: {
         type: "bar",
+        animations: {
+          enabled: false,
+        },
       },
       plotOptions: {
         bar: {
-          horizontal: true,
           dataLabels: {
             position: "top",
           },
@@ -40,7 +42,6 @@ export default class BarChartUtils {
       },
       dataLabels: {
         enabled: true,
-        offsetX: -6,
         style: {
           fontSize: "12px",
           colors: ["#fff"],
@@ -62,14 +63,11 @@ export default class BarChartUtils {
     };
   }
 
-  private static mapFieldsToSeries(
-    fields: { f: string; name: string }[],
-    data: any[]
-  ) {
+  static MapFieldsToSeries(fields: { f: string; name: string }[], data: any[]) {
     return fields.map(({ f, name }) => ({
       name,
-      color: Color.generateFromString(name).darker(40).hex,
-      data: data.map((c) => Math.round(c[f] * 1000) / 1000),
+      color: Color.generateFromString(name).darker(50).hex,
+      data: data.map((c) => Math.round(c[f] * 100) / 100),
     }));
   }
 
@@ -87,7 +85,7 @@ export default class BarChartUtils {
       },
       { f: "totalInterfaceCohesion", name: "Total Interface Cohesion (TSIC)" },
     ];
-    return BarChartUtils.mapFieldsToSeries(fields, cohesions);
+    return BarChartUtils.MapFieldsToSeries(fields, cohesions);
   }
 
   static SeriesFromServiceCoupling(coupling: TServiceCoupling[]) {
@@ -102,6 +100,6 @@ export default class BarChartUtils {
       },
       { f: "acs", name: "Absolute Criticality (ACS)" },
     ];
-    return BarChartUtils.mapFieldsToSeries(fields, coupling);
+    return BarChartUtils.MapFieldsToSeries(fields, coupling);
   }
 }
