@@ -62,17 +62,17 @@ export default function Insights() {
       ),
       GraphService.getInstance().subscribeToServiceCohesion((data) => {
         if (JSON.stringify(data) !== JSON.stringify(cohesion)) {
-          setCohesion(data.sort((a, b) => a.name.localeCompare(b.name)));
+          setCohesion(data);
         }
       }),
       GraphService.getInstance().subscribeToServiceCoupling((data) => {
         if (JSON.stringify(data) !== JSON.stringify(coupling)) {
-          setCoupling(data.sort((a, b) => a.name.localeCompare(b.name)));
+          setCoupling(data);
         }
       }),
       GraphService.getInstance().subscribeToServiceInstability((data) => {
         if (JSON.stringify(data) !== JSON.stringify(instability)) {
-          setInstability(data.sort((a, b) => a.name.localeCompare(b.name)));
+          setInstability(data);
         }
       }),
     ];
