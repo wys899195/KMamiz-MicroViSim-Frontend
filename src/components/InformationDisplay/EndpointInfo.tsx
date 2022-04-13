@@ -1,4 +1,11 @@
-import { Card } from "@mui/material";
+import {
+  Card,
+  Chip,
+  List,
+  ListItem,
+  ListItemText,
+  Tooltip,
+} from "@mui/material";
 import { TAggregatedEndpointInfo } from "../../entities/TAggregatedData";
 import TEndpointDataType from "../../entities/TEndpointDataType";
 import CodeDisplay from "../CodeDisplay";
@@ -17,6 +24,8 @@ export default function EndpointInfo(props: {
   const resSchema = schema?.responseSchema;
   const reqSchema = schema?.requestSchema;
   const reqTime = schema?.time;
+  const isReqJson = schema?.requestContentType === "application/json";
+  const isResJson = schema?.responseContentType === "application/json";
 
   const {
     totalRequests,
@@ -24,6 +33,7 @@ export default function EndpointInfo(props: {
     totalServerErrors: srvErrors,
   } = endpointInfo;
 
+  console.log(schema?.requestContentType, schema?.responseContentType);
   return (
     <div>
       <Card variant="outlined">
@@ -31,7 +41,45 @@ export default function EndpointInfo(props: {
           series={[totalRequests - reqErrors - srvErrors, reqErrors, srvErrors]}
         />
       </Card>
-      {reqSchema && (
+      {(schema?.requestContentType || schema?.responseContentType) && (
+        <List>
+          {schema?.requestContentType && (
+            <ListItem disablePadding>
+              <Tooltip
+                title={`Request Content-Type: "${schema.requestContentType}"`}
+              >
+                <ListItemText
+                  primary={
+                    <Chip
+                      color="primary"
+                      size="small"
+                      label={`REQ "${schema.requestContentType}"`}
+                    />
+                  }
+                />
+              </Tooltip>
+            </ListItem>
+          )}
+          {schema?.responseContentType && (
+            <ListItem disablePadding>
+              <Tooltip
+                title={`Response Content-Type: "${schema.responseContentType}"`}
+              >
+                <ListItemText
+                  primary={
+                    <Chip
+                      color="primary"
+                      size="small"
+                      label={`RES "${schema.responseContentType}"`}
+                    />
+                  }
+                />
+              </Tooltip>
+            </ListItem>
+          )}
+        </List>
+      )}
+      {isReqJson && reqSchema && (
         <div>
           <h4>Request Schema (Typescript)</h4>
           {reqTime && (
@@ -42,7 +90,7 @@ export default function EndpointInfo(props: {
           <CodeDisplay code={reqSchema} />
         </div>
       )}
-      {resSchema && (
+      {isResJson && resSchema && (
         <div>
           <h4>Response Schema (Typescript)</h4>
           {reqTime && (
