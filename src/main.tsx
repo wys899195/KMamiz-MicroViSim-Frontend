@@ -8,7 +8,7 @@ import Loading from "./components/Loading";
 const DependencyGraph = lazy(() => import("./pages/DependencyGraph"));
 const Metrics = lazy(() => import("./pages/Metrics"));
 const Insights = lazy(() => import("./pages/Insights"));
-const Labels = lazy(() => import("./pages/Labels"));
+const Endpoints = lazy(() => import("./pages/Endpoints"));
 const Interfaces = lazy(() => import("./pages/Interfaces"));
 const Swagger = lazy(() => import("./pages/Swagger"));
 
@@ -21,7 +21,7 @@ ReactDOM.render(
           <Route path="/" element={<DependencyGraph />} />
           <Route path="/metrics" element={<Metrics />} />
           <Route path="/insights" element={<Insights />} />
-          <Route path="/labels" element={<Labels />} />
+          <Route path="/endpoints" element={<Endpoints />} />
           <Route path="/interfaces" element={<Interfaces />} />
           <Route path="/swagger/:service" element={<Swagger />} />
         </Routes>

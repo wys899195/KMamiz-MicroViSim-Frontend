@@ -37,7 +37,7 @@ const useStyles = makeStyles(() => ({
     marginRight: "1em",
   },
 }));
-export default function Labels() {
+export default function Endpoints() {
   const classes = useStyles();
   const navigate = useNavigate();
   const { search } = useLocation();

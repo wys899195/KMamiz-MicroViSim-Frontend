@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@mui/material";
 import { makeStyles } from "@mui/styles";
-import { EndpointRowType } from "../../pages/Labels";
+import { EndpointRowType } from "../../pages/Endpoints";
 
 export type TableProps = {
   namespace: string;

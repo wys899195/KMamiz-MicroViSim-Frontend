@@ -17,7 +17,7 @@ import {
 import { makeStyles } from "@mui/styles";
 import { useEffect, useState } from "react";
 import { TRequestTypeUpper } from "../../entities/TRequestType";
-import { EndpointRowType } from "../../pages/Labels";
+import { EndpointRowType } from "../../pages/Endpoints";
 import DataService from "../../services/DataService";
 
 type BaseProps = {

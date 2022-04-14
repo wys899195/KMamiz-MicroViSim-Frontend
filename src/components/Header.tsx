@@ -29,7 +29,7 @@ export default function Header() {
     { name: "Dependency Graph", path: "/", icon: <BubbleChart /> },
     { name: "Metrics", path: "/metrics", icon: <StackedLineChart /> },
     { name: "Insights", path: "/insights", icon: <BarChart /> },
-    { name: "Labels", path: "/labels", icon: <LocalOffer /> },
+    { name: "Endpoints", path: "/endpoints", icon: <LocalOffer /> },
     { name: "Interfaces", path: "/interfaces", icon: <Code /> },
   ];
 
