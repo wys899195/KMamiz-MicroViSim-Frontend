@@ -111,7 +111,7 @@ export default function Endpoints() {
       version && `\t${version}`
     }`;
     const encoded = encodeURIComponent(btoa(url));
-    navigate(`/labels${encoded && `?q=${encoded}`}`, {
+    navigate(`/endpoints${encoded && `?q=${encoded}`}`, {
       replace: true,
     });
   }, [namespace, service, version]);
