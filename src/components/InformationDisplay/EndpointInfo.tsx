@@ -33,7 +33,6 @@ export default function EndpointInfo(props: {
     totalServerErrors: srvErrors,
   } = endpointInfo;
 
-  console.log(schema?.requestContentType, schema?.responseContentType);
   return (
     <div>
       <Card variant="outlined">
