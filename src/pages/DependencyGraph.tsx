@@ -58,9 +58,13 @@ export default function DependencyGraph() {
       const nextRawData = JSON.stringify(nextData);
       if (rawDataRef.current === nextRawData) return;
       if (!rawDataRef.current) {
-        setTimeout(() => {
-          graphRef.current.zoom(4, 0);
-        }, 10);
+        const timer = setInterval(() => {
+          if (!graphRef.current) return;
+          clearInterval(timer);
+          setTimeout(() => {
+            graphRef.current.zoom(4, 0);
+          }, 10);
+        });
       }
       rawDataRef.current = nextRawData;
       setData(nextData && DependencyGraphUtils.ProcessData(nextData));
