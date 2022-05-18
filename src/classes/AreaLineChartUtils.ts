@@ -33,6 +33,14 @@ export default class AreaLineChartUtils {
       },
       xaxis: {
         type: "datetime",
+        labels: {
+          formatter: (_, ts) => {
+            const tok = new Date(ts as any).toISOString().split("T");
+            const dateTok = tok[0].split("-");
+            const timeTok = tok[1].split(":");
+            return `${dateTok[1]}/${dateTok[2]} ${timeTok[0]}:${timeTok[1]}`;
+          },
+        },
       },
     };
   }
