@@ -14,7 +14,7 @@ export default function AreaLineChart(props: {
 
   return (
     <ReactApexChart
-      type="area"
+      type="line"
       height={350}
       options={options}
       series={props.series}

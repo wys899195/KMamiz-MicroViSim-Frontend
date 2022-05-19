@@ -13,20 +13,14 @@ export default class AreaLineChartUtils {
         align: "center",
       },
       chart: {
-        type: "area",
+        type: "line",
       },
       dataLabels: {
         enabled: false,
       },
       stroke: {
         curve: "smooth",
-      },
-      fill: {
-        type: "gradient",
-        gradient: {
-          opacityFrom: 0.4,
-          opacityTo: 0.6,
-        },
+        width: 3,
       },
       legend: {
         horizontalAlign: "left",
