@@ -73,11 +73,12 @@ export default class GraphService {
     return await GraphService.getInstance().get<TGraphData>(path);
   }
 
-  async getAreaLineData(uniqueServiceName?: string) {
+  async getAreaLineData(uniqueServiceName?: string, notBefore?: number) {
     const postfix = uniqueServiceName
       ? `/${encodeURIComponent(uniqueServiceName)}`
       : "";
-    const path = `${this.prefix}/graph/line${postfix}`;
+    const query = notBefore ? `?notBefore=${notBefore}` : "";
+    const path = `${this.prefix}/graph/line${postfix}${query}`;
     return await GraphService.getInstance().get<TAreaLineChartData[]>(path);
   }
 
@@ -126,12 +127,14 @@ export default class GraphService {
 
   subscribeToAreaLineData(
     next: (data: TAreaLineChartData[]) => void,
-    uniqueServiceName?: string
+    uniqueServiceName?: string,
+    notBefore?: number
   ) {
     const postfix = uniqueServiceName
       ? `/${encodeURIComponent(uniqueServiceName)}`
       : "";
-    const path = `${this.prefix}/graph/line${postfix}`;
+    const query = notBefore ? `?notBefore=${notBefore}` : "";
+    const path = `${this.prefix}/graph/line${postfix}${query}`;
 
     return GraphService.getInstance().subscribeToArray(path, next);
   }

@@ -15,12 +15,19 @@ export default class AlertManager {
     setInterval(() => this.interval(), AlertManager.ALERT_TIMEOUT);
   }
 
-  create(alert: TAlert) {
-    this._alerts.set(alert.id, alert);
+  create(alert: TAlert, update = false) {
+    if (this._alerts.has(alert.id) && !update) {
+      const existing = this._alerts.get(alert.id)!;
+      this._alerts.set(alert.id, {
+        ...existing,
+        context: alert.context,
+        timestamp: alert.timestamp,
+      });
+    } else this._alerts.set(alert.id, alert);
   }
 
   update(alert: TAlert) {
-    this.create(alert);
+    this.create(alert, true);
     this.interval();
   }
 
