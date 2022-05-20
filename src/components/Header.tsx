@@ -9,21 +9,35 @@ import {
   ListItemIcon,
   ListItemText,
   ListItemButton,
+  Tooltip,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BarChart,
   BubbleChart,
   Code,
   LocalOffer,
+  Notifications,
+  NotificationsActive,
   StackedLineChart,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import Alert from "./Alert";
+import AlertManager from "../services/AlertManager";
 
 export default function Header() {
   const [isOpen, setOpen] = useState(false);
+  const [hasAlert, setHasAlert] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const unSub = AlertManager.getInstance().listen(
+      (alerts) => setHasAlert(alerts.length > 0),
+      true
+    );
+    return () => unSub();
+  }, []);
 
   const routes = [
     { name: "Dependency Graph", path: "/", icon: <BubbleChart /> },
@@ -60,6 +74,20 @@ export default function Header() {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             KMamiz
           </Typography>
+
+          <Tooltip
+            title={
+              hasAlert ? "Toggle notifications" : "No notification present"
+            }
+          >
+            <IconButton
+              color="inherit"
+              onClick={() => AlertManager.getInstance().toggleNotify()}
+            >
+              {hasAlert ? <NotificationsActive /> : <Notifications />}
+            </IconButton>
+          </Tooltip>
+          <Alert />
         </Toolbar>
       </AppBar>
       <Toolbar />
