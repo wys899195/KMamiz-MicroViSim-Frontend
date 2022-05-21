@@ -4,6 +4,7 @@ const MonitorRisk = (
 ) => {
   return serviceRisks
     .filter(({ risks }) => {
+      risks = risks.filter((r) => r > 0);
       const mean = risks.reduce((prev, curr) => prev + curr) / risks.length;
       const sqSum =
         risks.reduce((prev, curr) => prev + curr * curr, 0) / risks.length;
