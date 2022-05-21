@@ -2,6 +2,7 @@ import { TAlert } from "../entities/TAlert";
 
 export default class AlertManager {
   private static readonly ALERT_TIMEOUT = 5000;
+  private static readonly STORAGE_KEY = "KMAMIZ_ALERT";
   private static instance?: AlertManager;
   static getInstance = () => this.instance || (this.instance = new this());
 
@@ -12,6 +13,7 @@ export default class AlertManager {
     this._alerts = new Map();
     this._observers = [];
     this._rawObservers = [];
+    this.load();
     setInterval(() => this.interval(), AlertManager.ALERT_TIMEOUT);
   }
 
@@ -24,6 +26,8 @@ export default class AlertManager {
         timestamp: alert.timestamp,
       });
     } else this._alerts.set(alert.id, alert);
+
+    this.save();
   }
 
   update(alert: TAlert) {
@@ -70,11 +74,7 @@ export default class AlertManager {
   }
 
   private getIntervalAlerts(raw = false) {
-    this._alerts = new Map(
-      [...this._alerts.entries()].filter(([_, alert]) => {
-        return Date.now() - alert.timestamp < AlertManager.ALERT_TIMEOUT;
-      })
-    );
+    this.clearOutdated();
     const baseAlerts = [...this._alerts.values()].sort(
       (a, b) => a.timestamp - b.timestamp
     );
@@ -86,5 +86,27 @@ export default class AlertManager {
   private interval() {
     this._observers.forEach((o) => o(this.getIntervalAlerts()));
     this._rawObservers.forEach((o) => o(this.getIntervalAlerts(true)));
+  }
+
+  private clearOutdated() {
+    this._alerts = new Map(
+      [...this._alerts.entries()].filter(([_, alert]) => {
+        return Date.now() - alert.timestamp < AlertManager.ALERT_TIMEOUT;
+      })
+    );
+  }
+
+  private save() {
+    localStorage.setItem(
+      AlertManager.STORAGE_KEY,
+      JSON.stringify([...this._alerts.entries()])
+    );
+  }
+  private load() {
+    const data = localStorage.getItem(AlertManager.STORAGE_KEY);
+    if (!data) return;
+    const parsed = JSON.parse(data) as [string, TAlert][];
+    this._alerts = new Map(parsed);
+    this.clearOutdated();
   }
 }
