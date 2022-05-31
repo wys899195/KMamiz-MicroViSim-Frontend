@@ -1,11 +1,11 @@
 import { ApexOptions } from "apexcharts";
 import {
-  TAreaLineChartData,
-  TAreaLineChartDataFields,
-} from "../entities/TAreaLineChartData";
+  TLineChartData,
+  TLineChartDataFields,
+} from "../entities/TLineChartData";
 import { Color } from "./ColorUtils";
 
-export default class AreaLineChartUtils {
+export default class LineChartUtils {
   static DefaultOptions(title: string): ApexOptions {
     return {
       title: {
@@ -40,10 +40,10 @@ export default class AreaLineChartUtils {
   }
 
   static MappedBaseDataToSeriesData(
-    data: TAreaLineChartData[],
-    field: TAreaLineChartDataFields
+    data: TLineChartData[],
+    field: TLineChartDataFields
   ): ApexAxisChartSeries {
-    const serviceMap = new Map<string, TAreaLineChartData[]>();
+    const serviceMap = new Map<string, TLineChartData[]>();
 
     data.forEach((d) => {
       serviceMap.set(d.name, [...(serviceMap.get(d.name) || []), d]);

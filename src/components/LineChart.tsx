@@ -1,6 +1,6 @@
 import { ApexOptions } from "apexcharts";
 import ReactApexChart from "react-apexcharts";
-import AreaLineChartUtils from "../classes/AreaLineChartUtils";
+import LineChartUtils from "../classes/LineChartUtils";
 
 export default function AreaLineChart(props: {
   title: string;
@@ -8,7 +8,7 @@ export default function AreaLineChart(props: {
   overrideOptions?: ApexOptions;
 }) {
   const options: ApexOptions = {
-    ...AreaLineChartUtils.DefaultOptions(props.title),
+    ...LineChartUtils.DefaultOptions(props.title),
     ...props.overrideOptions,
   };
 

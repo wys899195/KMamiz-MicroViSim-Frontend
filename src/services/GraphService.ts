@@ -1,6 +1,6 @@
 import Config from "../../Config";
 import { Color } from "../classes/ColorUtils";
-import { TAreaLineChartData } from "../entities/TAreaLineChartData";
+import { TLineChartData } from "../entities/TLineChartData";
 import { TChordData, TChordRadius } from "../entities/TChordData";
 import { TGraphData } from "../entities/TGraphData";
 import { TServiceCoupling } from "../entities/TServiceCoupling";
@@ -79,7 +79,7 @@ export default class GraphService {
       : "";
     const query = notBefore ? `?notBefore=${notBefore}` : "";
     const path = `${this.prefix}/graph/line${postfix}${query}`;
-    return await GraphService.getInstance().get<TAreaLineChartData[]>(path);
+    return await GraphService.getInstance().get<TLineChartData[]>(path);
   }
 
   async getDirectChord() {
@@ -126,7 +126,7 @@ export default class GraphService {
   }
 
   subscribeToAreaLineData(
-    next: (data: TAreaLineChartData[]) => void,
+    next: (data: TLineChartData[]) => void,
     uniqueServiceName?: string,
     notBefore?: number
   ) {

@@ -1,12 +1,12 @@
 import { Box, Grid } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { useEffect, useState } from "react";
-import AreaLineChartUtils from "../classes/AreaLineChartUtils";
-import AreaLineChart from "../components/AreaLineChart";
+import LineChartUtils from "../classes/LineChartUtils";
+import AreaLineChart from "../components/LineChart";
 import {
-  TAreaLineChartData,
-  TAreaLineChartDataFields,
-} from "../entities/TAreaLineChartData";
+  TLineChartData,
+  TLineChartDataFields,
+} from "../entities/TLineChartData";
 import GraphService from "../services/GraphService";
 
 const useStyles = makeStyles(() => ({
@@ -20,7 +20,7 @@ const useStyles = makeStyles(() => ({
 export default function Metrics() {
   const classes = useStyles();
   const [mappedHistoricalData, setMappedHistoricalData] = useState<
-    TAreaLineChartData[]
+    TLineChartData[]
   >([]);
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export default function Metrics() {
 
   const areaCharts: {
     name: string;
-    field: TAreaLineChartDataFields;
+    field: TLineChartDataFields;
     options?: any;
   }[] = [
     { name: "Requests", field: "requests" },
@@ -64,7 +64,7 @@ export default function Metrics() {
               <Grid key={c.name} item xs={6}>
                 <AreaLineChart
                   title={c.name}
-                  series={AreaLineChartUtils.MappedBaseDataToSeriesData(
+                  series={LineChartUtils.MappedBaseDataToSeriesData(
                     mappedHistoricalData,
                     c.field
                   )}
