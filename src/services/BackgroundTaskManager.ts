@@ -1,7 +1,5 @@
-import { MonitorRisk } from "../classes/BackgruondTasks";
 import AlertManager from "./AlertManager";
-import DataService from "./DataService";
-import GraphService from "./GraphService";
+import AlertService from "./AlertService";
 
 type TTask = (..._: any[]) => any;
 
@@ -18,31 +16,19 @@ export default class BackgroundTaskManager {
 
   private setup() {
     // risk monitor
-    GraphService.getInstance().subscribeToAreaLineData(
-      (data) => {
-        const map = new Map<string, number[]>();
-        data.sort((a, b) => new Date(a.x).getTime() - new Date(b.x).getTime());
-        data.forEach((d) => {
-          if (!d.risk) return;
-          map.set(d.name, (map.get(d.name) || []).concat([d.risk]));
+    AlertService.getInstance().subscribeToRiskViolation((violations) => {
+      violations.forEach((v) => {
+        AlertManager.getInstance().create({
+          id: `${v.id}-risk-violation`,
+          context: `${v.displayName} violates Risk threshold (at ${new Date(
+            v.occursAt
+          ).toISOString()})`,
+          severity: "warning",
+          timestamp: v.timeoutAt,
+          notified: false,
         });
-        const violation = MonitorRisk(
-          [...map.entries()].map(([name, risks]) => ({ name, risks })),
-          2
-        );
-        violation.forEach((s) => {
-          AlertManager.getInstance().create({
-            id: `${s}-risk-violation`,
-            context: `${s} violates Risk threshold (${new Date().toISOString()})`,
-            severity: "warning",
-            timestamp: Date.now() + 3600000,
-            notified: false,
-          });
-        });
-      },
-      undefined,
-      86400000
-    );
+      });
+    });
   }
 
   register(name: string, task: TTask) {
@@ -50,7 +36,7 @@ export default class BackgroundTaskManager {
     task();
   }
 
-  startTimer(interval = 5000) {
+  startTimer(interval = 15000) {
     setInterval(() => {
       [...this._taskMap.values()].forEach((t) => t());
     }, interval);
