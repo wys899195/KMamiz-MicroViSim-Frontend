@@ -4,6 +4,7 @@ import {
   Suspense,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -18,6 +19,7 @@ import GraphService from "../services/GraphService";
 import { TGraphData } from "../entities/TGraphData";
 import { TDisplayNodeInfo } from "../entities/TDisplayNodeInfo";
 import Loading from "../components/Loading";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const ForceGraph2D = lazy(() => import("react-force-graph-2d"));
 const InformationWindow = lazy(() => import("../components/InformationWindow"));
@@ -36,10 +38,46 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
+function queryToDisplayInfo(query: string): TDisplayNodeInfo {
+  const raw = atob(decodeURIComponent(query));
+  const [service, namespace, version, method, label] = raw.split("\t");
+  const type = version && method && label ? "EP" : "SRV";
+  const name =
+    type === "SRV"
+      ? `${service}.${namespace}`
+      : `(${version}) ${method.toUpperCase()} ${label}`;
+
+  return {
+    labelName: label,
+    type,
+    service,
+    namespace,
+    version,
+    name,
+    method,
+    uniqueServiceName: `${service}\t${namespace}\t${version}`,
+  };
+}
+
+function displayInfoToQuery(info: TDisplayNodeInfo) {
+  let query = "";
+
+  if (info.type === "SRV") {
+    query = `${info.service!}\t${info.namespace!}`;
+  } else if (info.type === "EP") {
+    query = `${info.uniqueServiceName!}\t${info.method!}\t${info.labelName}`;
+  }
+
+  return encodeURIComponent(btoa(query));
+}
+
 export default function DependencyGraph() {
   const classes = useStyles();
+  const navigate = useNavigate();
   const graphRef = useRef<any>();
   const rawDataRef = useRef<string>();
+  const { search } = useLocation();
+  const query = useMemo(() => new URLSearchParams(search), [search]);
   const [size, setSize] = useState([0, 0]);
   const [data, setData] = useState<any>();
   const [highlightInfo, setHighlightInfo] = useHoverHighlight();
@@ -52,6 +90,28 @@ export default function DependencyGraph() {
     );
     return unsubscribe;
   }, []);
+
+  useEffect(() => {
+    if (!data) return;
+    const selected = query.get("s");
+    if (selected) {
+      const info = queryToDisplayInfo(selected);
+      const node = data?.nodes.find((n: any) => n.name === info.name);
+      if (node) {
+        DependencyGraphFactory.OnClick(node, graphRef, setDisplayInfo);
+        setHighlightInfo(
+          DependencyGraphFactory.HighlightOnNodeHover(node, highlightInfo)
+        );
+      }
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (!data) return;
+    navigate(`/${displayInfo ? `?s=${displayInfoToQuery(displayInfo)}` : ""}`, {
+      replace: true,
+    });
+  }, [displayInfo]);
 
   useEffect(() => {
     const next = (nextData?: TGraphData) => {
