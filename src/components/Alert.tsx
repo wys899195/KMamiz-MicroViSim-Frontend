@@ -1,4 +1,4 @@
-import { Snackbar, Box, Button } from "@mui/material";
+import { Snackbar, Box, Button, Tooltip } from "@mui/material";
 import { useEffect, useState } from "react";
 import { TAlert } from "../entities/TAlert";
 import MuiAlert from "@mui/material/Alert";
@@ -31,17 +31,20 @@ export default function Alert() {
       >
         {alerts.map((a) => (
           <MuiAlert
-            elevation={6}
             key={a.id}
+            elevation={6}
             variant="filled"
             severity={a.severity}
-            onClose={() =>
-              AlertManager.getInstance().update({ ...a, notified: true })
-            }
+            onClose={(e) => {
+              e.stopPropagation();
+              AlertManager.getInstance().update({ ...a, notified: true });
+            }}
             onClick={() => a.onClickNavigation && navigate(a.onClickNavigation)}
             sx={{ cursor: "pointer" }}
           >
-            {a.context}
+            <Tooltip title="Click to jump to Dependency Graph">
+              <div>{a.context}</div>
+            </Tooltip>
           </MuiAlert>
         ))}
       </Box>
