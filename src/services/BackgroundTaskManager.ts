@@ -26,6 +26,9 @@ export default class BackgroundTaskManager {
           severity: "warning",
           timestamp: v.timeoutAt,
           notified: false,
+          onClickNavigation: `/?s=${encodeURIComponent(
+            btoa(v.highlightNodeName)
+          )}`,
         });
       });
     });

@@ -1,10 +1,12 @@
-import { Snackbar, Box } from "@mui/material";
+import { Snackbar, Box, Button } from "@mui/material";
 import { useEffect, useState } from "react";
 import { TAlert } from "../entities/TAlert";
 import MuiAlert from "@mui/material/Alert";
 import AlertManager from "../services/AlertManager";
+import { useNavigate } from "react-router-dom";
 
 export default function Alert() {
+  const navigate = useNavigate();
   const [alerts, setAlerts] = useState<TAlert[]>([]);
 
   useEffect(() => {
@@ -36,6 +38,8 @@ export default function Alert() {
             onClose={() =>
               AlertManager.getInstance().update({ ...a, notified: true })
             }
+            onClick={() => a.onClickNavigation && navigate(a.onClickNavigation)}
+            sx={{ cursor: "pointer" }}
           >
             {a.context}
           </MuiAlert>

@@ -4,4 +4,5 @@ export type TAlert = {
   severity: "success" | "info" | "warning" | "error";
   timestamp: number;
   notified: boolean;
+  onClickNavigation?: string;
 };
