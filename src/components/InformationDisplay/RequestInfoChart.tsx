@@ -7,13 +7,19 @@ export type RequestInfoChartProps = {
 };
 
 export default function RequestInfoChart(props: RequestInfoChartProps) {
-  return props.chartData ? (
+  const show =
+    props.chartData &&
+    (props.chartData.totalRequestCount ||
+      props.chartData.totalClientErrors ||
+      props.chartData.totalServerErrors);
+
+  return show ? (
     <Card variant="outlined">
       <RequestDonutChart
         series={[
-          props.chartData.totalRequestCount,
-          props.chartData.totalClientErrors,
-          props.chartData.totalServerErrors,
+          props.chartData!.totalRequestCount,
+          props.chartData!.totalClientErrors,
+          props.chartData!.totalServerErrors,
         ]}
       />
     </Card>
