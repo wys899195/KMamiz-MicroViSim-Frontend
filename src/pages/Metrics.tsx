@@ -19,13 +19,12 @@ const useStyles = makeStyles(() => ({
 
 export default function Metrics() {
   const classes = useStyles();
-  const [mappedHistoricalData, setMappedHistoricalData] = useState<
-    TLineChartData[]
-  >([]);
+  const [mappedHistoricalData, setMappedHistoricalData] =
+    useState<TLineChartData>();
 
   useEffect(() => {
     const unsubscribe = [
-      GraphService.getInstance().subscribeToAreaLineData(
+      GraphService.getInstance().subscribeToLineChartData(
         setMappedHistoricalData
       ),
     ];

@@ -7,6 +7,7 @@ import { TServiceCoupling } from "../entities/TServiceCoupling";
 import { TServiceInstability } from "../entities/TServiceInstability";
 import { TTotalServiceInterfaceCohesion } from "../entities/TTotalServiceInterfaceCohesion";
 import { DataView } from "./DataView";
+import { TRequestInfoChartData } from "../entities/TRequestInfoChartData";
 
 type RawChordData = {
   nodes: {
@@ -125,8 +126,8 @@ export default class GraphService {
     );
   }
 
-  subscribeToAreaLineData(
-    next: (data: TLineChartData[]) => void,
+  subscribeToLineChartData(
+    next: (data?: TLineChartData) => void,
     uniqueServiceName?: string,
     notBefore?: number
   ) {
@@ -136,7 +137,9 @@ export default class GraphService {
     const query = notBefore ? `?notBefore=${notBefore}` : "";
     const path = `${this.prefix}/graph/line${postfix}${query}`;
 
-    return GraphService.getInstance().subscribeToArray(path, next);
+    return DataView.getInstance().subscribe<TLineChartData>(path, (_, data) =>
+      next(data)
+    );
   }
 
   subscribeToDirectChord(next: (data?: TChordData) => void) {
@@ -180,5 +183,16 @@ export default class GraphService {
       namespace ? `/${namespace}` : ""
     }`;
     return GraphService.getInstance().subscribeToArray(path, next);
+  }
+
+  subscribeToRequestInfoChartData(
+    next: (data: TRequestInfoChartData | undefined) => void,
+    uniqueName: string
+  ) {
+    const path = `${this.prefix}/graph/requests/${uniqueName}`;
+    return DataView.getInstance().subscribe<TRequestInfoChartData>(
+      path,
+      (_, data) => next(data)
+    );
   }
 }

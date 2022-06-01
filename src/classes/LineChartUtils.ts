@@ -1,5 +1,6 @@
 import { ApexOptions } from "apexcharts";
 import {
+  FieldIndex,
   TLineChartData,
   TLineChartDataFields,
 } from "../entities/TLineChartData";
@@ -14,6 +15,9 @@ export default class LineChartUtils {
       },
       chart: {
         type: "line",
+        animations: {
+          enabled: false,
+        },
       },
       dataLabels: {
         enabled: false,
@@ -40,25 +44,18 @@ export default class LineChartUtils {
   }
 
   static MappedBaseDataToSeriesData(
-    data: TLineChartData[],
+    data: TLineChartData,
     field: TLineChartDataFields
   ): ApexAxisChartSeries {
-    const serviceMap = new Map<string, TLineChartData[]>();
-
-    data.forEach((d) => {
-      serviceMap.set(d.name, [...(serviceMap.get(d.name) || []), d]);
-    });
-
-    return [...serviceMap.entries()].map(([name, data]) => {
-      return {
-        name,
-        color: Color.generateFromString(name).hex,
-        data: data.map((d) => ({
-          x: d.x,
-          y: Math.round((d[field] || 0) * 1000) / 1000,
-          fillColor: Color.generateFromString(name).hex,
-        })),
-      };
-    });
+    const fIndex = FieldIndex.indexOf(field);
+    return data.services.map((s, i) => ({
+      name: s,
+      color: Color.generateFromString(s).hex,
+      data: data.dates.map((d, j) => ({
+        x: d,
+        y: Math.round((data.metrics[j][i][fIndex] || 0) * 1000) / 1000,
+        fillColor: Color.generateFromString(s).hex,
+      })),
+    }));
   }
 }

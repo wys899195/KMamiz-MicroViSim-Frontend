@@ -1,16 +1,22 @@
 export type TLineChartDataFields =
   | "requests"
-  | "serverErrors"
   | "requestErrors"
-  | "risk"
-  | "latencyCV";
+  | "serverErrors"
+  | "latencyCV"
+  | "risk";
 
 export type TLineChartData = {
-  name: string;
-  x: Date;
-  requests: number;
-  serverErrors: number;
-  requestErrors: number;
-  latencyCV: number;
-  risk?: number;
+  dates: number[];
+  services: string[];
+  metrics: [number, number, number, number, number][][];
 };
+
+const FieldIndex = [
+  "requests",
+  "requestErrors",
+  "serverErrors",
+  "latencyCV",
+  "risk",
+];
+
+export { FieldIndex };
