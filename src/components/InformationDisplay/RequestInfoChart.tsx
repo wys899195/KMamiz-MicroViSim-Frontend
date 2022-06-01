@@ -15,9 +15,6 @@ function createOverwriteChartOptions(title: string) {
     ...defaultOptions,
     chart: {
       ...defaultOptions.chart,
-      toolbar: {
-        show: false,
-      },
     },
     title: {
       ...defaultOptions.title,
