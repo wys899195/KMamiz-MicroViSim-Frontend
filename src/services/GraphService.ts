@@ -187,9 +187,13 @@ export default class GraphService {
 
   subscribeToRequestInfoChartData(
     next: (data: TRequestInfoChartData | undefined) => void,
-    uniqueName: string
+    uniqueName: string,
+    ignoreServiceVersion = false,
+    notBefore = 86400000
   ) {
-    const path = `${this.prefix}/graph/requests/${uniqueName}`;
+    const path = `${this.prefix}/graph/requests/${encodeURIComponent(
+      uniqueName
+    )}?ignoreServiceVersion=${ignoreServiceVersion}&notBefore=${notBefore}`;
     return DataView.getInstance().subscribe<TRequestInfoChartData>(
       path,
       (_, data) => next(data)

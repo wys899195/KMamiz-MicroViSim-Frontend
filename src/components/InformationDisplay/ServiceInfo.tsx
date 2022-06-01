@@ -16,7 +16,8 @@ import {
 } from "@mui/material";
 import { Article, FiberManualRecord, Warning } from "@mui/icons-material";
 import { TAggregatedServiceInfo } from "../../entities/TAggregatedData";
-import RequestDonutChart from "../RequestDonutChart";
+import { useEffect, useState } from "react";
+import DataService from "../../services/DataService";
 
 function roundNumber(num: number) {
   return Math.round(num * 10000) / 10000;
@@ -26,29 +27,38 @@ function sumField(field: string, obj: any[]) {
 }
 
 export default function ServiceInfo(props: {
-  services: TAggregatedServiceInfo[];
+  service: string;
+  namespace: string;
 }) {
-  props.services.sort((a, b) => a.version.localeCompare(b.version));
+  const [services, setServices] = useState<TAggregatedServiceInfo[]>([]);
+  useEffect(() => {
+    const unSub = DataService.getInstance().subscribeToAggregatedData(
+      (data) => {
+        setServices(
+          data
+            ? data.services.sort((a, b) => a.version.localeCompare(b.version))
+            : []
+        );
+      },
+      undefined,
+      `${props.service}\t${props.namespace}`
+    );
+    return () => {
+      unSub();
+    };
+  }, [props.service, props.namespace]);
 
   const endpoints = [
     ...new Set<string>(
-      props.services
+      services
         .map((s) => s.endpoints.map((e) => ({ ...e, version: s.version })))
         .flat()
         .map((e) => `${e.version}\t${e.method}\t${e.labelName}`)
     ),
   ].length;
 
-  const reqErrors = sumField("totalRequestErrors", props.services);
-  const srvErrors = sumField("totalServerErrors", props.services);
-  const normalReq =
-    sumField("totalRequests", props.services) - reqErrors - srvErrors;
-
   return (
     <div>
-      <Card variant="outlined">
-        <RequestDonutChart series={[normalReq, reqErrors, srvErrors]} />
-      </Card>
       <List>
         <ListItem disablePadding>
           <ListItemIcon>
@@ -62,7 +72,7 @@ export default function ServiceInfo(props: {
           </ListItemIcon>
           <ListItemText
             primary={`Combined Risk: ${roundNumber(
-              sumField("avgRisk", props.services) / props.services.length
+              sumField("avgRisk", services) / services.length
             )}`}
           />
         </ListItem>
@@ -77,7 +87,7 @@ export default function ServiceInfo(props: {
             </TableRow>
           </TableHead>
           <TableBody>
-            {props.services.map((s) => (
+            {services.map((s) => (
               <TableRow key={s.version}>
                 <TableCell>{s.version}</TableCell>
                 <TableCell>{roundNumber(s.avgRisk)}</TableCell>

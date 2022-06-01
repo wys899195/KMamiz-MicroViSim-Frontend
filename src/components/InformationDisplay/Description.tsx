@@ -1,17 +1,13 @@
 import { Chip, Tooltip } from "@mui/material";
-import { useEffect, useMemo, useState } from "react";
-import {
-  TAggregatedData,
-  TAggregatedEndpointInfo,
-  TAggregatedServiceInfo,
-} from "../../entities/TAggregatedData";
+import { useEffect, useState } from "react";
 import { TDisplayNodeInfo } from "../../entities/TDisplayNodeInfo";
-import IEndpointDataType from "../../entities/TEndpointDataType";
-import DataService from "../../services/DataService";
 import EndpointInfo from "./EndpointInfo";
 import ServiceInfo from "./ServiceInfo";
 import { makeStyles } from "@mui/styles";
 import { Unsubscribe } from "../../services/DataView";
+import { TRequestInfoChartData } from "../../entities/TRequestInfoChartData";
+import GraphService from "../../services/GraphService";
+import RequestInfoChart from "./RequestInfoChart";
 
 const useStyles = makeStyles(() => ({
   info: {
@@ -24,77 +20,27 @@ const useStyles = makeStyles(() => ({
 
 export default function Description(props: { info: TDisplayNodeInfo | null }) {
   const classes = useStyles();
-  const [serviceInfo, setServiceInfo] = useState<TAggregatedServiceInfo[]>();
-  const [endpointInfo, setEndpointInfo] = useState<TAggregatedEndpointInfo>();
-  const [endpointDataType, setEndpointDataType] = useState<IEndpointDataType>();
-  const [aggDataSnap, setAggDataSnap] = useState<TAggregatedData>();
-  const combinedMap = useMemo(() => {
-    const service = aggDataSnap?.services.find(
-      (s) => s.uniqueServiceName === props.info?.uniqueServiceName
-    );
-    if (!service) return;
-    const endpointMap = new Map<string, TAggregatedEndpointInfo[]>();
-    service.endpoints.forEach((e) => {
-      endpointMap.set(
-        e.labelName,
-        (endpointMap.get(e.labelName) || []).concat([e])
-      );
-    });
-
-    const combinedMap = new Map<string, TAggregatedEndpointInfo>();
-    [...endpointMap.entries()].map(([label, endpoints]) => {
-      const combined = endpoints.reduce((prev, curr) => {
-        prev.totalRequests += curr.totalRequests;
-        prev.totalRequestErrors += curr.totalRequestErrors;
-        prev.totalServerErrors += curr.totalServerErrors;
-        prev.avgLatencyCV += curr.avgLatencyCV;
-        return prev;
-      });
-      combinedMap.set(label, combined);
-    });
-    return combinedMap;
-  }, [aggDataSnap]);
+  const [data, setData] = useState<TRequestInfoChartData>();
 
   useEffect(() => {
-    const { info } = props;
-    if (!info || info.type === "EX") return;
-    const aggUnSub =
-      DataService.getInstance().subscribeToAggregatedData(setAggDataSnap);
+    let unSub: Unsubscribe;
 
-    let dataTypeUnSub: Unsubscribe;
-    if (info.type === "EP") {
-      const uniqueLabelName = `${info.uniqueServiceName}\t${info.method}\t${info.labelName}`;
-      dataTypeUnSub = DataService.getInstance().subscribeToEndpointDataType(
-        setEndpointDataType,
-        uniqueLabelName
+    if (props.info && props.info.type !== "EX") {
+      const uniqueName =
+        props.info.type === "SRV"
+          ? `${props.info.service!}\t${props.info.namespace!}`
+          : `${props.info.uniqueServiceName!}\t${props.info.method!}\t${props
+              .info.labelName!}`;
+      unSub = GraphService.getInstance().subscribeToRequestInfoChartData(
+        (data) => setData(data),
+        uniqueName,
+        props.info.type === "SRV"
       );
     }
-
     return () => {
-      if (aggUnSub) aggUnSub();
-      if (dataTypeUnSub) dataTypeUnSub();
+      if (unSub) unSub();
     };
   }, [props.info]);
-
-  useEffect(() => {
-    const { info } = props;
-    if (!info || info.type === "EX") return;
-    if (info.type === "SRV") {
-      setServiceInfo(
-        aggDataSnap?.services.filter(
-          (s) => s.service === info.service && s.namespace === info.namespace
-        )
-      );
-    }
-  }, [aggDataSnap, endpointDataType]);
-
-  useEffect(() => {
-    const { info } = props;
-    if (!info) return;
-    if (info.type === "EP") {
-      setEndpointInfo(combinedMap?.get(info.labelName));
-    }
-  }, [combinedMap]);
 
   switch (props.info?.type) {
     case "SRV":
@@ -105,7 +51,11 @@ export default function Description(props: { info: TDisplayNodeInfo | null }) {
               <Chip color="success" size="small" label={props.info.namespace} />
             </Tooltip>
           </div>
-          {serviceInfo ? <ServiceInfo services={serviceInfo} /> : null}
+          <RequestInfoChart chartData={data} />
+          <ServiceInfo
+            service={props.info.service!}
+            namespace={props.info.namespace!}
+          />
         </div>
       );
     case "EP":
@@ -122,9 +72,10 @@ export default function Description(props: { info: TDisplayNodeInfo | null }) {
               <Chip color="warning" size="small" label={props.info.version} />
             </Tooltip>
           </div>
+          <RequestInfoChart chartData={data} />
           <EndpointInfo
-            endpointInfo={endpointInfo}
-            dataType={endpointDataType}
+            uniqueLabelName={`${props.info.uniqueServiceName!}\t${props.info
+              .method!}\t${props.info.labelName!}`}
           />
         </div>
       );

@@ -1,22 +1,20 @@
-import {
-  Card,
-  Chip,
-  List,
-  ListItem,
-  ListItemText,
-  Tooltip,
-} from "@mui/material";
-import { TAggregatedEndpointInfo } from "../../entities/TAggregatedData";
+import { Chip, List, ListItem, ListItemText, Tooltip } from "@mui/material";
+import { useEffect, useState } from "react";
 import TEndpointDataType from "../../entities/TEndpointDataType";
+import DataService from "../../services/DataService";
 import CodeDisplay from "../CodeDisplay";
-import RequestDonutChart from "../RequestDonutChart";
 
-export default function EndpointInfo(props: {
-  endpointInfo?: TAggregatedEndpointInfo;
-  dataType?: TEndpointDataType;
-}) {
-  const { endpointInfo, dataType } = props;
-  if (!endpointInfo) return <div></div>;
+export default function EndpointInfo(props: { uniqueLabelName: string }) {
+  const [dataType, setDataType] = useState<TEndpointDataType>();
+  useEffect(() => {
+    const unSub = DataService.getInstance().subscribeToEndpointDataType(
+      setDataType,
+      props.uniqueLabelName
+    );
+    return () => {
+      unSub();
+    };
+  }, [props.uniqueLabelName]);
 
   const schema = dataType?.schemas
     ?.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
@@ -27,19 +25,8 @@ export default function EndpointInfo(props: {
   const isReqJson = schema?.requestContentType === "application/json";
   const isResJson = schema?.responseContentType === "application/json";
 
-  const {
-    totalRequests,
-    totalRequestErrors: reqErrors,
-    totalServerErrors: srvErrors,
-  } = endpointInfo;
-
   return (
     <div>
-      <Card variant="outlined">
-        <RequestDonutChart
-          series={[totalRequests - reqErrors - srvErrors, reqErrors, srvErrors]}
-        />
-      </Card>
       {(schema?.requestContentType || schema?.responseContentType) && (
         <List>
           {schema?.requestContentType && (

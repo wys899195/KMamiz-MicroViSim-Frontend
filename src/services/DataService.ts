@@ -112,11 +112,14 @@ export default class DataService {
   subscribeToAggregatedData(
     next: (data?: TAggregatedData) => void,
     namespace?: string,
+    filter?: string,
     notBefore = 86400000
   ) {
     const url = `${this.prefix}/data/aggregate${
       namespace ? "/" + namespace : ""
-    }${notBefore ? `?notBefore=${notBefore}` : ""}`;
+    }?notBefore=${notBefore}${
+      filter ? `&filter=${encodeURIComponent(filter)}` : ""
+    }`;
     return DataView.getInstance().subscribe<TAggregatedData>(url, (_, data) => {
       next(data);
     });
