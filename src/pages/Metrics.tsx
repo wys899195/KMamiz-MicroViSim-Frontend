@@ -2,7 +2,7 @@ import { Box, Grid } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { useEffect, useState } from "react";
 import LineChartUtils from "../classes/LineChartUtils";
-import AreaLineChart from "../components/LineChart";
+import LineChart from "../components/LineChart";
 import {
   TLineChartData,
   TLineChartDataFields,
@@ -61,13 +61,13 @@ export default function Metrics() {
         {mappedHistoricalData
           ? areaCharts.map((c) => (
               <Grid key={c.name} item xs={6}>
-                <AreaLineChart
+                <LineChart
                   title={c.name}
                   series={LineChartUtils.MappedBaseDataToSeriesData(
                     mappedHistoricalData,
                     c.field
                   )}
-                  overrideOptions={c.options}
+                  overwriteOptions={c.options}
                 />
               </Grid>
             ))

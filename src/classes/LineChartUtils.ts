@@ -4,6 +4,7 @@ import {
   TLineChartData,
   TLineChartDataFields,
 } from "../entities/TLineChartData";
+import { TRequestInfoChartData } from "../entities/TRequestInfoChartData";
 import { Color } from "./ColorUtils";
 
 export default class LineChartUtils {
@@ -57,5 +58,52 @@ export default class LineChartUtils {
         fillColor: Color.generateFromString(s).hex,
       })),
     }));
+  }
+
+  static MapRequestInfoToRequestSeriesData(
+    data: TRequestInfoChartData
+  ): ApexAxisChartSeries {
+    const requestSeries = {
+      name: "2XX/3XX",
+      color: "#0000ff",
+      data: data.time.map((t, i) => ({
+        x: t,
+        y: data.requests[i],
+      })),
+    };
+
+    const clientErrorSeries = {
+      name: "4XX",
+      color: "#ffff00",
+      data: data.time.map((t, i) => ({
+        x: t,
+        y: data.clientErrors[i],
+      })),
+    };
+
+    const serverErrorSeries = {
+      name: "5XX",
+      color: "#ff0000",
+      data: data.time.map((t, i) => ({
+        x: t,
+        y: data.serverErrors[i],
+      })),
+    };
+    return [requestSeries, clientErrorSeries, serverErrorSeries];
+  }
+
+  static MapRequestInfoToLatencySeriesData(
+    data: TRequestInfoChartData
+  ): ApexAxisChartSeries {
+    return [
+      {
+        name: "Latency CV",
+        color: "#4b0082",
+        data: data.time.map((t, i) => ({
+          x: t,
+          y: Math.round((data.latencyCV[i] || 0) * 1000) / 1000,
+        })),
+      },
+    ];
   }
 }
