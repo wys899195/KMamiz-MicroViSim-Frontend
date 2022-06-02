@@ -104,7 +104,7 @@ export default function DependencyGraph() {
         );
       }
     }
-  }, [data]);
+  }, [data, search]);
 
   useEffect(() => {
     if (!data) return;
