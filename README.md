@@ -1,12 +1,16 @@
 # KMamiz-Web
 
-> Frontend for [KMamiz](https://github.com/stanley2058/KMamiz)
+> This project is the frontend webpage for [KMamiz](https://github.com/stanley2058/KMamiz).
 
-_NOTICE: Documents are currently under construction._
+## Build Image
 
-This is the webpage for KMamiz, created using React, MUI, amchart and apexcharts.
+To build the image, run:
 
-## Build
+```bash
+./build.sh
+```
+
+## Build Locally
 
 First, install all dependencies by running `npm i`.
 
