@@ -10,20 +10,30 @@ export default class BarChartUtils {
     title: string,
     data: T[],
     toSeriesStrategy: (_: T[]) => any[],
+    stacked = false,
+    overwriteOpts: Props = {},
     height = 600
   ): Props {
     return {
       type: "bar",
       height,
-      options: BarChartUtils.DefaultOptions(
-        title,
-        data.map(({ name }) => name)
-      ),
+      options: {
+        ...BarChartUtils.DefaultOptions(
+          title,
+          stacked,
+          data.map(({ name }) => name)
+        ),
+        ...overwriteOpts,
+      },
       series: toSeriesStrategy(data),
     };
   }
 
-  static DefaultOptions(title: string, categories: any[]): ApexOptions {
+  static DefaultOptions(
+    title: string,
+    stacked: boolean,
+    categories: any[]
+  ): ApexOptions {
     return {
       title: {
         text: title,
@@ -31,6 +41,7 @@ export default class BarChartUtils {
       },
       chart: {
         type: "bar",
+        stacked,
         animations: {
           enabled: false,
         },
@@ -46,7 +57,6 @@ export default class BarChartUtils {
         enabled: true,
         style: {
           fontSize: "12px",
-          colors: ["#fff"],
         },
       },
       stroke: {
@@ -71,12 +81,60 @@ export default class BarChartUtils {
     };
   }
 
+  static RoundToDisplay(n: number) {
+    return Math.round(n * 100) / 100;
+  }
   static MapFieldsToSeries(fields: { f: string; name: string }[], data: any[]) {
     return fields.map(({ f, name }) => ({
       name,
       color: Color.generateFromString(name).darker(50).hex,
-      data: data.map((c) => Math.round(c[f] * 100) / 100),
+      data: data.map((c) => BarChartUtils.RoundToDisplay(c[f])),
     }));
+  }
+
+  static ServiceCohesionOpts(
+    cohesions: TTotalServiceInterfaceCohesion[]
+  ): ApexOptions {
+    const tsic = "Total Interface Cohesion (TSIC)";
+    const color = Color.generateFromString(tsic);
+    return {
+      stroke: {
+        show: false,
+      },
+      dataLabels: {
+        enabledOnSeries: [0, 1],
+      },
+      annotations: {
+        points: cohesions.map((c) => ({
+          x: c.name,
+          y: BarChartUtils.RoundToDisplay(c.totalInterfaceCohesion),
+          marker: {
+            size: 5,
+            shape: "square",
+            fillColor: color.hex,
+            strokeColor: color.darker(30).hex,
+          },
+          label: {
+            borderColor: color.darker(30).hex,
+            borderWidth: 2,
+            offsetX: 45,
+            offsetY: 15,
+            style: {
+              color: "#fff",
+              fontWeight: "bold",
+              background: color.darker(50).hex,
+              padding: {
+                top: 4,
+              },
+            },
+
+            text: `TSIC: ${BarChartUtils.RoundToDisplay(
+              c.totalInterfaceCohesion
+            )}`,
+          },
+        })),
+      },
+    };
   }
 
   static SeriesFromServiceCohesion(
@@ -91,9 +149,21 @@ export default class BarChartUtils {
         f: "usageCohesion",
         name: "Usage Cohesion (SIUC)",
       },
-      { f: "totalInterfaceCohesion", name: "Total Interface Cohesion (TSIC)" },
+      {
+        f: "totalInterfaceCohesion",
+        name: "Total Interface Cohesion (TSIC)",
+      },
     ];
-    return BarChartUtils.MapFieldsToSeries(fields, cohesions);
+    const base = BarChartUtils.MapFieldsToSeries(fields, cohesions);
+    return base.map((b) => {
+      if (b.name === "Total Interface Cohesion (TSIC)") {
+        return {
+          ...b,
+          type: "line",
+        };
+      }
+      return { ...b, type: "column" };
+    });
   }
 
   static SeriesFromServiceCoupling(coupling: TServiceCoupling[]) {

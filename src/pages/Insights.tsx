@@ -102,7 +102,9 @@ export default function Insights() {
             {...BarChartUtils.CreateBarChart(
               "Service Cohesion",
               cohesion,
-              BarChartUtils.SeriesFromServiceCohesion
+              BarChartUtils.SeriesFromServiceCohesion,
+              true,
+              BarChartUtils.ServiceCohesionOpts(cohesion)
             )}
           ></ReactApexChart>
         </Grid>
