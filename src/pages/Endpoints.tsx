@@ -120,7 +120,7 @@ export default function Endpoints() {
     <Box className={classes.root}>
       <Grid container padding={1} spacing={1}>
         <Grid item xs={12}>
-          <Typography variant="h5">Labels</Typography>
+          <Typography variant="h5">Endpoints</Typography>
         </Grid>
         <Grid item xs={12} margin="1em 1em 0 0">
           <FormControl className={classes.select}>
