@@ -134,6 +134,21 @@ export default class BarChartUtils {
           },
         })),
       },
+      tooltip: {
+        shared: true,
+        intersect: false,
+        y: {
+          formatter: (value, { seriesIndex, dataPointIndex }) => {
+            if (seriesIndex === 2) {
+              const c = BarChartUtils.RoundToDisplay(
+                cohesions[dataPointIndex].totalInterfaceCohesion
+              );
+              return c.toString();
+            }
+            return value.toString();
+          },
+        },
+      },
     };
   }
 
@@ -159,6 +174,7 @@ export default class BarChartUtils {
       if (b.name === "Total Interface Cohesion (TSIC)") {
         return {
           ...b,
+          data: b.data.map((_) => 0),
           type: "line",
         };
       }
