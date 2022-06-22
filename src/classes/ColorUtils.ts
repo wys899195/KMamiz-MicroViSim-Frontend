@@ -97,6 +97,16 @@ export class Color {
     return Color.fromHSL(h, s, l > maxLightness ? maxLightness : l);
   }
 
+  mixWith(color: Color) {
+    const cur = this.hsl;
+    const mix = color.hsl;
+    return Color.fromHSL(
+      (cur.h + mix.h) / 2,
+      (cur.s + mix.s) / 2,
+      (cur.l + mix.l) / 2
+    );
+  }
+
   private static isValidRGB(val: number) {
     return val >= 0 && val <= 255;
   }

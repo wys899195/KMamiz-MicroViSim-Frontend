@@ -81,22 +81,22 @@ export default class BarChartUtils {
     };
   }
 
-  static RoundToDisplay(n: number) {
-    return Math.round(n * 100) / 100;
-  }
-  static MapFieldsToSeries(fields: { f: string; name: string }[], data: any[]) {
-    return fields.map(({ f, name }) => ({
-      name,
-      color: Color.generateFromString(name).darker(50).hex,
-      data: data.map((c) => BarChartUtils.RoundToDisplay(c[f])),
-    }));
-  }
-
-  static ServiceCohesionOpts(
-    cohesions: TTotalServiceInterfaceCohesion[]
-  ): ApexOptions {
-    const tsic = "Total Interface Cohesion (TSIC)";
-    const color = Color.generateFromString(tsic);
+  static StackMixedChartOverwriteOpts<T>(
+    markerName: string,
+    data: T[],
+    strategy: {
+      x: (d: T) => string | number;
+      y: (d: T) => number;
+      markerLabel: (d: T) => string;
+      tooltip: (
+        y: number,
+        seriesIndex: number,
+        dataPointIndex: number
+      ) => string;
+    },
+    overwriteYAxis = 0
+  ) {
+    const color = Color.generateFromString(markerName);
     return {
       stroke: {
         show: false,
@@ -105,9 +105,10 @@ export default class BarChartUtils {
         enabledOnSeries: [0, 1],
       },
       annotations: {
-        points: cohesions.map((c) => ({
-          x: c.name,
-          y: BarChartUtils.RoundToDisplay(c.totalInterfaceCohesion),
+        points: data.map((d) => ({
+          x: strategy.x(d),
+          y: BarChartUtils.roundToDisplay(strategy.y(d)),
+          yAxisIndex: overwriteYAxis,
           marker: {
             size: 5,
             shape: "square",
@@ -117,8 +118,9 @@ export default class BarChartUtils {
           label: {
             borderColor: color.darker(30).hex,
             borderWidth: 2,
-            offsetX: 45,
+            offsetX: 15,
             offsetY: 15,
+            textAnchor: "start",
             style: {
               color: "#fff",
               fontWeight: "bold",
@@ -128,9 +130,7 @@ export default class BarChartUtils {
               },
             },
 
-            text: `TSIC: ${BarChartUtils.RoundToDisplay(
-              c.totalInterfaceCohesion
-            )}`,
+            text: strategy.markerLabel(d),
           },
         })),
       },
@@ -138,17 +138,159 @@ export default class BarChartUtils {
         shared: true,
         intersect: false,
         y: {
-          formatter: (value, { seriesIndex, dataPointIndex }) => {
-            if (seriesIndex === 2) {
-              const c = BarChartUtils.RoundToDisplay(
-                cohesions[dataPointIndex].totalInterfaceCohesion
-              );
-              return c.toString();
-            }
-            return value.toString();
-          },
+          formatter: (
+            y: number,
+            {
+              seriesIndex,
+              dataPointIndex,
+            }: { seriesIndex: number; dataPointIndex: number }
+          ) => strategy.tooltip(y, seriesIndex, dataPointIndex),
         },
       },
+    };
+  }
+
+  static ServiceCohesionOpts(
+    cohesions: TTotalServiceInterfaceCohesion[]
+  ): ApexOptions {
+    const tsic = "Total Interface Cohesion (TSIC)";
+    return BarChartUtils.StackMixedChartOverwriteOpts(tsic, cohesions, {
+      x: (d) => d.name,
+      y: (d) => d.totalInterfaceCohesion,
+      markerLabel: (d) =>
+        `TSIC: ${BarChartUtils.roundToDisplay(d.totalInterfaceCohesion)}`,
+      tooltip: (y, seriesIndex, dataPointIndex) => {
+        if (seriesIndex === 2) {
+          const c = BarChartUtils.roundToDisplay(
+            cohesions[dataPointIndex].totalInterfaceCohesion
+          );
+          return c.toString();
+        }
+        return y.toString();
+      },
+    });
+  }
+
+  static ServiceCouplingOpts(coupling: TServiceCoupling[]): ApexOptions {
+    const acs = "Absolute Criticality (ACS)";
+    const base = BarChartUtils.StackMixedChartOverwriteOpts(
+      acs,
+      coupling,
+      {
+        x: (d) => d.name,
+        y: (d) => d.acs,
+        markerLabel: (d) => `ACS: ${BarChartUtils.roundToDisplay(d.acs)}`,
+        tooltip: (y, seriesIndex, dataPointIndex) => {
+          if (seriesIndex === 2) {
+            const c = BarChartUtils.roundToDisplay(
+              coupling[dataPointIndex].acs
+            );
+            return c.toString();
+          }
+          return y.toString();
+        },
+      },
+      2
+    );
+
+    const { maxY, maxRY } = coupling.reduce(
+      ({ maxY, maxRY }, { ais, ads, acs }) => ({
+        maxY: Math.max(maxY, ais + ads),
+        maxRY: Math.max(maxRY, acs),
+      }),
+      { maxY: 0, maxRY: 0 }
+    );
+
+    const colorAis = Color.generateFromString("Absolute Importance (AIS)");
+    const colorAds = Color.generateFromString("Absolute Dependence (ADS)");
+    const colorAcs = Color.generateFromString("Absolute Criticality (ACS)");
+    const mixedColor = colorAis.mixWith(colorAds);
+
+    return {
+      ...base,
+      yaxis: [
+        {
+          title: {
+            text: "AIS + ADS",
+            style: {
+              color: mixedColor.hex,
+            },
+          },
+          ...BarChartUtils.generateTick(maxY),
+        },
+        {
+          show: false,
+          ...BarChartUtils.generateTick(maxY),
+        },
+        {
+          opposite: true,
+          title: {
+            text: "ACS",
+            style: {
+              color: colorAcs.hex,
+            },
+          },
+          ...BarChartUtils.generateTick(maxRY),
+        },
+      ],
+    };
+  }
+
+  static ServiceInstabilityOpts(
+    instability: TServiceInstability[]
+  ): ApexOptions {
+    const base = BarChartUtils.StackMixedChartOverwriteOpts(
+      "Instability (SDP)",
+      instability,
+      {
+        x: (d) => d.name,
+        y: (d) => d.instability,
+        markerLabel: (d) =>
+          `SDP: ${BarChartUtils.roundToDisplay(d.instability)}`,
+        tooltip: (y, seriesIndex, dataPointIndex) => {
+          if (seriesIndex === 2) {
+            const c = BarChartUtils.roundToDisplay(
+              instability[dataPointIndex].instability
+            );
+            return c.toString();
+          }
+          return y.toString();
+        },
+      },
+      2
+    );
+
+    return {
+      ...base,
+      yaxis: [
+        {
+          title: {
+            text: "FanOut",
+            style: {
+              color: Color.generateFromString("FanOut").hex,
+            },
+          },
+        },
+        {
+          title: {
+            text: "FanIn",
+            style: {
+              color: Color.generateFromString("FanIn").hex,
+            },
+          },
+        },
+        {
+          opposite: true,
+          title: {
+            text: "Instability (SDP)",
+            style: {
+              color: Color.generateFromString("Instability (SDP)").hex,
+            },
+          },
+          min: 0,
+          max: 1,
+        },
+      ],
     };
   }
 
@@ -169,17 +311,11 @@ export default class BarChartUtils {
         name: "Total Interface Cohesion (TSIC)",
       },
     ];
-    const base = BarChartUtils.MapFieldsToSeries(fields, cohesions);
-    return base.map((b) => {
-      if (b.name === "Total Interface Cohesion (TSIC)") {
-        return {
-          ...b,
-          data: b.data.map((_) => 0),
-          type: "line",
-        };
-      }
-      return { ...b, type: "column" };
-    });
+    const base = BarChartUtils.mapFieldsToSeries(fields, cohesions);
+    return BarChartUtils.markFieldToLine(
+      "Total Interface Cohesion (TSIC)",
+      base
+    );
   }
 
   static SeriesFromServiceCoupling(coupling: TServiceCoupling[]) {
@@ -194,21 +330,56 @@ export default class BarChartUtils {
       },
       { f: "acs", name: "Absolute Criticality (ACS)" },
     ];
-    return BarChartUtils.MapFieldsToSeries(fields, coupling);
+    const base = BarChartUtils.mapFieldsToSeries(fields, coupling);
+    return BarChartUtils.markFieldToLine("Absolute Criticality (ACS)", base);
   }
 
-  static FanSeriesFromServiceInstability(instability: TServiceInstability[]) {
+  static SeriesFromServiceInstability(instability: TServiceInstability[]) {
     const fields = [
       { f: "dependingOn", name: "FanOut" },
       { f: "dependingBy", name: "FanIn" },
+      { f: "instability", name: "Instability (SDP)" },
     ];
-    return BarChartUtils.MapFieldsToSeries(fields, instability);
+    const base = BarChartUtils.mapFieldsToSeries(fields, instability);
+    return BarChartUtils.markFieldToLine("Instability (SDP)", base);
   }
 
-  static InstabilitySeriesFromServiceInstability(
-    instability: TServiceInstability[]
+  private static roundToDisplay(n: number) {
+    return Math.round(n * 100) / 100;
+  }
+
+  private static mapFieldsToSeries(
+    fields: { f: string; name: string }[],
+    data: any[]
   ) {
-    const fields = [{ f: "instability", name: "Instability (SDP)" }];
-    return BarChartUtils.MapFieldsToSeries(fields, instability);
+    return fields.map(({ f, name }) => ({
+      name,
+      color: Color.generateFromString(name).darker(50).hex,
+      data: data.map((c) => BarChartUtils.roundToDisplay(c[f])),
+    }));
+  }
+
+  private static generateTick(max: number) {
+    return {
+      max,
+      min: 0,
+      tickAmount: max,
+    };
+  }
+
+  private static markFieldToLine(
+    fName: string,
+    series: ApexAxisChartSeries
+  ): ApexAxisChartSeries {
+    return series.map((s) => {
+      if (s.name === fName) {
+        return {
+          ...s,
+          data: s.data.map(() => 0),
+          type: "line",
+        };
+      }
+      return { ...s, type: "column" };
+    });
   }
 }

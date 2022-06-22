@@ -113,20 +113,24 @@ export default function Insights() {
             {...BarChartUtils.CreateBarChart(
               "Service Coupling",
               coupling,
-              BarChartUtils.SeriesFromServiceCoupling
+              BarChartUtils.SeriesFromServiceCoupling,
+              true,
+              BarChartUtils.ServiceCouplingOpts(coupling)
             )}
           ></ReactApexChart>
         </Grid>
         <Grid item xs={size}>
           <ReactApexChart
             {...BarChartUtils.CreateBarChart(
-              "Service Instability (FanIn / FanOut)",
+              "Service Instability",
               instability,
-              BarChartUtils.FanSeriesFromServiceInstability
+              BarChartUtils.SeriesFromServiceInstability,
+              false,
+              BarChartUtils.ServiceInstabilityOpts(instability)
             )}
           ></ReactApexChart>
         </Grid>
-        <Grid item xs={size}>
+        {/* <Grid item xs={size}>
           <ReactApexChart
             {...BarChartUtils.CreateBarChart(
               "Service Instability (SDP)",
@@ -134,7 +138,7 @@ export default function Insights() {
               BarChartUtils.InstabilitySeriesFromServiceInstability
             )}
           ></ReactApexChart>
-        </Grid>
+        </Grid> */}
       </Grid>
     </Box>
   );
