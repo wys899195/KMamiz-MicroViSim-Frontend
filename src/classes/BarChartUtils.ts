@@ -153,28 +153,72 @@ export default class BarChartUtils {
   static ServiceCohesionOpts(
     cohesions: TTotalServiceInterfaceCohesion[]
   ): ApexOptions {
-    const tsic = "Total Interface Cohesion (TSIC)";
-    return BarChartUtils.StackMixedChartOverwriteOpts(tsic, cohesions, {
-      x: (d) => d.name,
-      y: (d) => d.totalInterfaceCohesion,
-      markerLabel: (d) =>
-        `TSIC: ${BarChartUtils.roundToDisplay(d.totalInterfaceCohesion)}`,
-      tooltip: (y, seriesIndex, dataPointIndex) => {
-        if (seriesIndex === 2) {
-          const c = BarChartUtils.roundToDisplay(
-            cohesions[dataPointIndex].totalInterfaceCohesion
-          );
-          return c.toString();
-        }
-        return y.toString();
+    const base = BarChartUtils.StackMixedChartOverwriteOpts(
+      "Total Interface Cohesion (TSIC)",
+      cohesions,
+      {
+        x: (d) => d.name,
+        y: (d) => d.totalInterfaceCohesion,
+        markerLabel: (d) =>
+          `TSIC: ${BarChartUtils.roundToDisplay(d.totalInterfaceCohesion)}`,
+        tooltip: (y, seriesIndex, dataPointIndex) => {
+          if (seriesIndex === 2) {
+            const c = BarChartUtils.roundToDisplay(
+              cohesions[dataPointIndex].totalInterfaceCohesion
+            );
+            return c.toString();
+          }
+          return y.toString();
+        },
       },
-    });
+      2
+    );
+
+    const colorSidc = Color.generateFromString("Data Cohesion (SIDC)").darker(
+      50
+    );
+    const colorSiuc = Color.generateFromString("Usage Cohesion (SIUC)").darker(
+      50
+    );
+    const mixedColor = colorSidc.mixWith(colorSiuc);
+
+    return {
+      ...base,
+      yaxis: [
+        {
+          title: {
+            text: "SIDC + SIUC",
+            style: {
+              color: mixedColor.hex,
+            },
+          },
+          ...BarChartUtils.generateTick(2),
+          tickAmount: 20,
+        },
+        {
+          show: false,
+          ...BarChartUtils.generateTick(2),
+        },
+        {
+          opposite: true,
+          title: {
+            text: "TSIC",
+            style: {
+              color: BarChartUtils.stringToColorHex(
+                "Total Interface Cohesion (TSIC)"
+              ),
+            },
+          },
+          min: 0,
+          max: 1,
+        },
+      ],
+    };
   }
 
   static ServiceCouplingOpts(coupling: TServiceCoupling[]): ApexOptions {
-    const acs = "Absolute Criticality (ACS)";
     const base = BarChartUtils.StackMixedChartOverwriteOpts(
-      acs,
+      "Absolute Criticality (ACS)",
       coupling,
       {
         x: (d) => d.name,
@@ -201,9 +245,12 @@ export default class BarChartUtils {
       { maxY: 0, maxRY: 0 }
     );
 
-    const colorAis = Color.generateFromString("Absolute Importance (AIS)");
-    const colorAds = Color.generateFromString("Absolute Dependence (ADS)");
-    const colorAcs = Color.generateFromString("Absolute Criticality (ACS)");
+    const colorAis = Color.generateFromString(
+      "Absolute Importance (AIS)"
+    ).darker(50);
+    const colorAds = Color.generateFromString(
+      "Absolute Dependence (ADS)"
+    ).darker(50);
     const mixedColor = colorAis.mixWith(colorAds);
 
     return {
@@ -227,7 +274,9 @@ export default class BarChartUtils {
           title: {
             text: "ACS",
             style: {
-              color: colorAcs.hex,
+              color: BarChartUtils.stringToColorHex(
+                "Absolute Criticality (ACS)"
+              ),
             },
           },
           ...BarChartUtils.generateTick(maxRY),
@@ -267,7 +316,7 @@ export default class BarChartUtils {
           title: {
             text: "FanOut",
             style: {
-              color: Color.generateFromString("FanOut").hex,
+              color: BarChartUtils.stringToColorHex("FanOut"),
             },
           },
         },
@@ -275,7 +324,7 @@ export default class BarChartUtils {
           title: {
             text: "FanIn",
             style: {
-              color: Color.generateFromString("FanIn").hex,
+              color: BarChartUtils.stringToColorHex("FanIn"),
             },
           },
         },
@@ -284,7 +333,7 @@ export default class BarChartUtils {
           title: {
             text: "Instability (SDP)",
             style: {
-              color: Color.generateFromString("Instability (SDP)").hex,
+              color: BarChartUtils.stringToColorHex("Instability (SDP)"),
             },
           },
           min: 0,
@@ -344,6 +393,10 @@ export default class BarChartUtils {
     return BarChartUtils.markFieldToLine("Instability (SDP)", base);
   }
 
+  private static stringToColorHex(str: string) {
+    return Color.generateFromString(str).darker(50).hex;
+  }
+
   private static roundToDisplay(n: number) {
     return Math.round(n * 100) / 100;
   }
@@ -354,7 +407,7 @@ export default class BarChartUtils {
   ) {
     return fields.map(({ f, name }) => ({
       name,
-      color: Color.generateFromString(name).darker(50).hex,
+      color: BarChartUtils.stringToColorHex(name),
       data: data.map((c) => BarChartUtils.roundToDisplay(c[f])),
     }));
   }
