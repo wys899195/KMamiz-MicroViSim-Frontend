@@ -15,7 +15,7 @@ export default class AlertService {
     notBefore?: number
   ) {
     const path = `${this.prefix}/alert/violation${
-      namespace ? `/${namespace}` : ""
+      namespace ? `/${encodeURIComponent(namespace)}` : ""
     }${notBefore ? `?notBefore=${notBefore}` : ""}`;
     return DataView.getInstance().subscribe<TRiskViolation[]>(path, (_, data) =>
       next(data || [])

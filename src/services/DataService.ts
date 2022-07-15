@@ -21,14 +21,14 @@ export default class DataService {
 
   async getAggregatedData(namespace?: string) {
     const path = `${this.prefix}/data/aggregate${
-      namespace ? "/" + namespace : ""
+      namespace ? "/" + encodeURIComponent(namespace) : ""
     }`;
     return await DataService.getInstance().get<TAggregatedData>(path);
   }
 
   async getHistoricalData(namespace?: string) {
     const path = `${this.prefix}/data/history${
-      namespace ? "/" + namespace : ""
+      namespace ? "/" + encodeURIComponent(namespace) : ""
     }`;
     return await DataService.getInstance().get<THistoricalData[]>(path);
   }
@@ -116,7 +116,7 @@ export default class DataService {
     notBefore = 86400000
   ) {
     const url = `${this.prefix}/data/aggregate${
-      namespace ? "/" + namespace : ""
+      namespace ? "/" + encodeURIComponent(namespace) : ""
     }?notBefore=${notBefore}${
       filter ? `&filter=${encodeURIComponent(filter)}` : ""
     }`;
@@ -130,7 +130,7 @@ export default class DataService {
     namespace?: string
   ) {
     const url = `${this.prefix}/data/history${
-      namespace ? "/" + namespace : ""
+      namespace ? "/" + encodeURIComponent(namespace) : ""
     }`;
     return DataView.getInstance().subscribe<THistoricalData[]>(
       url,

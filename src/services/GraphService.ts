@@ -93,7 +93,7 @@ export default class GraphService {
 
   async getServiceCohesion(namespace?: string) {
     const path = `${this.prefix}/graph/cohesion${
-      namespace ? `/${namespace}` : ""
+      namespace ? `/${encodeURIComponent(namespace)}` : ""
     }`;
     return await GraphService.getInstance().get<
       TTotalServiceInterfaceCohesion[]
@@ -101,13 +101,13 @@ export default class GraphService {
   }
   async getServiceInstability(namespace?: string) {
     const path = `${this.prefix}/graph/instability${
-      namespace ? `/${namespace}` : ""
+      namespace ? `/${encodeURIComponent(namespace)}` : ""
     }`;
     return await GraphService.getInstance().get<TServiceInstability[]>(path);
   }
   async getServiceCoupling(namespace?: string) {
     const path = `${this.prefix}/graph/coupling${
-      namespace ? `/${namespace}` : ""
+      namespace ? `/${encodeURIComponent(namespace)}` : ""
     }`;
     return await GraphService.getInstance().get<TServiceCoupling[]>(path);
   }
@@ -160,7 +160,7 @@ export default class GraphService {
     namespace?: string
   ) {
     const path = `${this.prefix}/graph/cohesion${
-      namespace ? `/${namespace}` : ""
+      namespace ? `/${encodeURIComponent(namespace)}` : ""
     }`;
     return GraphService.getInstance().subscribeToArray(path, next);
   }
@@ -170,7 +170,7 @@ export default class GraphService {
     namespace?: string
   ) {
     const path = `${this.prefix}/graph/instability${
-      namespace ? `/${namespace}` : ""
+      namespace ? `/${encodeURIComponent(namespace)}` : ""
     }`;
     return GraphService.getInstance().subscribeToArray(path, next);
   }
@@ -180,7 +180,7 @@ export default class GraphService {
     namespace?: string
   ) {
     const path = `${this.prefix}/graph/coupling${
-      namespace ? `/${namespace}` : ""
+      namespace ? `/${encodeURIComponent(namespace)}` : ""
     }`;
     return GraphService.getInstance().subscribeToArray(path, next);
   }

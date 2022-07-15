@@ -45,7 +45,7 @@ export default function Swagger() {
   const [newVersion, setNewVersion] = useState<string>("");
   const [url, setUrl] = useState<string>(
     `${swaggerPrefix}${encodeURIComponent(service || "")}${
-      tag ? `?tag=${tag}` : ""
+      tag ? `?tag=${encodeURIComponent(tag)}` : ""
     }`
   );
 
@@ -53,7 +53,7 @@ export default function Swagger() {
     if (service) {
       setUrl(
         `${swaggerPrefix}${encodeURIComponent(service || "")}${
-          tag ? `?tag=${tag}` : ""
+          tag ? `?tag=${encodeURIComponent(tag)}` : ""
         }`
       );
       SwaggerService.getInstance().getTags(service).then(setTags);
@@ -74,7 +74,7 @@ export default function Swagger() {
     const filename = `${service.replace(/\t/g, "_")}.${json ? "json" : "yaml"}`;
     const path = `${swaggerPrefix}${json ? "" : "yaml/"}${encodeURIComponent(
       service
-    )}${tag ? `?tag=${tag}` : ""}`;
+    )}${tag ? `?tag=${encodeURIComponent(tag)}` : ""}`;
     fetch(path)
       .then((res) => res.text())
       .then((res) => {
@@ -99,7 +99,11 @@ export default function Swagger() {
       ),
     });
     setNewVersion("");
-    navigate(`/swagger/${encodeURIComponent(service)}?tag=${newVersion}`);
+    navigate(
+      `/swagger/${encodeURIComponent(service)}?tag=${encodeURIComponent(
+        newVersion
+      )}`
+    );
   };
   const deleteVersion = async () => {
     if (!service || !tag || tag === "Latest") return;
@@ -162,7 +166,9 @@ export default function Swagger() {
                 onChange={(e) => {
                   if (!service) return;
                   const tag =
-                    e.target.value !== "latest" ? `?tag=${e.target.value}` : "";
+                    e.target.value !== "latest"
+                      ? `?tag=${encodeURIComponent(e.target.value)}`
+                      : "";
                   navigate(`/swagger/${encodeURIComponent(service)}${tag}`);
                 }}
               >
