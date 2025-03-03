@@ -4,6 +4,9 @@ import { TServiceCoupling } from "../entities/TServiceCoupling";
 import { TServiceInstability } from "../entities/TServiceInstability";
 import {TServiceStatistics} from "../entities/TStatistics";
 import { TTotalServiceInterfaceCohesion } from "../entities/TTotalServiceInterfaceCohesion";
+import { TInsightDiffCohesion } from "../entities/TInsightDiffCohesion";
+import { TInsightDiffCoupling } from "../entities/TInsightDiffCoupling";
+import { TInsightDiffInstability } from "../entities/TInsightDiffInstability";
 import { Color } from "./ColorUtils";
 
 export default class BarChartUtils {
@@ -27,6 +30,30 @@ export default class BarChartUtils {
         ...overwriteOpts,
       },
       series: toSeriesStrategy(data),
+    };
+  }
+  static CreateDiffBarChart<T extends { name: string }>(
+    title: string,
+    data: T[],
+    toSeriesStrategy: (_: T[], versionTag1: string, versionTag2: string) => any[],
+    versionTag1: string,
+    versionTag2: string,
+    stacked = false,
+    overwriteOpts: Props = {},
+    height = 600
+  ): Props {
+    return {
+      type: "bar",
+      height,
+      options: {
+        ...BarChartUtils.DefaultOptions(
+          title,
+          stacked,
+          data.map(({ name }) => name)
+        ),
+        ...overwriteOpts,
+      },
+      series: toSeriesStrategy(data,versionTag1,versionTag2),
     };
   }
 
@@ -134,6 +161,48 @@ export default class BarChartUtils {
             text: strategy.markerLabel(d),
           },
         })),
+      },
+      tooltip: {
+        shared: true,
+        intersect: false,
+        y: {
+          formatter: (
+            y: number,
+            {
+              seriesIndex,
+              dataPointIndex,
+            }: { seriesIndex: number; dataPointIndex: number }
+          ) => strategy.tooltip(y, seriesIndex, dataPointIndex),
+        },
+      },
+    };
+  }
+
+  static StackMixedChartOverwriteTOpts<T>(
+    data: T[],
+    strategy: {
+      x: (d: T) => string | number;
+      y: (d: T) => number;
+      tooltip: (
+        y: number,
+        seriesIndex: number,
+        dataPointIndex: number
+      ) => string;
+    },
+    overwriteYAxis = 0
+  ) {
+    return {
+      stroke: {
+        show: false,
+      },
+      dataLabels: {
+        enabledOnSeries: [0, 1],
+        formatter: (value: number) => {
+          return value === 0 ? '0' : value.toString();
+        },
+        style: {
+          colors: ['#000000', '#000000'], // version1 ，version2 显示蓝色
+        }
       },
       tooltip: {
         shared: true,
@@ -286,74 +355,6 @@ export default class BarChartUtils {
     };
   }
 
-  static ServiceStatisticsOpts(
-    statistics: TServiceStatistics[]
-  ): ApexOptions {
-    const base = BarChartUtils.StackMixedChartOverwriteOpts(
-      "Absolute Criticality (ACS)",
-      statistics,
-      {
-        x: (d) => d.name,
-        y: (d) => d.serverErrorRate,
-        markerLabel: (d) =>
-          `ACS: ${BarChartUtils.roundToDisplay(d.serverErrorRate)}`,
-        tooltip: (y, seriesIndex, dataPointIndex) => {
-          if (seriesIndex === 2) {
-            const c = BarChartUtils.roundToDisplay(
-              statistics[dataPointIndex].serverErrorRate
-            );
-            return c.toString();
-          }
-          return y.toString();
-        },
-      },
-      2
-    );
-
-    const { maxY, maxRY } = statistics.reduce(
-      ({ maxY, maxRY }, { latencyMean,serverErrorRate, requestErrorsRate}) => ({
-        maxY: Math.max(maxY, latencyMean),
-        maxRY: Math.max(maxRY, Math.max(serverErrorRate,requestErrorsRate)),
-      }),
-      { maxY: 0, maxRY: 0 }
-    );
-
-    return {
-      ...base,
-      yaxis: [
-        {
-          title: {
-            text: "latencyMean",
-            style: {
-              color: BarChartUtils.stringToColorHex("latencyMean"),
-            },
-          },
-          ...BarChartUtils.generateTick(maxY),
-        },
-        {
-          opposite: true,
-          title: {
-            text: "serverErrorRate",
-            style: {
-              color: BarChartUtils.stringToColorHex("serverErrorRate"),
-            },
-          },
-          ...BarChartUtils.generateTick(maxRY),
-        },
-        {
-          opposite: true,
-          title: {
-            text: "requestErrorsRate",
-            style: {
-              color: BarChartUtils.stringToColorHex("requestErrorsRate"),
-            },
-          },
-          ...BarChartUtils.generateTick(maxRY),
-        },
-      ],
-    };
-  }
-
   static ServiceInstabilityOpts(
     instability: TServiceInstability[]
   ): ApexOptions {
@@ -412,6 +413,161 @@ export default class BarChartUtils {
     };
   }
 
+  static ServiceCohesionDiffOpts (
+    cohesionDiff: TInsightDiffCohesion[],
+    versionTag1: string,
+    versionTag2: string,
+  ): ApexOptions {
+    const base = BarChartUtils.StackMixedChartOverwriteTOpts(
+      cohesionDiff,
+      {
+        x: (d) => d.name,
+        y: (d) => d.totalInterfaceCohesionV2,
+        tooltip: (y) => {
+          return y.toString();
+        },
+      },
+      1
+    );
+
+    const { maxY, maxRY } = cohesionDiff.reduce(
+      ({ maxY, maxRY }, { totalInterfaceCohesionV1,totalInterfaceCohesionV2}) => ({
+        maxY: Math.max(maxY, totalInterfaceCohesionV1),
+        maxRY: Math.max(maxRY,totalInterfaceCohesionV2),
+      }),
+      { maxY: 0, maxRY: 0 }
+    );
+
+    return {
+      ...base,
+      yaxis: [
+        {
+          title: {
+            text: `TSIC (${versionTag1})`,
+            style: {
+              color: "#FF6666",
+            },
+          },
+          ...BarChartUtils.generateTick(1),
+          tickAmount: 10,
+        },
+        {
+          opposite: true,
+          title: {
+            text: `TSIC (${versionTag2})`,
+            style: {
+              color: "#00a2ff",
+            },
+          },
+          ...BarChartUtils.generateTick(1),
+          tickAmount: 10,
+        }
+      ],
+    };
+  }
+
+  static ServiceCouplingDiffOpts(
+    couplingDiff: TInsightDiffCoupling[],
+    versionTag1: string,
+    versionTag2: string,
+  ): ApexOptions {
+    const base = BarChartUtils.StackMixedChartOverwriteTOpts(
+      couplingDiff,
+      {
+        x: (d) => d.name,
+        y: (d) => d.acsV2,
+        tooltip: (y) => {
+          return y.toString();
+        },
+      },
+      1
+    );
+
+    const { maxY} = couplingDiff.reduce(
+      ({ maxY}, { acsV1,acsV2}) => ({
+        maxY: Math.max(maxY, acsV1, acsV2),
+      }),
+      { maxY: 0}
+    );
+
+    return {
+      ...base,
+      yaxis: [
+        {
+          title: {
+            text: `ACS (${versionTag1})`,
+            style: {
+              color: "#FF6666",
+            },
+          },
+          ...BarChartUtils.generateTick(maxY),
+        },
+        {
+          opposite: true,
+          title: {
+            text: `ACS (${versionTag2})`,
+            style: {
+              color: "#00a2ff",
+            },
+          },
+          ...BarChartUtils.generateTick(maxY),
+        }
+      ],
+    };
+  }
+
+  static ServiceInstabilityDiffOpts(
+    instabilityDiff: TInsightDiffInstability[],
+    versionTag1: string,
+    versionTag2: string,
+  ): ApexOptions {
+    const base = BarChartUtils.StackMixedChartOverwriteTOpts(
+      instabilityDiff,
+      {
+        x: (d) => d.name,
+        y: (d) => d.instabilityV2,
+        tooltip: (y) => {
+          return y.toString();
+        },
+      },
+      1
+    );
+
+    const { maxY} = instabilityDiff.reduce(
+      ({ maxY}, { instabilityV1,instabilityV2}) => ({
+        maxY: Math.max(maxY, instabilityV1, instabilityV2),
+      }),
+      { maxY: 0}
+    );
+
+    return {
+      ...base,
+      yaxis: [
+        {
+          title: {
+            text: `SDP (${versionTag1})`,
+            style: {
+              color: "#FF6666",
+            },
+          },
+          min: 0,
+          max: 1,
+        },
+        {
+          opposite: true,
+          title: {
+            text: `SDP (${versionTag2})`,
+            style: {
+              color: "#00a2ff",
+            },
+          },
+          min: 0,
+          max: 1,
+        }
+      ],
+    };
+  }
+
   static SeriesFromServiceCohesion(
     cohesions: TTotalServiceInterfaceCohesion[]
   ) {
@@ -446,28 +602,10 @@ export default class BarChartUtils {
         f: "ads",
         name: "Absolute Dependence (ADS)",
       },
+      { f: "acs", name: "Absolute Criticality (ACS)" },
     ];
     const base = BarChartUtils.mapFieldsToSeries(fields, coupling);
     return BarChartUtils.markFieldToLine("Absolute Criticality (ACS)", base);
-  }
-
-  static SeriesFromServiceStatistics(statistics: TServiceStatistics[]) {
-    const fields = [
-      {
-        f: "latencyMean",
-        name: "latencyMean",
-      },
-      {
-        f: "serverErrorRate",
-        name: "serverErrorRate",
-      },
-      {
-        f: "requestErrorsRate",
-        name: "requestErrorsRate",
-      },
-    ];
-    const base = BarChartUtils.mapFieldsToSeries(fields, statistics);
-    return BarChartUtils.markFieldToLine("", base);
   }
 
   static SeriesFromServiceInstability(instability: TServiceInstability[]) {
@@ -478,6 +616,63 @@ export default class BarChartUtils {
     ];
     const base = BarChartUtils.mapFieldsToSeries(fields, instability);
     return BarChartUtils.markFieldToLine("Instability (SDP)", base);
+  }
+
+  static SeriesFromServiceCohesionDiff(
+    cohesionDiff: TInsightDiffCohesion[],
+    versionTag1: string,
+    versionTag2: string,
+  ) {
+    const fields = [
+      {
+        f: "totalInterfaceCohesionV1",
+        name: versionTag1,
+      },
+      {
+        f: "totalInterfaceCohesionV2",
+        name: versionTag2,
+      }
+    ];
+    const base = BarChartUtils.mapFieldsToDiffSeries(fields,cohesionDiff);
+    return base;
+  }
+
+  static SeriesFromServiceCouplingDiff(
+    couplingDiff: TInsightDiffCoupling[],
+    versionTag1: string,
+    versionTag2: string,
+  ) {
+    const fields = [
+      {
+        f: "acsV1",
+        name: versionTag1,
+      },
+      {
+        f: "acsV2",
+        name: versionTag2,
+      }
+    ];
+    const base = BarChartUtils.mapFieldsToDiffSeries(fields,couplingDiff);
+    return base;
+  }
+
+  static SeriesFromServiceInstabilityDiff(
+    instabilityDiff: TInsightDiffInstability[],
+    versionTag1: string,
+    versionTag2: string,
+  ) {
+    const fields = [
+      {
+        f: "instabilityV1",
+        name: versionTag1,
+      },
+      {
+        f: "instabilityV2",
+        name: versionTag2,
+      }
+    ];
+    const base = BarChartUtils.mapFieldsToDiffSeries(fields,instabilityDiff);
+    return base;
   }
 
   private static stringToColorHex(str: string) {
@@ -499,14 +694,15 @@ export default class BarChartUtils {
     }));
   }
 
-  private static mapFieldsToSeriesForTestAPI(
+  private static mapFieldsToDiffSeries(
     fields: { f: string; name: string }[],
     data: any[]
   ) {
-    return fields.map(({ f, name }) => ({
+    fields = fields.slice(0, 2); //只取前兩個，即version1 與 version2
+    return fields.map(({ f, name }, index) => ({
       name,
-      color: BarChartUtils.stringToColorHex(name),
-      data: data.map((c) => BarChartUtils.roundToDisplay(c[f.split("+")[0]] + c[f.split("+")[1]])),
+      color: index === 0 ? '#FF6666' : '#00a2ff',
+      data: data.map((c) => BarChartUtils.roundToDisplay(c[f])),
     }));
   }
 

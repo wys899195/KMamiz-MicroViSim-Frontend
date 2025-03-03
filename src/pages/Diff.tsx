@@ -29,6 +29,9 @@ import { TGraphData } from "../entities/TGraphData";
 import { TTotalServiceInterfaceCohesion } from "../entities/TTotalServiceInterfaceCohesion";
 import { TServiceCoupling } from "../entities/TServiceCoupling";
 import { TServiceInstability } from "../entities/TServiceInstability";
+import { TInsightDiffCohesion } from "../entities/TInsightDiffCohesion";
+import { TInsightDiffCoupling } from "../entities/TInsightDiffCoupling";
+import { TInsightDiffInstability } from "../entities/TInsightDiffInstability";
 import { useLocation, useNavigate } from "react-router-dom";
 
 
@@ -135,9 +138,17 @@ export default function Diff() {
   /***graph diff info***/
   const [graphDifferenceInfo, setGraphDifferenceInfo] = useGraphDifference();
 
+  /***insight diff***/
+  const [cohesionDiff, setCohesionDiff] = useState<TInsightDiffCohesion[]>([]);
+  const [couplingDiff, setCouplingDiff] = useState<TInsightDiffCoupling[]>([]);
+  const [instabilityDiff, setInstabilityDiff] = useState<TInsightDiffInstability[]>([]);
+
   /***for graph display***/
   const [showEndpoint, setShowEndpoint] = useState(true);
   const [showServicePairDiff, setShowServicePairDiff] = useState(false);
+  const [showCohesionInsightDiffChart, setShowCohesionInsightDiffChart] = useState(true);
+  const [showCouplingInsightDiffChart, setShowCouplingInsightDiffChart] = useState(true);
+  const [showInstabilityInsightDiffChart, setShowInstabilityInsightDiffChart] = useState(true);
 
   /***window size control***/
   const rwdWidth = 1300
@@ -147,9 +158,10 @@ export default function Diff() {
   const [graphHeightRate, setCanvasHeightRate] = useState(0.65);
 
   /***to get a specific version diff data***/
+  const latestVersionStr = "Latest"
   const query = useMemo(() => new URLSearchParams(search), [search]);
-  const tagV1 = query.get("tagV1"); //version1 tag
-  const tagV2 = query.get("tagV2"); //version2 tag
+  const tagV1 = query.get("tagV1") as string || ""; //version1 tag
+  const tagV2 = query.get("tagV2") as string || ""; //version2 tag
   const [tags, setTags] = useState<string[]>([]);
   const [newVersion, setNewVersion] = useState<string>("");
 
@@ -271,13 +283,13 @@ export default function Diff() {
       }
     });
     //Coupling
-    GraphService.getInstance().getTaggedServiceCoupling(tagV1).then((nextLatestCouplingData) => {
+    GraphService.getInstance().getServiceCoupling().then((nextLatestCouplingData) => {
       if (nextLatestCouplingData){
         setLatestCoupling(nextLatestCouplingData);
       }
     }); 
     //Instability
-    GraphService.getInstance().getTaggedServiceInstability(tagV1).then((nextLatestInstabilityData) => {
+    GraphService.getInstance().getServiceInstability().then((nextLatestInstabilityData) => {
       if (nextLatestInstabilityData){
         setLatestInstability(nextLatestInstabilityData);
       }
@@ -392,6 +404,158 @@ export default function Diff() {
     }
   }, [rawDataV1,rawDataV2]);
 
+  useEffect(() => {
+    const newDataDiff = mergeCohesionData(cohesionV1, cohesionV2);
+    setCohesionDiff(newDataDiff);
+  }, [cohesionV1, cohesionV2]); 
+
+  useEffect(() => {
+    const newDataDiff = mergeCouplingData(couplingV1, couplingV2);
+    setCouplingDiff(newDataDiff);
+  }, [couplingV1, couplingV2]); 
+  
+  useEffect(() => {
+    const newDataDiff = mergeInstabilityData(instabilityV1, instabilityV2);
+    setInstabilityDiff(newDataDiff);
+  }, [instabilityV1, instabilityV2]); 
+  
+
+  const mergeCohesionData = (
+    datav1: TTotalServiceInterfaceCohesion[], 
+    datav2: TTotalServiceInterfaceCohesion[]
+  ): TInsightDiffCohesion[] => {
+    // 組合兩個TTotalServiceInterfaceCohesion[]組成diff資料
+    const allServiceNames = new Set([
+      ...datav1.map(item => item.name),
+      ...datav2.map(item => item.name),
+    ]);
+    const mergedData: TInsightDiffCohesion[] = [];
+
+    allServiceNames.forEach(serviceName => {
+      const v1 = datav1.find(item => item.name === serviceName) || {
+        uniqueServiceName: serviceName,
+        name: serviceName,
+        dataCohesion: 0,
+        usageCohesion: 0,
+        totalInterfaceCohesion: 0,
+        endpointCohesion: [],
+        totalEndpoints: 0,
+        consumers: []
+      };
+      const v2 = datav2.find(item => item.name === serviceName) || {
+        uniqueServiceName: serviceName,
+        name: serviceName,
+        dataCohesion: 0,
+        usageCohesion: 0,
+        totalInterfaceCohesion: 0,
+        endpointCohesion: [],
+        totalEndpoints: 0,
+        consumers: []
+      };
+      const diff: TInsightDiffCohesion = {
+        uniqueServiceName: serviceName,
+        name: serviceName,
+        dataCohesionV1: v1.dataCohesion,
+        usageCohesionV1: v1.usageCohesion,
+        totalInterfaceCohesionV1: v1.totalInterfaceCohesion,
+        dataCohesionV2: v2.dataCohesion,
+        usageCohesionV2: v2.usageCohesion,
+        totalInterfaceCohesionV2: v2.totalInterfaceCohesion
+      };
+      mergedData.push(diff);
+    });
+    return mergedData;
+  };
+
+  const mergeCouplingData = (
+    datav1: TServiceCoupling[], 
+    datav2: TServiceCoupling[]
+  ): TInsightDiffCoupling[] => {
+    const allServiceNames = new Set([
+      ...datav1.map(item => item.name),
+      ...datav2.map(item => item.name),
+    ]);
+  
+    const mergedData: TInsightDiffCoupling[] = [];
+  
+    allServiceNames.forEach(serviceName => {
+      const v1 = datav1.find(item => item.name === serviceName) || {
+        uniqueServiceName: serviceName,
+        name: serviceName,
+        ais: 0,
+        ads: 0,
+        acs: 0,
+      };
+      const v2 = datav2.find(item => item.name === serviceName) || {
+        uniqueServiceName: serviceName,
+        name: serviceName,
+        ais: 0,
+        ads: 0,
+        acs: 0,
+      };
+  
+      const diff: TInsightDiffCoupling = {
+        uniqueServiceName: serviceName,
+        name: serviceName,
+        aisV1: v1.ais,
+        adsV1: v1.ads,
+        acsV1: v1.acs,
+        aisV2: v2.ais,
+        adsV2: v2.ads,
+        acsV2: v2.acs,
+      };
+
+      mergedData.push(diff);
+    });
+    return mergedData;
+  };
+  
+  const mergeInstabilityData = (
+    datav1: TServiceInstability[], 
+    datav2: TServiceInstability[]
+  ): TInsightDiffInstability[] => {
+    const allServiceNames = new Set([
+      ...datav1.map(item => item.name),
+      ...datav2.map(item => item.name),
+    ]);
+  
+    const mergedData: TInsightDiffInstability[] = [];
+  
+    allServiceNames.forEach(serviceName => {
+      const v1 = datav1.find(item => item.name === serviceName) || {
+        uniqueServiceName: serviceName,
+        name: serviceName,
+        dependingBy: 0,
+        dependingOn: 0,
+        instability: 0,
+      };
+  
+      const v2 = datav2.find(item => item.name === serviceName) || {
+        uniqueServiceName: serviceName,
+        name: serviceName,
+        dependingBy: 0,
+        dependingOn: 0,
+        instability: 0,
+      };
+  
+      const diff: TInsightDiffInstability = {
+        uniqueServiceName: serviceName,
+        name: serviceName,
+        dependingByV1: v1.dependingBy,
+        dependingOnV1: v1.dependingOn,
+        instabilityV1: v1.instability,
+        dependingByV2: v2.dependingBy,
+        dependingOnV2: v2.dependingOn,
+        instabilityV2: v2.instability,
+      };
+  
+      mergedData.push(diff);
+    });
+  
+    return mergedData;
+  };
+  
+
   const createNewVersion = async () => {
     if (!latestRawData|| !newVersion) return;
     await GraphService.getInstance().addTaggedDiffData({
@@ -402,13 +566,18 @@ export default function Diff() {
       instabilityData:latestInstability,
     });
     setNewVersion("");
-    navigate(0); //refresh page
+    navigate(`/diff?tagV2=${encodeURIComponent(newVersion)}`);
   };
 
-  const deleteVersion = async () => {
-    if (!tagV1 || tagV1 === "Latest") return;
+  const deleteVersionTagV1 = async () => {
+    if (!tagV1 || tagV1 === latestVersionStr) return;
     await GraphService.getInstance().deleteTaggedDiffData(tagV1);
-    navigate(`/Diff`);
+    navigate(`/diff`);
+  };
+  const deleteVersionTagV2 = async () => {
+    if (!tagV2 || tagV2 === latestVersionStr) return;
+    await GraphService.getInstance().deleteTaggedDiffData(tagV2);
+    navigate(`/diff`);
   };
 
   const scrollToElement = (elementName:string) => {
@@ -437,16 +606,13 @@ export default function Diff() {
   return (
     <Box className={classes.root}>
       <Grid container padding={1} spacing={0.5} className={classes.pageHeader}>
-        <Grid item xs={12} style={{marginBottom:'0.5em'}}>
-          <Typography variant="h5">Diff</Typography>
-        </Grid>
-        <Grid item xs={7}>
+        <Grid item xs={6}>
           <Card variant="outlined" className={classes.actions}>
             <TextField
               fullWidth
               label="save the latest version as a new version"
               variant="outlined"
-              value={newVersion}
+              value={newVersion} 
               onChange={(e) => setNewVersion(e.target.value)}
             />
             <Tooltip title="Save the latest version as a new version">
@@ -458,30 +624,30 @@ export default function Diff() {
         </Grid>
         <Grid item xs={5}></Grid>
         <Grid item xs={6}>
-          <Card variant="outlined" className={classes.actions}>
+          <Card variant="outlined" className={classes.actions}> 
             <FormControl fullWidth>
               <InputLabel id="tag1-label">Selected Version 1</InputLabel>
               <Select
                 labelId="tag1-label"
-                value={tagV1 || "latest"}
+                value={tagV1 || latestVersionStr}
                 label="Selected Version 1"
                 onChange={(e) => {
-                  if (e.target.value !== "latest"){
+                  if (e.target.value != latestVersionStr){
                     if(tagV2){
-                      navigate(`/Diff?tagV1=${encodeURIComponent(e.target.value)}&&tagV2=${encodeURIComponent(tagV2)}`);
+                      navigate(`/diff?tagV1=${encodeURIComponent(e.target.value)}&&tagV2=${encodeURIComponent(tagV2)}`);
                     }else{
-                      navigate(`/Diff?tagV1=${encodeURIComponent(e.target.value)}`);
+                      navigate(`/diff?tagV1=${encodeURIComponent(e.target.value)}`);
                     }
-                  }else{
+                  }else{ 
                     if(tagV2){
-                      navigate(`/Diff?tagV2=${encodeURIComponent(tagV2)}`);
+                      navigate(`/diff?tagV2=${encodeURIComponent(tagV2)}`);
                     }else{
-                      navigate(`/Diff`);
+                      navigate(`/diff`);
                     }
                   }
                 }}
               >
-                <MenuItem value="latest">Latest</MenuItem>
+                <MenuItem value={latestVersionStr}>{latestVersionStr}</MenuItem>
                 {tags.map((t, i) => (
                   <MenuItem key={`tag1-${i}`} value={t}>
                     {t}
@@ -494,8 +660,8 @@ export default function Diff() {
                 <Button
                   variant="contained"
                   color="error"
-                  onClick={() => deleteVersion()}
-                  disabled={!tagV1 || tagV1 === "Latest"}
+                  onClick={() => deleteVersionTagV1()}
+                  disabled={!tagV1 || tagV1 === latestVersionStr}
                 >
                   Delete
                 </Button>
@@ -509,25 +675,25 @@ export default function Diff() {
               <InputLabel id="tag2-label">Selected Version 2</InputLabel>
               <Select
                 labelId="tag2-label"
-                value={tagV2 || "latest"}
-                label="Selected Version 2"
+                value={tagV2 || latestVersionStr}
+                label="Selected Version 2" 
                 onChange={(e) => {
-                  if (e.target.value !== "latest"){
+                  if (e.target.value != latestVersionStr){
                     if(tagV1){
-                      navigate(`/Diff?tagV1=${encodeURIComponent(tagV1)}&&tagV2=${encodeURIComponent(e.target.value)}`);
+                      navigate(`/diff?tagV1=${encodeURIComponent(tagV1)}&&tagV2=${encodeURIComponent(e.target.value)}`);
                     }else{
-                      navigate(`/Diff?tagV2=${encodeURIComponent(e.target.value)}`);
+                      navigate(`/diff?tagV2=${encodeURIComponent(e.target.value)}`);
                     }
                   }else{
                     if(tagV1){
-                      navigate(`/Diff?tagV1=${encodeURIComponent(tagV1)}`);
+                      navigate(`/diff?tagV1=${encodeURIComponent(tagV1)}`);
                     }else{
-                      navigate(`/Diff`);
+                      navigate(`/diff`);
                     }
                   }
                 }}
               >
-                <MenuItem value="latest">Latest</MenuItem>
+                <MenuItem value={latestVersionStr}>{latestVersionStr}</MenuItem>
                 {tags.map((t, i) => (
                   <MenuItem key={`tag2-${i}`} value={t}>
                     {t}
@@ -540,8 +706,8 @@ export default function Diff() {
                 <Button
                   variant="contained"
                   color="error"
-                  onClick={() => deleteVersion()}
-                  disabled={!tagV2 || tagV2 === "Latest"}
+                  onClick={() => deleteVersionTagV2()}
+                  disabled={!tagV2 || tagV2 === latestVersionStr}
                 >
                   Delete
                 </Button>
@@ -553,13 +719,13 @@ export default function Diff() {
       <Grid container padding={1} spacing={1} className={classes.pageBody}>
         <Grid item xs={12} >
           <Element name="Overview Title">
-            <Typography variant="h6">Graph Diff Overview</Typography>
+            <Typography variant="h6">Graph Difference Overview</Typography>
           </Element>
         </Grid>
         <Grid item xs={gridSize}>
           <div className={classes.graphContainer}>
             <Grid item xs={12} className={classes.graphHeader}>
-              <h3 className={classes.graphTitle}>Latest Version</h3>
+              <h3 className={classes.graphTitle}>{tagV1 || latestVersionStr}</h3>
             </Grid>
             <Suspense fallback={<Loading />}>
               <ForceGraph2D
@@ -577,7 +743,7 @@ export default function Diff() {
         <Grid item xs={gridSize}>
           <div className={classes.graphContainer}>
             <Grid item xs={12} className={classes.graphHeader}>
-              <h3 className={classes.graphTitle}>Selected Version</h3>
+              <h3 className={classes.graphTitle}>{tagV2 || latestVersionStr}</h3>
             </Grid>
             <Suspense fallback={<Loading />}>
               <ForceGraph2D
@@ -592,7 +758,7 @@ export default function Diff() {
             </Suspense>
           </div>
         </Grid>
-        <Grid item xs={12}>
+        {/* <Grid item xs={12}>
           <Element name="Service Pair Details Title">
             <Typography variant="h6">Graph Diff Details ( between each pair of services )</Typography>
           </Element>
@@ -649,7 +815,7 @@ export default function Diff() {
         <Grid item xs={gridSize} style={showServicePairDiff ? {} : {display:'none'}}>
           <div className={classes.graphContainer}>
             <Grid item xs={12} className={classes.graphHeader}>
-              <h3 className={classes.graphTitle}>Latest Version</h3>
+              <h3 className={classes.graphTitle}>{tagV1 || latestVersionStr}</h3>
             </Grid>
             <h3 className={classes.graphMessage}>{servicePairGraphV1Message}</h3>
             <Suspense fallback={<Loading />}>
@@ -690,16 +856,52 @@ export default function Diff() {
             </Suspense>
 
           </div>
-        </Grid>
+        </Grid> */}
         <Grid item xs={12}>
-          <Element name="Insight Diff">
-            <Typography variant="h6">Insight Diff</Typography>
+          <Element name="Insight Difference">
+            <Typography variant="h6">Insight Difference</Typography>
           </Element>
         </Grid>
-        <Grid item xs={gridSize - 0.5}>
+        <Grid item xs={12}>
+          <Element name="Insight Cohesion Difference">
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => {
+                setShowCohesionInsightDiffChart(!showCohesionInsightDiffChart);
+              }}
+            >
+              {showCohesionInsightDiffChart? "show details":"show difference"}
+            </Button>
+          </Element>
+        </Grid>
+
+        {/* Cohesion diff*/}
+        <Grid item xs={gridSize==6?3:0} style={{ display: showCohesionInsightDiffChart&&gridSize==6 ? 'block' : 'none' }}></Grid> 
+        <Grid item xs={gridSize - 0.5} style={{ display: showCohesionInsightDiffChart ? 'block' : 'none' }}>
+        <ReactApexChart
+            {...BarChartUtils.CreateDiffBarChart( 
+              "Service Cohesion (Differences between the two versions)", 
+              cohesionDiff,
+              BarChartUtils.SeriesFromServiceCohesionDiff, 
+              tagV1 || latestVersionStr,
+              tagV2 || latestVersionStr, 
+              false,
+              BarChartUtils.ServiceCohesionDiffOpts( 
+                cohesionDiff,
+                tagV1 || latestVersionStr,
+                tagV2 || latestVersionStr 
+              )
+            )}
+          ></ReactApexChart> 
+        </Grid>
+        <Grid item xs={gridSize==6?3:0} style={{ display: showCohesionInsightDiffChart&&gridSize==6 ? 'block' : 'none' }}></Grid>
+
+        {/* Cohesion details*/}
+        <Grid item xs={gridSize - 0.5} style={{ display: showCohesionInsightDiffChart ? 'none' : 'block' }} >
           <ReactApexChart
             {...BarChartUtils.CreateBarChart(
-              "Service Cohesion (Latest version)",
+              `Service Cohesion (${tagV1 || latestVersionStr})`,
               cohesionV1,
               BarChartUtils.SeriesFromServiceCohesion,
               true,
@@ -707,11 +909,11 @@ export default function Diff() {
             )}
           ></ReactApexChart>
         </Grid>
-        <Grid item xs={1}></Grid>
-        <Grid item xs={gridSize - 0.5}>
+        <Grid item xs={1} style={{ display: showCohesionInsightDiffChart ? 'none' : 'block' }}></Grid>
+        <Grid item xs={gridSize - 0.5} style={{ display: showCohesionInsightDiffChart ? 'none' : 'block' }}>
           <ReactApexChart
             {...BarChartUtils.CreateBarChart(
-              "Service Cohesion (Selected Version)",
+              `Service Cohesion (${tagV2 || latestVersionStr})`,
               cohesionV2,
               BarChartUtils.SeriesFromServiceCohesion,
               true,
@@ -719,10 +921,47 @@ export default function Diff() {
             )}
           ></ReactApexChart>
         </Grid>
-        <Grid item xs={gridSize - 0.5}>
+
+
+        {/* Coupling diff*/}
+        <Grid item xs={12}>
+          <Element name="Insight Coupling Difference">
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => {
+              setShowCouplingInsightDiffChart(!showCouplingInsightDiffChart);
+            }}
+          >
+            {showCouplingInsightDiffChart? "show details":"show difference"}
+          </Button>
+          </Element>
+        </Grid>
+        <Grid item xs={gridSize==6?3:0} style={{ display: showCouplingInsightDiffChart&&gridSize==6 ? 'block' : 'none' }}></Grid>
+        <Grid item xs={gridSize - 0.5} style={{ display: showCouplingInsightDiffChart ? 'block' : 'none' }}>
+        <ReactApexChart
+            {...BarChartUtils.CreateDiffBarChart( 
+              "Service Coupling (Differences between the two versions)", 
+              couplingDiff,
+              BarChartUtils.SeriesFromServiceCouplingDiff, 
+              tagV1 || latestVersionStr,
+              tagV2 || latestVersionStr, 
+              false,
+              BarChartUtils.ServiceCouplingDiffOpts(  
+                couplingDiff,
+                tagV1 || latestVersionStr,
+                tagV2 || latestVersionStr 
+              )
+            )}
+          ></ReactApexChart> 
+        </Grid>
+        <Grid item xs={gridSize==6?3:0} style={{ display: showCouplingInsightDiffChart&&gridSize==6 ? 'block' : 'none' }}></Grid> 
+
+        {/* Coupling details*/}
+        <Grid item xs={gridSize - 0.5} style={{ display: showCouplingInsightDiffChart ? 'none' : 'block' }}>
           <ReactApexChart
             {...BarChartUtils.CreateBarChart(
-              "Service Coupling (Latest version)",
+              `Service Coupling (${tagV1 || latestVersionStr})`,
               couplingV1,
               BarChartUtils.SeriesFromServiceCoupling,
               true,
@@ -730,11 +969,11 @@ export default function Diff() {
             )}
           ></ReactApexChart>
         </Grid>
-        <Grid item xs={1}></Grid>
-        <Grid item xs={gridSize - 0.5}>
+        <Grid item xs={1} style={{ display: showCouplingInsightDiffChart ? 'none' : 'block' }}></Grid>
+        <Grid item xs={gridSize - 0.5} style={{ display: showCouplingInsightDiffChart ? 'none' : 'block' }}>
           <ReactApexChart
             {...BarChartUtils.CreateBarChart(
-              "Service Coupling (Selected Version)",
+              `Service Coupling (${tagV2 || latestVersionStr})`,
               couplingV2,
               BarChartUtils.SeriesFromServiceCoupling,
               true,
@@ -742,10 +981,52 @@ export default function Diff() {
             )}
           ></ReactApexChart>
         </Grid>
-        <Grid item xs={gridSize - 0.5}>
+
+
+
+
+        {/* Instabilitydiff*/}
+        <Grid item xs={12}>
+          <Element name="Insight Instability Difference">
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => {
+              setShowInstabilityInsightDiffChart(!showInstabilityInsightDiffChart);
+            }}
+          >
+            {showInstabilityInsightDiffChart? "show details":"show difference"}
+          </Button>
+          </Element>
+        </Grid>
+        <Grid item xs={gridSize==6?3:0} style={{ display: showInstabilityInsightDiffChart&&gridSize==6 ? 'block' : 'none' }}></Grid>
+        <Grid item xs={gridSize - 0.5} style={{ display: showInstabilityInsightDiffChart ? 'block' : 'none' }}>
+        <ReactApexChart
+            {...BarChartUtils.CreateDiffBarChart( 
+              "Service Instability (Differences between the two versions)", 
+              instabilityDiff,
+              BarChartUtils.SeriesFromServiceInstabilityDiff, 
+              tagV1 || latestVersionStr, 
+              tagV2 || latestVersionStr, 
+              false,
+              BarChartUtils.ServiceInstabilityDiffOpts(
+                instabilityDiff,
+                tagV1 || latestVersionStr, 
+                tagV2 || latestVersionStr 
+              )
+            )}
+          ></ReactApexChart> 
+        </Grid>
+        <Grid item xs={gridSize==6?3:0} style={{ display: showInstabilityInsightDiffChart&&gridSize==6 ? 'block' : 'none' }}></Grid> 
+ 
+
+
+
+        {/* Instability details*/}
+        <Grid item xs={gridSize - 0.5} style={{ display: showInstabilityInsightDiffChart ? 'none' : 'block' }}>
           <ReactApexChart
             {...BarChartUtils.CreateBarChart(
-              "Service Instability (Latest version)",
+              `Service Instability (${tagV1 || latestVersionStr})`,
               instabilityV1,
               BarChartUtils.SeriesFromServiceInstability,
               false,
@@ -753,11 +1034,11 @@ export default function Diff() {
             )}
           ></ReactApexChart>
         </Grid>
-        <Grid item xs={1}></Grid>
-        <Grid item xs={gridSize - 0.5}>
+        <Grid item xs={1} style={{ display: showInstabilityInsightDiffChart ? 'none' : 'block' }}></Grid>
+        <Grid item xs={gridSize - 0.5} style={{ display: showInstabilityInsightDiffChart ? 'none' : 'block' }}>
           <ReactApexChart
             {...BarChartUtils.CreateBarChart(
-              "Service Instability (Selected Version)",
+              `Service Instability (${tagV2 || latestVersionStr})`,
               instabilityV2,
               BarChartUtils.SeriesFromServiceInstability,
               false,

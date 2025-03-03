@@ -1,4 +1,4 @@
-FROM node:lts-alpine as build
+FROM node:lts-alpine AS build
 WORKDIR /kmamiz-web
 COPY . .
 RUN ["npm", "i"]
