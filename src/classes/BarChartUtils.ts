@@ -487,7 +487,7 @@ export default class BarChartUtils {
       ({ maxY}, { acsV1,acsV2}) => ({
         maxY: Math.max(maxY, acsV1, acsV2),
       }),
-      { maxY: 0}
+      { maxY: 1}
     );
 
     return {
