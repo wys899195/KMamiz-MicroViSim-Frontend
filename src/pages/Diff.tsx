@@ -265,7 +265,6 @@ export default function Diff() {
   useEffect(() => {
     GraphService.getInstance().getTaggedDependencyGraph(true,tagV2).then((nextRawDataV2) => {
       if (nextRawDataV2){
-        console.log("nextRawDataV2:",nextRawDataV2)
         setRawGraphDataV2(nextRawDataV2);
       }
     });
@@ -311,9 +310,10 @@ export default function Diff() {
 
   useEffect(() => {
     if(rawGraphDataV1 && rawGraphDataV2){
-      const nextGraphDifferenceInfo = DependencyGraphUtils.CompareTwoGraphData(rawGraphDataV1,rawGraphDataV2) ;
+      console.log("rawGraphDataV1:",rawGraphDataV1);
+      console.log("rawGraphDataV2:",rawGraphDataV2);
+      const nextGraphDifferenceInfo = DependencyGraphUtils.CompareTwoGraphData(rawGraphDataV1,rawGraphDataV2,showEndpoint) ;
       const nextDiffGraphData = JSON.stringify(nextGraphDifferenceInfo.diffGraphData);
-      if (rawDiffGraphDataRef.current === nextDiffGraphData) return;
       if (!rawDiffGraphDataRef.current) {
         const timer = setInterval(() => {
           if (!diffGraphDataRef.current) return;
@@ -325,11 +325,14 @@ export default function Diff() {
         });
       }
       rawDiffGraphDataRef.current = nextDiffGraphData;
-      setDiffGraphData(JSON.parse(nextDiffGraphData));
-  
+
+      if (nextGraphDifferenceInfo && nextGraphDifferenceInfo.diffGraphData){
+        setDiffGraphData(DependencyGraphUtils.ProcessData(JSON.parse(nextDiffGraphData)));
+      }
+     
       setGraphDifferenceInfo(nextGraphDifferenceInfo);
     }
-  }, [rawGraphDataV1,rawGraphDataV2]);
+  }, [rawGraphDataV1,rawGraphDataV2,showEndpoint]);
 
   useEffect(() => {
     const newDataDiff = mergeCohesionData(cohesionV1, cohesionV2);

@@ -183,7 +183,32 @@ export class DependencyGraphUtils {
     }
   }
 
-  static CompareTwoGraphData(newData:TGraphData,oldData:TGraphData):GraphDifferenceInfo{
+  static toServiceDependencyGraph(endpointGraph:TGraphData){
+    const linkSet = new Set<string>();
+    endpointGraph.links.forEach((l) => {
+      const source = l.source.split("\t").slice(0, 2).join("\t");
+      const target = l.target.split("\t").slice(0, 2).join("\t");
+      linkSet.add(`${source}\n${target}`);
+    });
+
+    const links = [...linkSet]
+      .map((l) => l.split("\n"))
+      .map(([source, target]) => ({ source, target }));
+
+    const nodes = endpointGraph.nodes.filter((n) => n.id === n.group);
+    nodes.forEach((n) => {
+      n.linkInBetween = links.filter((l) => l.source === n.id);
+      n.dependencies = n.linkInBetween.map((l) => l.target);
+    });
+
+    const serviceGraph: TGraphData = {
+      nodes,
+      links,
+    };
+    return serviceGraph;
+  }
+
+  static CompareTwoGraphData(newData:TGraphData,oldData:TGraphData,showEndpoint:boolean):GraphDifferenceInfo{
     if (!newData || !oldData){
       return {
         addedNodeIds: [],
@@ -196,19 +221,22 @@ export class DependencyGraphUtils {
         }
       }
     }else{
+      if (!showEndpoint) {
+        newData = this.toServiceDependencyGraph(newData);
+        oldData = this.toServiceDependencyGraph(oldData);
+      }
+
       // ids of all nodes
       const nodeIdsInNewData: string[] = newData.nodes.map(node => node.id);
       const nodeIdsInOldData: string[] = oldData.nodes.map(node => node.id);
       const addedNodeIds: Set<string> = new Set(nodeIdsInNewData.filter(id => !nodeIdsInOldData.includes(id)));
       const deletedNodeIds: Set<string> = new Set(nodeIdsInOldData.filter(id => !nodeIdsInNewData.includes(id)));
-      const commonNodeIds: Set<string> = new Set([...nodeIdsInNewData].filter(id => nodeIdsInOldData.includes(id)));
 
       // ids of all links excluding external nodes
       const linkIdsInNewData: string[] = newData.links.map(link => this.TLinkToId(link));
       const linkIdsInOldData: string[] = oldData.links.map(link => this.TLinkToId(link));
       const addedLinkIds: Set<string> = new Set(linkIdsInNewData.filter(id => !linkIdsInOldData.includes(id)));
       const deletedLinkIds: Set<string> = new Set(linkIdsInOldData.filter(id => !linkIdsInNewData.includes(id)));
-      const commonLinkIds: Set<string> = new Set([...linkIdsInNewData].filter(id => linkIdsInOldData.includes(id)));
 
       const mergedNodes = [
         ...newData.nodes,
@@ -228,17 +256,17 @@ export class DependencyGraphUtils {
       }
 
       
-      console.log("CompareTwoGraphData result:",{
-        newData:newData,
-        oldData:oldData,
-        linkIdsInNewData: Array.from(linkIdsInNewData),
-        linkIdsInOldData: Array.from(linkIdsInOldData),
-        addedNodeIds: Array.from(addedNodeIds),
-        deletedNodeIds: Array.from(deletedNodeIds),
-        addedLinkIds: Array.from(addedLinkIds),
-        deletedLinkIds: Array.from(deletedLinkIds),
-        diffGraphData:diffGraphData
-      })
+      // console.log("CompareTwoGraphData result:",{
+      //   newData:newData,
+      //   oldData:oldData,
+      //   linkIdsInNewData: Array.from(linkIdsInNewData),
+      //   linkIdsInOldData: Array.from(linkIdsInOldData),
+      //   addedNodeIds: Array.from(addedNodeIds),
+      //   deletedNodeIds: Array.from(deletedNodeIds),
+      //   addedLinkIds: Array.from(addedLinkIds),
+      //   deletedLinkIds: Array.from(deletedLinkIds),
+      //   diffGraphData:diffGraphData
+      // })
 
       return {
         addedNodeIds: Array.from(addedNodeIds),
