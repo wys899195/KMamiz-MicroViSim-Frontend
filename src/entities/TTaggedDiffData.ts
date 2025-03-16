@@ -13,3 +13,7 @@ export type TTaggedDiffData = {
   instabilityData:TServiceInstability[];
 };
 
+export type TagWithTime = {
+  tag: string;
+  time: number;
+}

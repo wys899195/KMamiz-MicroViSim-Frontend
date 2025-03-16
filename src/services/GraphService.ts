@@ -154,7 +154,7 @@ export default class GraphService {
 
   async getTagsOfDiffdata() {
     return (
-      (await this.get<string[]>(
+      (await this.get<{ tag: string; time: number }[]>(
         `${this.prefix}/graph/diffData/tags`
       )) || []
     );

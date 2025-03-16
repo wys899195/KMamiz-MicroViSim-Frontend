@@ -21,6 +21,7 @@ import {
 import ViewportUtils from "../classes/ViewportUtils";
 import GraphService from "../services/GraphService";
 import Loading from "../components/Loading";
+import { TagWithTime } from "../entities/TTaggedDiffData";
 import { TGraphData } from "../entities/TGraphData";
 import { TTotalServiceInterfaceCohesion } from "../entities/TTotalServiceInterfaceCohesion";
 import { TServiceCoupling } from "../entities/TServiceCoupling";
@@ -153,7 +154,7 @@ export default function Diff() {
   const query = useMemo(() => new URLSearchParams(search), [search]);
   const tagV1 = query.get("tagV1") as string || ""; //version1 tag
   const tagV2 = query.get("tagV2") as string || ""; //version2 tag
-  const [tags, setTags] = useState<string[]>([]);
+  const [tags, setTags] = useState<TagWithTime[]>([]);
   const [newVersion, setNewVersion] = useState<string>("");
 
 
@@ -162,7 +163,7 @@ export default function Diff() {
       ViewportUtils.getInstance().subscribe(([vw]) =>{
         setGridSize(vw > rwdWidth ? 6 : 12)
         setCanvasWidthRate(vw > rwdWidth ? 0.5 : 0.99);
-        setCanvasHeightRate(vw > rwdWidth ? 0.65 : 0.65);
+        setCanvasHeightRate(vw > rwdWidth ? 0.8 : 0.65);
       }),
     ];
     return () => {
@@ -349,12 +350,22 @@ export default function Diff() {
     setInstabilityDiff(newDataDiff);
   }, [instabilityV1, instabilityV2]); 
   
+  function formatTimestamp(timestamp: number): string {
+    return new Date(timestamp).toLocaleString("zh-TW", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false, // 24 hour format
+    });
+  }
 
   const mergeCohesionData = (
     datav1: TTotalServiceInterfaceCohesion[], 
     datav2: TTotalServiceInterfaceCohesion[]
   ): TInsightDiffCohesion[] => {
-    // 組合兩個TTotalServiceInterfaceCohesion[]組成diff資料
     const allServiceNames = new Set([
       ...datav1.map(item => item.name),
       ...datav2.map(item => item.name),
@@ -548,8 +559,13 @@ export default function Diff() {
               >
                 <MenuItem value={latestVersionStr}>{latestVersionStr}</MenuItem>
                 {tags.map((t, i) => (
-                  <MenuItem key={`tag1-${i}`} value={t}>
-                    {t}
+                  <MenuItem key={`tag1-${i}`} value={t.tag}> 
+                    <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+                      <span>{t.tag}</span>
+                      <span style={{color: "gray", marginLeft: "0.5em" }}>
+                        (Created at {formatTimestamp(t.time)})
+                      </span>
+                    </div>
                   </MenuItem>
                 ))}
               </Select>
@@ -594,8 +610,13 @@ export default function Diff() {
               >
                 <MenuItem value={latestVersionStr}>{latestVersionStr}</MenuItem>
                 {tags.map((t, i) => (
-                  <MenuItem key={`tag2-${i}`} value={t}>
-                    {t}
+                  <MenuItem key={`tag1-${i}`} value={t.tag}> 
+                    <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+                      <span>{t.tag}</span>
+                      <span style={{color: "gray", marginLeft: "0.5em" }}>
+                        (Created at {formatTimestamp(t.time)})
+                      </span>
+                    </div>
                   </MenuItem>
                 ))}
               </Select>
@@ -649,7 +670,7 @@ export default function Diff() {
         {/* Graph diff*/}
         <Grid item xs={12} >
           <Element name="Graph Difference Title">
-            <Typography variant="h6">Graph Difference</Typography>
+            <Typography variant="h6">Dependency Graph Difference</Typography>
           </Element>
         </Grid>
         <Grid item xs={12} style={{ display: "flex", justifyContent: "flex-start", gap: "0.5em" }}>
@@ -739,8 +760,8 @@ export default function Diff() {
 
 
         <Grid item xs={12}>
-          <Element name="Insight Difference">
-            <Typography variant="h6">Insight Difference</Typography>
+          <Element name="Cohesion Difference Title">
+            <Typography variant="h6">Cohesion Difference</Typography>
           </Element>
         </Grid>
         <Grid item xs={12}>
@@ -806,6 +827,11 @@ export default function Diff() {
 
         {/* Coupling diff*/}
         <Grid item xs={12}>
+          <Element name="Coupling Difference Title">
+            <Typography variant="h6">Coupling Difference</Typography>
+          </Element>
+        </Grid>
+        <Grid item xs={12}>
           <Element name="Insight Coupling Difference">
           <Button
             variant="contained"
@@ -867,6 +893,11 @@ export default function Diff() {
 
 
         {/* Instabilitydiff*/}
+        <Grid item xs={12}>
+          <Element name="Instability Difference Title">
+            <Typography variant="h6">Instability Difference</Typography>
+          </Element>
+        </Grid>
         <Grid item xs={12}>
           <Element name="Insight Instability Difference">
           <Button
