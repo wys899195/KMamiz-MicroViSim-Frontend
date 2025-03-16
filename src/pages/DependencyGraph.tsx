@@ -12,6 +12,7 @@ import { Card, FormControlLabel, FormGroup, Switch } from "@mui/material";
 import { DependencyGraphFactory } from "../classes/DependencyGraphFactory";
 import {
   useHoverHighlight,
+  useGraphObsoleteNodes,
   DependencyGraphUtils,
 } from "../classes/DependencyGraphUtils";
 import ViewportUtils from "../classes/ViewportUtils";
@@ -79,10 +80,14 @@ export default function DependencyGraph() {
   const { search } = useLocation();
   const query = useMemo(() => new URLSearchParams(search), [search]);
   const [size, setSize] = useState([0, 0]);
-  const [data, setData] = useState<any>();
+  const [graphData, setGraphData] = useState<any>();
   const [highlightInfo, setHighlightInfo] = useHoverHighlight();
   const [displayInfo, setDisplayInfo] = useState<TDisplayNodeInfo | null>(null);
   const [showEndpoint, setShowEndpoint] = useState(true);
+
+  /***graph obsolete info***/
+  const [graphRawData, setGraphRawData] = useState<any>();
+  const [graphObsoleteNodesInfo, setGraphObsoleteNodesInfo] = useGraphObsoleteNodes();
 
   useLayoutEffect(() => {
     const unsubscribe = ViewportUtils.getInstance().subscribe(([vw, vh]) =>
@@ -92,11 +97,11 @@ export default function DependencyGraph() {
   }, []);
 
   useEffect(() => {
-    if (!data) return;
+    if (!graphData) return;
     const selected = query.get("s");
     if (selected) {
       const info = queryToDisplayInfo(selected);
-      const node = data?.nodes.find((n: any) => n.name === info.name);
+      const node = graphData?.nodes.find((n: any) => n.name === info.name);
       if (node) {
         DependencyGraphFactory.OnClick(node, graphRef, setDisplayInfo);
         setHighlightInfo(
@@ -104,14 +109,45 @@ export default function DependencyGraph() {
         );
       }
     }
-  }, [data, search]);
+  }, [graphData, search]);
 
   useEffect(() => {
-    if (!data) return;
+    if (!graphData) return;
     navigate(`/${displayInfo ? `?s=${displayInfoToQuery(displayInfo)}` : ""}`, {
       replace: true,
     });
   }, [displayInfo]);
+
+  useEffect(() => {
+    const updateGraphObsoleteNodesInfo = () => {
+      if (graphData) {
+        const nextGraphObsoleteNodesInfo = DependencyGraphUtils.findObsoleteNodes(graphData);
+        setGraphObsoleteNodesInfo(nextGraphObsoleteNodesInfo);
+      }
+    };
+
+    // Start the interval timer
+    const timer = setInterval(updateGraphObsoleteNodesInfo, 1000); // 10 seconds
+
+    // Immediately execute once after starting the timer
+    updateGraphObsoleteNodesInfo();
+    
+    return () => {
+      clearInterval(timer);
+    };
+  }, [graphData]); // Reset the timer when graphData changes
+
+  useEffect(() => {
+    const next = (nextData?: TGraphData) => {
+      if (nextData) {
+        setGraphRawData(nextData);
+      }
+    };
+    const unSub = GraphService.getInstance().subscribeToEndpointDependencyGraph(next);
+    return () => {
+      unSub();
+    };
+  }, [showEndpoint]);
 
   useEffect(() => {
     const next = (nextData?: TGraphData) => {
@@ -127,7 +163,9 @@ export default function DependencyGraph() {
         });
       }
       rawDataRef.current = nextRawData;
-      setData(nextData && DependencyGraphUtils.ProcessData(nextData));
+      if (nextData) {
+        setGraphData(DependencyGraphUtils.ProcessData(nextData));
+      }
     };
 
     const unSub = showEndpoint
@@ -146,12 +184,13 @@ export default function DependencyGraph() {
             ref={graphRef}
             width={size[0]}
             height={size[1]}
-            graphData={data}
+            graphData={DependencyGraphUtils.filterDeprecatedNodeAndLinks(graphData,graphObsoleteNodesInfo)}
             {...DependencyGraphFactory.Create(
               highlightInfo,
               setHighlightInfo,
               graphRef,
-              setDisplayInfo
+              setDisplayInfo,
+              graphObsoleteNodesInfo
             )}
           />
         </Suspense>

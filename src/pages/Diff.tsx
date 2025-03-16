@@ -14,13 +14,9 @@ import { Element, scroller } from 'react-scroll';
 import { 
   DiffDependencyGraphFactory
 } from "../classes/DiffDependencyGraphFactory";
-import { 
-  DiffDetailDependencyGraphFactory
-} from "../classes/DiffDetailDependencyGraphFactory";
 import {
   useGraphDifference,
   DependencyGraphUtils,
-  ServicvePairRelasionShip,
 } from "../classes/DependencyGraphUtils";
 import ViewportUtils from "../classes/ViewportUtils";
 import GraphService from "../services/GraphService";
@@ -76,14 +72,10 @@ const useStyles = makeStyles(() => ({
     zIndex:99,
   },
   pageBody: {
-    marginTop:'14em',
+    marginTop:'8em',
   },
-  switchEndpoint: {
-    position: "fixed",
-    top: "4.5em",
-    right: "1em",
+  switch: {
     paddingLeft: "0.8em",
-    zIndex:100,
   },
   graphMessage: {
     textAlign: 'center',
@@ -99,43 +91,42 @@ export default function Diff() {
   const navigate = useNavigate();
   const { search } = useLocation();
   
-  /***component references***/
+  /***graph data references***/
   //version 1
-  const graphV1Ref = useRef<any>();
-  const rawDataV1Ref = useRef<string>();
-  const servicePairGraphV1Ref = useRef<any>();
-  const rawServicePairDataV1Ref = useRef<string>();
-
+  const graphDataRefV1 = useRef<any>();
+  const rawGraphDataRefV1 = useRef<string>();
+  
   // version2
-  const graphV2Ref = useRef<any>();
-  const rawDataV2Ref = useRef<string>();
-  const servicePairGraphV2Ref = useRef<any>();
-  const rawServicePairDataV2Ref = useRef<string>();
+  const graphDataRefV2 = useRef<any>();
+  const rawGraphDataRefV2 = useRef<string>();
 
-  /***data & raw data***/
+  
+  /*** data ***/
   //latest version (to create new verion)
-  const [latestRawData, setLatestRawData] = useState<TGraphData | null>(null);
+  const [latestRawGraphData, setLatestRawGraphData] = useState<TGraphData | null>(null);
   const [latestCohesion, setLatestCohesion] = useState<TTotalServiceInterfaceCohesion[]>([]);
   const [latestCoupling, setLatestCoupling] = useState<TServiceCoupling[]>([]);
   const [latestInstability, setLatestInstability] = useState<TServiceInstability[]>([]);
 
   //version1
-  const [dataV1, setDataV1] = useState<any>();
-  const [servicePairDataV1, setServicePairDataV1] = useState<any>();
-  const [rawDataV1, setRawDataV1] = useState<TGraphData | null>(null);
+  const [graphDataV1, setGraphDataV1] = useState<any>();
+  const [rawGraphDataV1, setRawGraphDataV1] = useState<TGraphData | null>(null);
   const [cohesionV1, setCohesionV1] = useState<TTotalServiceInterfaceCohesion[]>([]);
   const [couplingV1, setCouplingV1] = useState<TServiceCoupling[]>([]);
   const [instabilityV1, setInstabilityV1] = useState<TServiceInstability[]>([]);
 
   //version2
-  const [DataV2, setDataV2] = useState<any>();
-  const [servicePairDataV2, setServicePairDataV2] = useState<any>();
-  const [rawDataV2, setRawDataV2] = useState<TGraphData | null>(null);
+  const [graphDataV2, setGraphDataV2] = useState<any>();
+  const [rawGraphDataV2, setRawGraphDataV2] = useState<TGraphData | null>(null);
   const [cohesionV2, setCohesionV2] = useState<TTotalServiceInterfaceCohesion[]>([]);
   const [couplingV2, setCouplingV2] = useState<TServiceCoupling[]>([]);
   const [instabilityV2, setInstabilityV2] = useState<TServiceInstability[]>([]);
 
   /***graph diff info***/
+  const diffGraphDataRef = useRef<any>();
+  const rawDiffGraphDataRef = useRef<string>();
+  const [diffGraphData, setDiffGraphData] = useState<any>();
+  const [rawDiffGraphData, setRawDiffGraphData] = useState<TGraphData | null>(null);
   const [graphDifferenceInfo, setGraphDifferenceInfo] = useGraphDifference();
 
   /***insight diff***/
@@ -145,7 +136,7 @@ export default function Diff() {
 
   /***for graph display***/
   const [showEndpoint, setShowEndpoint] = useState(true);
-  const [showServicePairDiff, setShowServicePairDiff] = useState(false);
+  const [showGraphDiffChart, setShowGraphDiffChart] = useState(true);
   const [showCohesionInsightDiffChart, setShowCohesionInsightDiffChart] = useState(true);
   const [showCouplingInsightDiffChart, setShowCouplingInsightDiffChart] = useState(true);
   const [showInstabilityInsightDiffChart, setShowInstabilityInsightDiffChart] = useState(true);
@@ -155,7 +146,7 @@ export default function Diff() {
   const [pageSize, setPageSize] = useState([0, 0]);
   const [gridSize, setGridSize] = useState(12);
   const [graphWidthRate, setCanvasWidthRate] = useState(0.5);
-  const [graphHeightRate, setCanvasHeightRate] = useState(0.65);
+  const [graphHeightRate, setCanvasHeightRate] = useState(0.75);
 
   /***to get a specific version diff data***/
   const latestVersionStr = "Latest"
@@ -165,15 +156,6 @@ export default function Diff() {
   const [tags, setTags] = useState<string[]>([]);
   const [newVersion, setNewVersion] = useState<string>("");
 
-
-  /***some controller at "Diff Details ( between each pair of services" area***/
-  const [allSvcNodeIds, setAllSvcNodeIds] = useState<string[]>([]);
-  const [firstSvcNodeId, setFirstSvcNodeId] = useState<string>("");
-  const [secondSvcNodeId, setSecondSvcNodeId] = useState<string>("");
-  const [servicePairGraphV1RS,setServicePairGraphV1RS] = useState<ServicvePairRelasionShip>('no matching services in graph');
-  const [servicePairGraphV2RS,setServicePairGraphV2RS] = useState<ServicvePairRelasionShip>('no matching services in graph');
-  const [servicePairGraphV1Message, setServicePairGraphV1Message] = useState<string>("");
-  const [servicePairGraphV2Message, setServicePairGraphV2Message] = useState<string>("");
 
   useEffect(() => {
     const unsubscribe = [
@@ -201,81 +183,18 @@ export default function Diff() {
 
   useEffect(() => {
     GraphService.getInstance().getTagsOfDiffdata().then(setTags);
-    setFirstSvcNodeId("");
-    setSecondSvcNodeId("");
-    setTimeout(() => {
-      // scrollToElement('Overview Title');
-    }, 100);
   }, [query]);
 
 
-  /***useEffect for graph diff***/
+  /***useEffect for graph diff and insight diff***/
   //latest version
   useEffect(() => {
+    console.log("useEffect executed at:", new Date().toLocaleTimeString());
     GraphService.getInstance().getDependencyGraph(true).then((nextLatestRawData) => {
       if (nextLatestRawData){
-        setLatestRawData(nextLatestRawData);
+        setLatestRawGraphData(nextLatestRawData);
       }
     });
-  }, [showEndpoint,tagV1,tagV2]);
-  //version1
-  useEffect(() => {
-    GraphService.getInstance().getTaggedDependencyGraph(true,tagV1).then((nextRawDataV1) => {
-      if (nextRawDataV1){
-        setRawDataV1(nextRawDataV1);
-      }
-    });
-    GraphService.getInstance().getTaggedDependencyGraph(showEndpoint,tagV1).then((nextDataV1) => {
-      if (nextDataV1){
-        const nextRawData = JSON.stringify(nextDataV1);
-        if (rawDataV1Ref.current === nextRawData) return;
-        if (!rawDataV1Ref.current) {
-          const timer = setInterval(() => {
-            if (!graphV1Ref.current) return;
-            clearInterval(timer);
-            setTimeout(() => {
-              graphV1Ref.current.zoom(3, 0);
-              graphV1Ref.current.centerAt(0, 0);
-            }, 10);
-          });
-        }
-        rawDataV1Ref.current = nextRawData;
-        setDataV1(DependencyGraphUtils.ProcessData(nextDataV1));
-      }
-    });
-  }, [showEndpoint,tagV1]);
-  //version2
-  useEffect(() => {
-    GraphService.getInstance().getTaggedDependencyGraph(true,tagV2).then((nextRawDataV2) => {
-      if (nextRawDataV2){
-        setRawDataV2(nextRawDataV2);
-      }
-    });
-    GraphService.getInstance().getTaggedDependencyGraph(showEndpoint,tagV2).then((nextDataV2) => {
-      if (nextDataV2){
-        const nextRawDataV2 = JSON.stringify(nextDataV2);
-        if (rawDataV2Ref.current === nextRawDataV2) return;
-        if (!rawDataV2Ref.current) {
-          const timer = setInterval(() => {
-            if (!graphV2Ref.current) return;
-            clearInterval(timer);
-            setTimeout(() => {
-              graphV2Ref.current.zoom(3, 0);
-              graphV2Ref.current.centerAt(0, 0);
-            }, 10);
-          });
-        }
-        rawDataV2Ref.current = nextRawDataV2;
-        ;
-        setDataV2(DependencyGraphUtils.ProcessData(nextDataV2));
-      }
-    });
-  }, [showEndpoint,tagV2]);
-
-  
-  /***useEffect for insight diff***/
-  //latest version
-  useEffect(() => {
     //Cohesion
     GraphService.getInstance().getServiceCohesion().then((nextLatestCohesionData) => {
       if (nextLatestCohesionData){
@@ -294,10 +213,34 @@ export default function Diff() {
         setLatestInstability(nextLatestInstabilityData);
       }
     }); 
-  }, [tagV1,tagV2]);
+  }, [showEndpoint,query]);
+
 
   //version1
   useEffect(() => {
+    GraphService.getInstance().getTaggedDependencyGraph(true,tagV1).then((nextRawDataV1) => {
+      if (nextRawDataV1){
+        setRawGraphDataV1(nextRawDataV1);
+      }
+    });
+    GraphService.getInstance().getTaggedDependencyGraph(showEndpoint,tagV1).then((nextDataV1) => {
+      if (nextDataV1){
+        const nextRawData = JSON.stringify(nextDataV1);
+        if (rawGraphDataRefV1.current === nextRawData) return;
+        if (!rawGraphDataRefV1.current) {
+          const timer = setInterval(() => {
+            if (!graphDataRefV1.current) return;
+            clearInterval(timer);
+            setTimeout(() => {
+              graphDataRefV1.current.zoom(3, 0);
+              graphDataRefV1.current.centerAt(0, 0);
+            }, 10);
+          });
+        }
+        rawGraphDataRefV1.current = nextRawData;
+        setGraphDataV1(DependencyGraphUtils.ProcessData(nextDataV1));
+      }
+    });
     //Cohesion
     GraphService.getInstance().getTaggedServiceCohesion(tagV1).then((nextCohesionDataV1) => {
       if (nextCohesionDataV1){
@@ -315,12 +258,36 @@ export default function Diff() {
       if (nextInstabilityDataV1){
         setInstabilityV1(nextInstabilityDataV1);
       }
-    }); 
-
-  }, [tagV1]);
+    });
+  }, [showEndpoint,tagV1]);
 
   //version2
   useEffect(() => {
+    GraphService.getInstance().getTaggedDependencyGraph(true,tagV2).then((nextRawDataV2) => {
+      if (nextRawDataV2){
+        console.log("nextRawDataV2:",nextRawDataV2)
+        setRawGraphDataV2(nextRawDataV2);
+      }
+    });
+    GraphService.getInstance().getTaggedDependencyGraph(showEndpoint,tagV2).then((nextDataV2) => {
+      if (nextDataV2){
+        const nextRawDataV2 = JSON.stringify(nextDataV2);
+        if (rawGraphDataRefV2.current === nextRawDataV2) return;
+        if (!rawGraphDataRefV2.current) {
+          const timer = setInterval(() => {
+            if (!graphDataRefV2.current) return;
+            clearInterval(timer);
+            setTimeout(() => {
+              graphDataRefV2.current.zoom(3, 0);
+              graphDataRefV2.current.centerAt(0, 0);
+            }, 10);
+          });
+        }
+        rawGraphDataRefV2.current = nextRawDataV2;
+        ;
+        setGraphDataV2(DependencyGraphUtils.ProcessData(nextDataV2));
+      }
+    });
     //Cohesion
     GraphService.getInstance().getTaggedServiceCohesion(tagV2).then((nextCohesionDataV2) => {
       if (nextCohesionDataV2){
@@ -339,70 +306,30 @@ export default function Diff() {
         setInstabilityV2(nextInstabilityDataV2);
       }
     }); 
+  }, [showEndpoint,tagV2]);
 
-  }, [tagV2]);
-
-  useEffect(() => {
-    if(firstSvcNodeId && secondSvcNodeId){
-      GraphService.getInstance().getTaggedDependencyGraph(showEndpoint,tagV1).then((nextTwoServicesDataV1) => {
-        if (nextTwoServicesDataV1){
-          const {graph,relationship} = DependencyGraphUtils
-            .toDetailsBetweenTwoServicesGraph(nextTwoServicesDataV1,firstSvcNodeId,secondSvcNodeId)
-          const nextTwoServicesRawDataV1 = JSON.stringify(graph);
-          if (rawServicePairDataV1Ref.current === nextTwoServicesRawDataV1) return;
-          if (!rawServicePairDataV1Ref.current) {
-            const timer = setInterval(() => {
-              if (!servicePairGraphV1Ref.current) return;
-              clearInterval(timer);
-              setTimeout(() => {
-                servicePairGraphV1Ref.current.zoom(3, 0);
-                servicePairGraphV1Ref.current.centerAt(0, 0);
-              }, 10);
-            });
-          }
-          rawServicePairDataV1Ref.current = nextTwoServicesRawDataV1;
-          setServicePairDataV1(DependencyGraphUtils.ProcessData(graph));
-          setServicePairGraphV1RS(relationship);
-          setMessageByRelationship(relationship,setServicePairGraphV1Message)
-        }
-      });
-      GraphService.getInstance().getTaggedDependencyGraph(showEndpoint,tagV2).then((nextTwoServicesDataV2) => {
-        if (nextTwoServicesDataV2){
-          const {graph,relationship} = DependencyGraphUtils
-            .toDetailsBetweenTwoServicesGraph(nextTwoServicesDataV2,firstSvcNodeId,secondSvcNodeId);
-          const nextTwoServicesRawDataV2 = JSON.stringify(graph);
-          if (rawServicePairDataV2Ref.current === nextTwoServicesRawDataV2) return;
-          if (!rawServicePairDataV2Ref.current) {
-            const timer = setInterval(() => {
-              if (!servicePairGraphV2Ref.current) return;
-              clearInterval(timer);
-              setTimeout(() => {
-                servicePairGraphV2Ref.current.zoom(3, 0);
-                servicePairGraphV2Ref.current.centerAt(0, 0);
-              }, 10);
-            });
-          }
-          rawServicePairDataV2Ref.current = nextTwoServicesRawDataV2;
-          setServicePairDataV2(DependencyGraphUtils.ProcessData(graph));
-          setServicePairGraphV2RS(relationship);
-          setMessageByRelationship(relationship,setServicePairGraphV2Message)
-        }
-      });
-      setShowServicePairDiff(true);
-      scrollToElement('Service Pair Details Title');
-    }
-    else{
-      setShowServicePairDiff(false);
-    }
-  }, [showEndpoint,tagV1,tagV2,firstSvcNodeId,secondSvcNodeId]);
 
   useEffect(() => {
-    if(rawDataV1 && rawDataV2){
-      const nextGraphDifferenceInfo = DependencyGraphUtils.CompareTwoGraphData(rawDataV1,rawDataV2) ;
+    if(rawGraphDataV1 && rawGraphDataV2){
+      const nextGraphDifferenceInfo = DependencyGraphUtils.CompareTwoGraphData(rawGraphDataV1,rawGraphDataV2) ;
+      const nextDiffGraphData = JSON.stringify(nextGraphDifferenceInfo.diffGraphData);
+      if (rawDiffGraphDataRef.current === nextDiffGraphData) return;
+      if (!rawDiffGraphDataRef.current) {
+        const timer = setInterval(() => {
+          if (!diffGraphDataRef.current) return;
+          clearInterval(timer);
+          setTimeout(() => {
+            diffGraphDataRef.current.zoom(3, 0);
+            diffGraphDataRef.current.centerAt(0, 0);
+          }, 10);
+        });
+      }
+      rawDiffGraphDataRef.current = nextDiffGraphData;
+      setDiffGraphData(JSON.parse(nextDiffGraphData));
+  
       setGraphDifferenceInfo(nextGraphDifferenceInfo);
-      setAllSvcNodeIds(nextGraphDifferenceInfo.allServiceNodeIds);
     }
-  }, [rawDataV1,rawDataV2]);
+  }, [rawGraphDataV1,rawGraphDataV2]);
 
   useEffect(() => {
     const newDataDiff = mergeCohesionData(cohesionV1, cohesionV2);
@@ -557,10 +484,10 @@ export default function Diff() {
   
 
   const createNewVersion = async () => {
-    if (!latestRawData|| !newVersion) return;
+    if (!latestRawGraphData|| !newVersion) return;
     await GraphService.getInstance().addTaggedDiffData({
       tag: newVersion,
-      graphData:latestRawData,
+      graphData:latestRawGraphData,
       cohesionData:latestCohesion,
       couplingData:latestCoupling,
       instabilityData:latestInstability,
@@ -588,41 +515,10 @@ export default function Diff() {
     });
   };
 
-  const setMessageByRelationship = (relationship: ServicvePairRelasionShip, setMessage: (message: string) => void) => {
-    switch (relationship) {
-      case 'no matching services in graph':
-        setMessage('These two given services do not exist in this version.');
-        break;
-      case 'indirect dependency':
-        setMessage('These two given services do not have a direct dependency in this version.');
-        break;
-      default:
-        setMessage('');
-        break;
-    }
-  }
-
 
   return (
     <Box className={classes.root}>
       <Grid container padding={1} spacing={0.5} className={classes.pageHeader}>
-        <Grid item xs={6}>
-          <Card variant="outlined" className={classes.actions}>
-            <TextField
-              fullWidth
-              label="save the latest version as a new version"
-              variant="outlined"
-              value={newVersion} 
-              onChange={(e) => setNewVersion(e.target.value)}
-            />
-            <Tooltip title="Save the latest version as a new version">
-              <Button variant="contained" onClick={() => createNewVersion()}>
-                Create
-              </Button>
-            </Tooltip>
-          </Card>
-        </Grid>
-        <Grid item xs={5}></Grid>
         <Grid item xs={6}>
           <Card variant="outlined" className={classes.actions}> 
             <FormControl fullWidth>
@@ -717,146 +613,128 @@ export default function Diff() {
         </Grid>
       </Grid>
       <Grid container padding={1} spacing={1} className={classes.pageBody}>
+        
+        {/* Create new version*/}
         <Grid item xs={12} >
-          <Element name="Overview Title">
-            <Typography variant="h6">Graph Difference Overview</Typography>
+          <Element name="Create new version Title">
+            <Typography variant="h6">Create new version</Typography>
           </Element>
         </Grid>
         <Grid item xs={gridSize}>
+          <Card variant="outlined" className={classes.actions}>
+            <TextField
+              fullWidth
+              label="save the latest version as a new version"
+              variant="outlined"
+              value={newVersion} 
+              onChange={(e) => setNewVersion(e.target.value)}
+            />
+            <Tooltip title="Save the latest version as a new version">
+              <Button variant="contained" onClick={() => createNewVersion()}>
+                Create
+              </Button>
+            </Tooltip>
+          </Card>
+        </Grid>
+        <Grid item xs={12 - gridSize}></Grid>
+        <Grid item xs={12} style={{ marginBottom: "3em" }}>
+          <Divider />
+        </Grid>
+
+
+
+        {/* Graph diff*/}
+        <Grid item xs={12} >
+          <Element name="Graph Difference Title">
+            <Typography variant="h6">Graph Difference</Typography>
+          </Element>
+        </Grid>
+        <Grid item xs={12} style={{ display: "flex", justifyContent: "flex-start", gap: "0.5em" }}>
+          <Card className={classes.switch}>
+            <FormGroup>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={showGraphDiffChart}
+                    onChange={(e) => setShowGraphDiffChart(e.target.checked)}
+                  />
+                }
+                label="Show difference"
+              />
+            </FormGroup>
+          </Card>
+          <Card className={classes.switch}>
+            <FormGroup>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={showEndpoint}
+                    onChange={(e) => setShowEndpoint(e.target.checked)}
+                  />
+                }
+                label="Show endpoints"
+              />
+            </FormGroup>
+          </Card>
+        </Grid>
+        <Grid item xs={gridSize} style={{ display: showGraphDiffChart ? 'block' : 'none' }}>
+          <div className={classes.graphContainer}>
+            <Suspense fallback={<Loading />}>
+              <ForceGraph2D
+                ref={diffGraphDataRef}
+                width={pageSize[0] - 20}
+                height={pageSize[1] * graphHeightRate - 40}
+                graphData={diffGraphData}
+                {...DiffDependencyGraphFactory.Create(
+                  graphDifferenceInfo,
+                  true,
+                )}
+              />
+            </Suspense>
+          </div>
+        </Grid>
+
+        {/* Graph details*/}
+        <Grid item xs={gridSize} style={{ display: showGraphDiffChart ? 'none' : 'block' }}>
           <div className={classes.graphContainer}>
             <Grid item xs={12} className={classes.graphHeader}>
               <h3 className={classes.graphTitle}>{tagV1 || latestVersionStr}</h3>
             </Grid>
             <Suspense fallback={<Loading />}>
               <ForceGraph2D
-                ref={graphV1Ref}
+                ref={graphDataRefV1}
                 width={pageSize[0] * graphWidthRate - 20}
                 height={pageSize[1] * graphHeightRate - 40}
-                graphData={dataV1}
+                graphData={graphDataV1}
                 {...DiffDependencyGraphFactory.Create(
-                  graphDifferenceInfo
+                  graphDifferenceInfo,
+                  false,
                 )}
               />
             </Suspense>
           </div>
         </Grid>
-        <Grid item xs={gridSize}>
+        <Grid item xs={gridSize} style={{ display: showGraphDiffChart ? 'none' : 'block' }}>
           <div className={classes.graphContainer}>
             <Grid item xs={12} className={classes.graphHeader}>
               <h3 className={classes.graphTitle}>{tagV2 || latestVersionStr}</h3>
             </Grid>
             <Suspense fallback={<Loading />}>
               <ForceGraph2D
-                ref={graphV2Ref}
+                ref={graphDataRefV2}
                 width={pageSize[0] * graphWidthRate - 20}
                 height={pageSize[1] * graphHeightRate - 40}
-                graphData={DataV2}
+                graphData={graphDataV2}
                 {...DiffDependencyGraphFactory.Create(
-                  graphDifferenceInfo
+                  graphDifferenceInfo,
+                  false,
                 )}
               />
             </Suspense>
           </div>
         </Grid>
-        {/* <Grid item xs={12}>
-          <Element name="Service Pair Details Title">
-            <Typography variant="h6">Graph Diff Details ( between each pair of services )</Typography>
-          </Element>
-        </Grid>
-        <Grid item xs={6}>
-          <FormControl fullWidth>
-            <InputLabel id="fsvc-nid-label">First Service</InputLabel>
-            <Select
-              labelId="fsvc-nid-label"
-              value={firstSvcNodeId}
-              label="Selected First Service"
-              onChange={(e) => {
-                setFirstSvcNodeId(e.target.value)
-              }}
-            >
-              {
-                allSvcNodeIds.length >= 2
-                ? allSvcNodeIds.filter(id => id != secondSvcNodeId).map((id, i) => (
-                  <MenuItem key={`fsvc-nid-${i}`} value={id}>
-                    {id.replace("\t", ".")}
-                  </MenuItem>))
-                : <MenuItem disabled key={`fsvc-not-enough-id`} value={''}>
-                    Cannot select, as there are fewer than 2 services in the system.
-                  </MenuItem>
-              }
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid item xs={6}>
-        <FormControl fullWidth>
-            <InputLabel id="ssvc-nid-label">Second Service</InputLabel>
-            <Select
-              labelId="ssvc-nid-label"
-              value={secondSvcNodeId}
-              label="Selected Second Service"
-              onChange={(e) => {
-                setSecondSvcNodeId(e.target.value)
-              }}
-            >
-              {
-                allSvcNodeIds.length >= 2
-                ? allSvcNodeIds.filter(id => id != firstSvcNodeId).map((id, i) => (
-                    <MenuItem key={`ssvc-nid-${i}`} value={id}>
-                      {id.replace("\t", ".")}
-                    </MenuItem>
-                  ))
-                : <MenuItem disabled key={`ssvc-not-enough-id`} value={''}>
-                    The number of services in the system is less than 2.
-                  </MenuItem>
-              }
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid item xs={gridSize} style={showServicePairDiff ? {} : {display:'none'}}>
-          <div className={classes.graphContainer}>
-            <Grid item xs={12} className={classes.graphHeader}>
-              <h3 className={classes.graphTitle}>{tagV1 || latestVersionStr}</h3>
-            </Grid>
-            <h3 className={classes.graphMessage}>{servicePairGraphV1Message}</h3>
-            <Suspense fallback={<Loading />}>
-              <ForceGraph2D
-                ref={servicePairGraphV1Ref}
-                width={pageSize[0] * graphWidthRate - 20}
-                height={pageSize[1] * graphHeightRate - 115}
-                graphData={servicePairDataV1}
-                {...DiffDetailDependencyGraphFactory.Create(
-                  graphDifferenceInfo,
-                  firstSvcNodeId,
-                  secondSvcNodeId,
-                  servicePairGraphV1RS
-                )}
-              />
-            </Suspense>
-          </div>
-        </Grid>
-        <Grid item xs={gridSize} style={showServicePairDiff ? {} : {display:'none'}}>
-          <div className={classes.graphContainer}>
-            <Grid item xs={12} className={classes.graphHeader}>
-              <h3 className={classes.graphTitle}>Selected Version</h3>
-            </Grid>
-            <h3 className={classes.graphMessage}>{servicePairGraphV2Message}</h3>
-            <Suspense fallback={<Loading />}>
-              <ForceGraph2D
-                ref={servicePairGraphV2Ref}
-                width={pageSize[0] * graphWidthRate - 20}
-                height={pageSize[1] * graphHeightRate - 115}
-                graphData={servicePairDataV2}
-                {...DiffDetailDependencyGraphFactory.Create(
-                  graphDifferenceInfo,
-                  firstSvcNodeId,
-                  secondSvcNodeId,
-                  servicePairGraphV2RS
-                )}
-              />
-            </Suspense>
 
-          </div>
-        </Grid> */}
+
         <Grid item xs={12}>
           <Element name="Insight Difference">
             <Typography variant="h6">Insight Difference</Typography>
@@ -1047,20 +925,6 @@ export default function Diff() {
           ></ReactApexChart>
         </Grid>
       </Grid>
-
-      <Card className={classes.switchEndpoint}>
-        <FormGroup>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={showEndpoint}
-                onChange={(e) => setShowEndpoint(e.target.checked)}
-              />
-            }
-            label="Show endpoints"
-          />
-        </FormGroup>
-      </Card>
     </Box>
   );
 }

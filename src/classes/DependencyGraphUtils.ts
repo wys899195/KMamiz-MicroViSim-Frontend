@@ -1,6 +1,7 @@
 import { Dispatch, SetStateAction, useState } from "react";
 import { TGraphData, TLink, TNode } from "../entities/TGraphData";
 import { Color } from "./ColorUtils";
+import Config from "../../Config";
 
 // to highlight node in the dependency graph
 export type HighlightInfo = {
@@ -21,42 +22,49 @@ const useHoverHighlight = (): [
 };
 
 
-// to compare two dependency graphs
-const state = [
-  'added',
-  'modified',
-  'deleted',
-  'unchanged'
-] as const;
-export type GraphDifferenceState = typeof state[number];
+// to show deprecated service or endpoint
+const parseThresholdToMilliseconds = (thresholdStr:string): number => {
+  if (!thresholdStr) return 0;
+  const regex = /(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?/;
+  const match = thresholdStr.match(regex);
+  if (!match) return 0;
 
-const relasionShip = [
-  'direct dependency',
-  'indirect dependency',
-  'only one matching service',
-  'no matching services in graph',
-] as const;
-export type ServicvePairRelasionShip = typeof relasionShip[number];
+  const days = match[1] ? parseInt(match[1], 10) : 0;
+  const hours = match[2] ? parseInt(match[2], 10) : 0;
+  const minutes = match[3] ? parseInt(match[3], 10) : 0;
+  const seconds = match[4] ? parseInt(match[4], 10) : 0;
 
-type DiffBetweenTwoServiceNodes = {
-  serviceIdPair: [string,string];
-  serviceStatePair: [GraphDifferenceState,GraphDifferenceState];
-  addedNodeIds: string[];
-  deletedNodeIds: string[];
-  addedLinkIds: string[];
-  deletedLinkIds: string[];
+  return ((days * 86400) + (hours * 3600) + (minutes * 60) + seconds) * 1000;
+}
+const GRAPH_IDLE_NODE_THRESHOLD = parseThresholdToMilliseconds(Config.InactiveEndpointThreshold || "");
+const GRAPH_DEPRECATED_NODE_THRESHOLD = Math.max(GRAPH_IDLE_NODE_THRESHOLD, parseThresholdToMilliseconds(Config.DeprecatedEndpointThreshold || ""));
+
+export type GraphObsoleteNodesInfo = {
+  inactiveNodeIds: Set<string>; 
+  deprecatedNodeIds: Set<string>; 
+  deprecatedLinkIds: Set<string>; 
 }
 
+const useGraphObsoleteNodes = (): [
+  GraphObsoleteNodesInfo,
+  Dispatch<SetStateAction<GraphObsoleteNodesInfo>>
+] => {
+  const [graphObsoleteNodes, setGraphObsoleteNodes] = useState<GraphObsoleteNodesInfo>({
+    inactiveNodeIds: new Set<string>(),
+    deprecatedNodeIds: new Set<string>(),
+    deprecatedLinkIds: new Set<string>(),
+  });
+  return [graphObsoleteNodes, setGraphObsoleteNodes];
+};
+
+// to compare two dependency graphs
 export type GraphDifferenceInfo = {
   // display at the Overview area
   addedNodeIds: string[]; 
   deletedNodeIds: string[];
   addedLinkIds: string[]; 
   deletedLinkIds: string[];
-
-  // display at the Diff Details (between each pair of services) area
-  allServiceNodeIds: string[];
-  diffsBetweenTwoServices: DiffBetweenTwoServiceNodes[]; 
+  diffGraphData: TGraphData;
 };
 
 const useGraphDifference = (): [
@@ -68,8 +76,10 @@ const useGraphDifference = (): [
     deletedNodeIds: [],
     addedLinkIds: [],
     deletedLinkIds: [],
-    allServiceNodeIds: [],
-    diffsBetweenTwoServices: [],
+    diffGraphData: {
+      nodes: [],
+      links: []
+    }
   });
   return [graphDifference, setGraphDifference];
 };
@@ -114,208 +124,130 @@ export class DependencyGraphUtils {
     return graphData;
   }
 
+  static filterDeprecatedNodeAndLinks(data: TGraphData,graphObsoleteNodesInfo: GraphObsoleteNodesInfo):TGraphData{
+    if (!data){
+      return {
+        nodes:[],
+        links:[]
+      }
+    }
+    console.log("graphObsoleteNodesInfo:",graphObsoleteNodesInfo)
+    const { deprecatedNodeIds, deprecatedLinkIds } = graphObsoleteNodesInfo;
+    const filteredNodes = data.nodes.filter(
+      (node) => !deprecatedNodeIds.has(node.id)
+    );
+    const filteredLinks = data.links.filter(
+      (link) => !deprecatedLinkIds.has(DependencyGraphUtils.TLinkToId(link))
+    );
+    return {
+      nodes:filteredNodes,
+      links:filteredLinks
+    }
+  }
+
   static TLinkToId(link:TLink):string {
     return `${link.source}==>${link.target}`
   }
 
-  static CompareTwoGraphData(latestData:TGraphData,taggedData:TGraphData):GraphDifferenceInfo{
-    if (!latestData || !taggedData){
+  static findObsoleteNodes(graphData:TGraphData):GraphObsoleteNodesInfo {
+    if (!graphData){
+      return {
+        inactiveNodeIds: new Set<string>(),
+        deprecatedNodeIds: new Set<string>(),
+        deprecatedLinkIds: new Set<string>(),
+      }
+    }else{
+      console.log("graphDataaa:",graphData)
+      const now = Date.now();
+      const inactiveTimestamp = now - GRAPH_IDLE_NODE_THRESHOLD;
+      const deprecatedTimestamp = now - GRAPH_DEPRECATED_NODE_THRESHOLD ;
+      const inactiveNodeIds = graphData.nodes
+      .filter(node => node.id !== "null" && node.lastTimestamp < inactiveTimestamp)
+      .map(node => node.id);
+      const deprecatedNodeIds = graphData.nodes
+      .filter(node => node.id !== "null" && node.lastTimestamp < deprecatedTimestamp)
+      .map(node => node.id);
+
+      const deprecatedLinkIds = graphData.links
+      .filter(link => deprecatedNodeIds.includes(link.target))
+      .map(link => this.TLinkToId(link));
+
+      console.log("inactiveNodeIds:",inactiveNodeIds);
+      console.log("deprecatedNodeIds:",deprecatedNodeIds)
+      console.log("deprecatedLinkIds:",deprecatedLinkIds)
+      return {
+        inactiveNodeIds:  new Set(inactiveNodeIds),
+        deprecatedNodeIds: new Set(deprecatedNodeIds),
+        deprecatedLinkIds: new Set(deprecatedLinkIds)
+      }
+    }
+  }
+
+  static CompareTwoGraphData(newData:TGraphData,oldData:TGraphData):GraphDifferenceInfo{
+    if (!newData || !oldData){
       return {
         addedNodeIds: [],
         deletedNodeIds: [],
         addedLinkIds: [],
         deletedLinkIds: [],
-        allServiceNodeIds: [],
-        diffsBetweenTwoServices: [],
+        diffGraphData: {
+          nodes: [],
+          links: []
+        }
       }
     }else{
       // ids of all nodes
-      const nodeIdsInLatestData: string[] = latestData.nodes.map(node => node.id)
-      const nodeIdsInTaggedData: string[] = taggedData.nodes.map(node => node.id);
-      const addedNodeIds: Set<string> = new Set(nodeIdsInLatestData.filter(id => !nodeIdsInTaggedData.includes(id)));
-      const deletedNodeIds: Set<string> = new Set(nodeIdsInTaggedData.filter(id => !nodeIdsInLatestData.includes(id)));
-      const addedNodes: Set<any> = new Set(latestData.nodes.filter(node => addedNodeIds.has(node.id)));
-      const deletedNodes: Set<any> = new Set(taggedData.nodes.filter(node => deletedNodeIds.has(node.id)));
+      const nodeIdsInNewData: string[] = newData.nodes.map(node => node.id);
+      const nodeIdsInOldData: string[] = oldData.nodes.map(node => node.id);
+      const addedNodeIds: Set<string> = new Set(nodeIdsInNewData.filter(id => !nodeIdsInOldData.includes(id)));
+      const deletedNodeIds: Set<string> = new Set(nodeIdsInOldData.filter(id => !nodeIdsInNewData.includes(id)));
+      const commonNodeIds: Set<string> = new Set([...nodeIdsInNewData].filter(id => nodeIdsInOldData.includes(id)));
 
       // ids of all links excluding external nodes
-      const linkIdsInLatestData: string[] = latestData.links.map(link => this.TLinkToId(link));
-      const linkIdsInTaggedData: string[] = taggedData.links.map(link => this.TLinkToId(link));
-      const addedLinkIds: Set<string> = new Set(linkIdsInLatestData.filter(id => !linkIdsInTaggedData.includes(id)));
-      const deletedLinkIds: Set<string> = new Set(linkIdsInTaggedData.filter(id => !linkIdsInLatestData.includes(id)));
+      const linkIdsInNewData: string[] = newData.links.map(link => this.TLinkToId(link));
+      const linkIdsInOldData: string[] = oldData.links.map(link => this.TLinkToId(link));
+      const addedLinkIds: Set<string> = new Set(linkIdsInNewData.filter(id => !linkIdsInOldData.includes(id)));
+      const deletedLinkIds: Set<string> = new Set(linkIdsInOldData.filter(id => !linkIdsInNewData.includes(id)));
+      const commonLinkIds: Set<string> = new Set([...linkIdsInNewData].filter(id => linkIdsInOldData.includes(id)));
 
-      // ids of service nodes (including external node)
-      const allServiceNodeIds: string[] = 
-      Array.from(
-        new Set(
-          [...latestData.nodes,...taggedData.nodes]
-            .filter(node => node.id === node.group)
-            .map(node => node.id)
-        )
-      );
+      const mergedNodes = [
+        ...newData.nodes,
+        ...oldData.nodes
+          .filter(node => deletedNodeIds.has(node.id))
+      ];
 
-      // At least two services are required for show diff between two services
-      if(allServiceNodeIds.length <= 2){
-        return {
-          addedNodeIds: Array.from(addedNodeIds),
-          deletedNodeIds: Array.from(deletedNodeIds),
-          addedLinkIds: Array.from(addedLinkIds),
-          deletedLinkIds: Array.from(deletedLinkIds),
-          allServiceNodeIds: allServiceNodeIds.filter(id => id !== 'null'),
-          diffsBetweenTwoServices: new Array<DiffBetweenTwoServiceNodes>(),
-        }
+      const mergedLinks = [
+        ...newData.links,
+        ...oldData.links
+          .filter(link => deletedLinkIds.has(this.TLinkToId(link)))
+      ];
+
+      const diffGraphData:TGraphData = {
+        nodes: mergedNodes,
+        links: mergedLinks
       }
-      const addedServiceNodeIds: string[] = 
-        Array.from(
-          new Set(
-            [...addedNodeIds].filter(id => allServiceNodeIds.includes(id))
-          )
-        );
-      const deletedServiceNodeIds: string[] =
-        Array.from(
-          new Set(
-            [...deletedNodeIds].filter(id => allServiceNodeIds.includes(id))
-          )
-        );
-      const overlappingServiceNodeIds: string[] =
-        Array.from(
-          new Set(
-            [...allServiceNodeIds].filter(id => !addedNodeIds.has(id) && !deletedNodeIds.has(id))
-          )
-        );
 
-      const diffDetails:Array<DiffBetweenTwoServiceNodes> = []
       
-      for (let i = 0; i < allServiceNodeIds.length - 1; i++) {
-        for (let j = i + 1; j < allServiceNodeIds.length; j++) {
-          const serviceIdPair: [string,string] = [
-            allServiceNodeIds[i],allServiceNodeIds[j]
-          ]
-          const serviceStatePair:[GraphDifferenceState,GraphDifferenceState] = [
-            addedServiceNodeIds.includes(allServiceNodeIds[i]) ? "added"
-                  : deletedServiceNodeIds.includes(allServiceNodeIds[i]) ? "deleted" 
-                  : overlappingServiceNodeIds.includes(allServiceNodeIds[i]) ? "modified" : "unchanged",
-            addedServiceNodeIds.includes(allServiceNodeIds[j]) ? "added"
-                  : deletedServiceNodeIds.includes(allServiceNodeIds[j]) ? "deleted" 
-                  : overlappingServiceNodeIds.includes(allServiceNodeIds[j]) ? "modified" : "unchanged"
-          ]
-          const addedNodeIdsBetweenTwoServices:string[] = 
-            [...addedNodes]
-              .filter(node => node.group === allServiceNodeIds[i] || node.group === allServiceNodeIds[j])
-              .map(node => node.id)
-          const deletedNodeIdsBetweenTwoServices:string[] = 
-            [...deletedNodes]
-              .filter(node => node.group === allServiceNodeIds[i] || node.group === allServiceNodeIds[j])
-              .map(node => node.id)
-          const addedLinkIdsBetweenTwoServices:string[] = 
-            [...addedLinkIds]
-              .filter(linkId => 
-                linkId.includes(allServiceNodeIds[i]) && linkId.includes(allServiceNodeIds[j])
-                || linkId.includes(allServiceNodeIds[i]) && linkId.includes(allServiceNodeIds[i])
-                || linkId.includes(allServiceNodeIds[j]) && linkId.includes(allServiceNodeIds[j])
-              )
-          const deletedLinkIdsBetweenTwoServices:string[] = 
-            [...deletedLinkIds]
-              .filter(linkId => 
-                linkId.includes(allServiceNodeIds[i]) && linkId.includes(allServiceNodeIds[j])
-                || linkId.includes(allServiceNodeIds[i]) && linkId.includes(allServiceNodeIds[i])
-                || linkId.includes(allServiceNodeIds[j]) && linkId.includes(allServiceNodeIds[j])
-              )
-
-          // filter out two services that are not directly dependent
-          if (addedLinkIdsBetweenTwoServices.length !== 0 || deletedLinkIdsBetweenTwoServices.length !== 0){
-            diffDetails.push({
-              serviceIdPair:serviceIdPair,
-              serviceStatePair:serviceStatePair,
-              addedNodeIds:addedNodeIdsBetweenTwoServices,
-              deletedNodeIds:deletedNodeIdsBetweenTwoServices,
-              addedLinkIds:addedLinkIdsBetweenTwoServices,
-              deletedLinkIds:deletedLinkIdsBetweenTwoServices,
-            })
-          }
-        }
-      }
+      console.log("CompareTwoGraphData result:",{
+        newData:newData,
+        oldData:oldData,
+        linkIdsInNewData: Array.from(linkIdsInNewData),
+        linkIdsInOldData: Array.from(linkIdsInOldData),
+        addedNodeIds: Array.from(addedNodeIds),
+        deletedNodeIds: Array.from(deletedNodeIds),
+        addedLinkIds: Array.from(addedLinkIds),
+        deletedLinkIds: Array.from(deletedLinkIds),
+        diffGraphData:diffGraphData
+      })
 
       return {
         addedNodeIds: Array.from(addedNodeIds),
         deletedNodeIds: Array.from(deletedNodeIds),
         addedLinkIds: Array.from(addedLinkIds),
         deletedLinkIds: Array.from(deletedLinkIds),
-        allServiceNodeIds: allServiceNodeIds.filter(id => id !== 'null'),
-        diffsBetweenTwoServices: diffDetails,
+        diffGraphData:diffGraphData
       }
     }
-  }
-
-  static toDetailsBetweenTwoServicesGraph(graphData:TGraphData,firstServiceNodeId:string,secondServiceNodeId:string):{
-    graph:TGraphData,
-    relationship:ServicvePairRelasionShip, // relationship between the two services
-  }{
-    if (firstServiceNodeId  && secondServiceNodeId && firstServiceNodeId  != secondServiceNodeId) {
-      const FilteredLinks: Array<TLink> = 
-      graphData.links.filter(link =>
-        link.source.includes(firstServiceNodeId) && link.target.includes(secondServiceNodeId)
-        || link.source.includes(secondServiceNodeId) && link.target.includes(firstServiceNodeId)
-        || link.source.includes(firstServiceNodeId) && link.target.includes(firstServiceNodeId)
-        || link.source.includes(secondServiceNodeId) && link.target.includes(secondServiceNodeId)
-      );
-      
-      const FilteredNodes: Array<TNode> = 
-        graphData.nodes
-          .filter(node => node.group === firstServiceNodeId || node.group === secondServiceNodeId);
-
-      FilteredNodes.forEach((n) => {
-        n.linkInBetween = FilteredLinks.filter((l) => l.source === n.id);
-        n.dependencies = n.linkInBetween.map((l) => l.target);
-      });
-
-      const FilteredGraphData = {
-        nodes:FilteredNodes,
-        links:FilteredLinks,  
-      }
-
-      let relationship:ServicvePairRelasionShip;
-
-      const isFirstSVCExist:boolean = FilteredNodes.find(node => node.id === firstServiceNodeId) ? true : false;
-      const isSecondSVCExist:boolean = FilteredNodes.find(node => node.id === secondServiceNodeId) ? true : false;
-
-      if (isFirstSVCExist || isSecondSVCExist){
-        if (isFirstSVCExist && isSecondSVCExist){
-          relationship = FilteredLinks.find(link =>         
-            link.source.includes(firstServiceNodeId) && link.target.includes(secondServiceNodeId)
-            || link.source.includes(secondServiceNodeId) && link.target.includes(firstServiceNodeId))
-          ? 'direct dependency' : 'indirect dependency';
-  
-          if (relationship === 'indirect dependency') {
-            /* add an invisible line between the two indirectly dependent service nodes 
-            to prevent them from spreading too far apart and exceeding the canvas */
-            FilteredLinks.push({source:firstServiceNodeId,target:secondServiceNodeId})
-          }
-        }
-        else{
-          relationship = 'only one matching service'
-        }
-      }
-      else {
-        relationship = 'no matching services in graph'
-      }
-
-
-
-      return {
-        graph:FilteredGraphData,
-        relationship:relationship
-      };
-    }
-    else{
-      return {
-        graph:{
-          nodes:[],
-          links:[],
-        },
-        relationship:'no matching services in graph'
-      }
-    }
-
   }
 
   static DrawHexagon(x: any, y: any, r: number, ctx: CanvasRenderingContext2D) {
@@ -423,6 +355,7 @@ export class DependencyGraphUtils {
     // paint underlying style on top of ring
     const color = Color.generateFromString(node.group);
     DependencyGraphUtils.PaintNode(node, color.hex, ctx);
+
   }
 
   static PaintNodeRingForShowDifference(
@@ -473,5 +406,7 @@ export class DependencyGraphUtils {
 }
 
 export { useHoverHighlight };
+
+export { useGraphObsoleteNodes };
 
 export { useGraphDifference };

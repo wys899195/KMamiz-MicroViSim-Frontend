@@ -1,5 +1,5 @@
 import { TDisplayNodeInfo } from "../entities/TDisplayNodeInfo";
-import { DependencyGraphUtils, HighlightInfo } from "./DependencyGraphUtils";
+import { DependencyGraphUtils, HighlightInfo, GraphObsoleteNodesInfo} from "./DependencyGraphUtils";
 
 export class DependencyGraphFactory {
   private constructor() {}
@@ -8,7 +8,8 @@ export class DependencyGraphFactory {
     highlightInfo: HighlightInfo,
     setHighlightInfo: (info: HighlightInfo) => void,
     graphRef: any,
-    setDisplayNodeInfo: (info: TDisplayNodeInfo | null) => void
+    setDisplayNodeInfo: (info: TDisplayNodeInfo | null) => void,
+    graphObsoleteNodesInfo: GraphObsoleteNodesInfo
   ) {
     const { highlightLinks, highlightNodes, focusNode } = highlightInfo;
     return {
@@ -18,13 +19,20 @@ export class DependencyGraphFactory {
       linkWidth: (link: any) => (highlightLinks.has(link) ? 7 : 1),
       linkDirectionalParticleWidth: (link: any) =>
         highlightLinks.has(link) ? 6 : 4,
-      nodeCanvasObject: (node: any, ctx: any) =>
+      nodeCanvasObject: (node: any, ctx: any) => {
+        if (node.id != "null") {
+          if (graphObsoleteNodesInfo.inactiveNodeIds.has(node.id)) {
+            ctx.globalAlpha = 0.5;
+          }
+        }
         DependencyGraphUtils.PaintNodeRing(
           node,
           ctx,
           highlightNodes.has(node),
           focusNode
         ),
+        ctx.globalAlpha = 1;
+      },
       onNodeClick: (node: any) => {
         if (highlightInfo.focusNode === node) {
           setHighlightInfo(this.ClearHighlight(highlightInfo));
