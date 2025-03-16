@@ -28,7 +28,7 @@ import DataService from "../services/DataService";
 import Loading from "./Loading";
 
 const CodeDisplay = lazy(() => import("./CodeDisplay"));
-const DiffDisplay = lazy(() => import("./DiffDisplay"));
+const InterfaceDiffDisplay = lazy(() => import("./InterfaceDiffDisplay"));
 
 type InterfaceDisplayProps = {
   uniqueLabelName: string;
@@ -323,7 +323,7 @@ export default function InterfaceDisplay(props: InterfaceDisplayProps) {
       <Grid item xs={12}>
         <Suspense fallback={<Loading />}>
           {firstSchema && secondSchema && (
-            <DiffDisplay
+            <InterfaceDiffDisplay
               name={getLabelName()}
               oldStr={firstSchema}
               newStr={secondSchema}

@@ -5,12 +5,12 @@ import {
 } from "diff2html/lib/ui/js/diff2html-ui";
 import { useEffect, useMemo, useRef } from "react";
 
-export type DiffDisplayProps = {
+export type InterfaceDiffDisplayProps = {
   name: string;
   oldStr: string;
   newStr: string;
 };
-export default function DiffDisplay(props: DiffDisplayProps) {
+export default function InterfaceDiffDisplay(props: InterfaceDiffDisplayProps) {
   const divRef = useRef<any>();
   const diff = useMemo(
     () =>
