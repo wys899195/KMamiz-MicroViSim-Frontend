@@ -16,11 +16,12 @@ const StyledTableCell = withStyles(() =>
       backgroundColor: 'black',
       color: 'white',
       fontWeight: 'bold',
-      textAlign: 'center'
+      textAlign: 'center',
     },
     body: {
       fontSize: 14,
-      textAlign: 'right'
+      textAlign: 'right',
+      borderRight: '0.5px solid black'
     },
   }),
 )(TableCell);      
@@ -42,16 +43,16 @@ export default function ServiceStatisticsTable({ servicesStatistics }: TStatisti
       <Table stickyHeader>
         <TableHead>
           <TableRow>
-            <StyledTableCell>ServicesName</StyledTableCell>
-            <StyledTableCell>LatencyMean</StyledTableCell>
-            <StyledTableCell>RequestErrorsRate</StyledTableCell>
-            <StyledTableCell>ServerErrorRate</StyledTableCell>
+            <StyledTableCell>Services Name</StyledTableCell>
+            <StyledTableCell>Average latency</StyledTableCell>
+            <StyledTableCell>Request Errors Rate</StyledTableCell>
+            <StyledTableCell>Server Error Rate</StyledTableCell>
           </TableRow>
         </TableHead>
         <TableBody>
         {servicesStatistics.length === 0 ? (
           <StyledTableRow>
-            <StyledTableCell colSpan={4} style={{ textAlign: 'center' }}>尚無歷史統計資料</StyledTableCell>
+            <StyledTableCell colSpan={4} style={{ textAlign: 'center' }}>There is no historical statistical data available for the selected time range.</StyledTableCell>
           </StyledTableRow>
         ):(
           servicesStatistics.map((item) => (

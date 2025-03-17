@@ -2,17 +2,6 @@ import { makeStyles } from "@mui/styles";
 import { 
   Box, 
   Grid,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Paper, 
-  Table, 
-  TableHead, 
-  TableBody, 
-  TableRow, 
-  TableCell,
-  TableContainer 
 } from "@mui/material";
 import { useRef, useEffect, useState } from "react";
 import { TChordData } from "../entities/TChordData";
@@ -24,9 +13,8 @@ import BarChartUtils from "../classes/BarChartUtils";
 import { TTotalServiceInterfaceCohesion } from "../entities/TTotalServiceInterfaceCohesion";
 import { TServiceInstability } from "../entities/TServiceInstability";
 import { TServiceCoupling } from "../entities/TServiceCoupling";
-import { TServiceStatistics } from "../entities/TStatistics";
 import ViewportUtils from "../classes/ViewportUtils";
-import ServiceStatisticsTable from '../components/ServiceStatisticsTable';
+
 const useStyles = makeStyles(() => ({
   root: {
     width: "100%",
@@ -55,10 +43,6 @@ function handleChordNext(
   });
 }
 
-function createData(name:string, calories:number, fat:number, carbs:number, protein:number) {
-  return { name, calories, fat, carbs, protein };
-}
-
 export default function Insights() {
   const classes = useStyles();
   const sChordRef = useRef<TChordData>();
@@ -70,8 +54,6 @@ export default function Insights() {
   );
   const [coupling, setCoupling] = useState<TServiceCoupling[]>([]);
   const [instability, setInstability] = useState<TServiceInstability[]>([]);
-  const [statistics,setStatistics] = useState<TServiceStatistics[]>([]);
-  const [lastTimes, setLastTimes] = useState<number>(86400);
   const [size, setSize] = useState(12);
 
 
@@ -112,16 +94,7 @@ export default function Insights() {
       unsubscribe.forEach((un) => un());
     };
   }, []);
-  useEffect(() => {
-    const unsubscribeStatistics = [
-      GraphService.getInstance().subscribeToServiceHistoricalStatistics(
-        setStatistics,lastTimes * 1000
-      ),
-    ];
-    return () => {
-      unsubscribeStatistics.forEach((uns) => uns());
-    };
-  }, [lastTimes]);
+
 
   return (
     <Box className={classes.root}>
@@ -168,56 +141,6 @@ export default function Insights() {
           ></ReactApexChart>
         </Grid>
         <Grid item xs={12}></Grid>
-        <Grid item xs={0.5}></Grid>
-        <Grid item xs={11}>
-          <FormControl className={classes.select} >
-            <InputLabel id="lt-label">LastTimes</InputLabel>
-            <Select
-              labelId="lt-label"
-              label="LastTimes"
-              onChange={(e) => setLastTimes(+e.target.value)}
-              value={lastTimes}
-            >
-            <MenuItem key={`lt-item-10m`} value={600}>
-              {'last 10 min'}
-            </MenuItem>
-            <MenuItem key={`lt-item-30m`} value={1800}>
-              {'last 30 min'}
-            </MenuItem>
-            <MenuItem key={`lt-item-1h`} value={3600}>
-              {'last 1 hr'}
-            </MenuItem>
-            <MenuItem key={`lt-item-3h`} value={10800}>
-              {'last 3 hr'}
-            </MenuItem>
-            <MenuItem key={`lt-item-6h`} value={21600}>
-              {'last 6 hr'}
-            </MenuItem>
-            <MenuItem key={`lt-item-12h`} value={43200}>
-              {'last 12 hr'}
-            </MenuItem>
-            <MenuItem key={`lt-item-1d`} value={86400}>
-              {'last 1 day'}
-            </MenuItem>
-            <MenuItem key={`lt-item-7d`} value={604800}>
-              {'last 7 days'}
-            </MenuItem>
-            </Select>
-          </FormControl>
-          <ServiceStatisticsTable servicesStatistics={statistics} />
-        </Grid>
-        <Grid item xs={0.5}></Grid>
-
-        
-        {/* <Grid item xs={size}>
-          <ReactApexChart
-            {...BarChartUtils.CreateBarChart(
-              "Service Instability (SDP)",
-              instability,
-              BarChartUtils.InstabilitySeriesFromServiceInstability
-            )}
-          ></ReactApexChart>
-        </Grid> */}
       </Grid>
 
     </Box>

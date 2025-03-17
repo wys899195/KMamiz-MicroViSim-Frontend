@@ -15,6 +15,8 @@ import {
   TLineChartDataFields,
 } from "../entities/TLineChartData";
 import GraphService from "../services/GraphService";
+import { TServiceStatistics } from "../entities/TStatistics";
+import ServiceStatisticsTable from '../components/ServiceStatisticsTable';
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -26,6 +28,18 @@ const useStyles = makeStyles(() => ({
     minWidth: 130,
     marginRight: "1em",
   },
+  pageHeader: {
+    borderBottom: '0.2em solid #ccc',
+    boxShadow: '0.0em  0.4em 0.5em rgba(0, 0, 0, 0.1)',
+    position: "fixed",
+    top: "4em",
+    left: "0em",
+    backgroundColor:'white',
+    zIndex:99,
+  },
+  pageBody: {
+    marginTop: '8em',
+  },
 }));
 
 export default function Metrics() {
@@ -33,6 +47,7 @@ export default function Metrics() {
   const [lastTimes, setLastTimes] = useState<number>(1800); //display data for the last 30 minutes by default
   const [mappedHistoricalData, setMappedHistoricalData] =
     useState<TLineChartData>();
+  const [statistics,setStatistics] = useState<TServiceStatistics[]>([]);
 
   useEffect(() => {
     const unsubscribe = [
@@ -43,6 +58,17 @@ export default function Metrics() {
 
     return () => {
       unsubscribe.forEach((un) => un());
+    };
+  }, [lastTimes]);
+
+  useEffect(() => {
+    const unsubscribeStatistics = [
+      GraphService.getInstance().subscribeToServiceHistoricalStatistics(
+        setStatistics,lastTimes * 1000
+      ),
+    ];
+    return () => {
+      unsubscribeStatistics.forEach((uns) => uns());
     };
   }, [lastTimes]);
 
@@ -65,13 +91,12 @@ export default function Metrics() {
     { name: "RequestErrors", field: "requestErrors" },
     { name: "ServerErrors", field: "serverErrors" },
     { name: "Latency (Coefficient of Variation)", field: "latencyCV" },
-    { name: "Latency (Mean)(單位：毫秒) test ", field: "latencyMean" }
   ];
 
   return (
     <Box className={classes.root}>
-      <Grid container>
-      <Grid item xs={12} margin="1em 1em 0 0">
+      <Grid container padding={1} spacing={0.5} className={classes.pageHeader}>
+        <Grid item xs={12} margin="1em 1em 0 0" >
           <FormControl className={classes.select}>
             <InputLabel id="lt-label">LastTimes</InputLabel>
             <Select
@@ -106,7 +131,9 @@ export default function Metrics() {
             </MenuItem>
             </Select>
           </FormControl>
+        </Grid>
       </Grid>
+      <Grid container className={classes.pageBody}>
         {mappedHistoricalData
           ? areaCharts.map((c) => (
               <Grid key={c.name} item xs={6}>
@@ -121,7 +148,9 @@ export default function Metrics() {
               </Grid>
             ))
           : null}
-
+        <Grid item xs={12} padding={1}>
+          <ServiceStatisticsTable servicesStatistics={statistics} />
+        </Grid>
       </Grid>
     </Box>
   );
