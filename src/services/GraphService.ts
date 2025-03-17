@@ -160,10 +160,10 @@ export default class GraphService {
     );
   }
 
-  async addTaggedDiffData(tagged: TTaggedDiffData) {
+  async addTaggedDiffData(tag: string) {
     const res = await fetch(`${this.prefix}/graph/diffData/tags`, {
       method: "POST",
-      body: JSON.stringify(tagged),
+      body: JSON.stringify({tag}),
       headers: {
         "Content-Type": "application/json",
       },

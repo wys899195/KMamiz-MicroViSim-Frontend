@@ -34,6 +34,7 @@ export default class BarChartUtils {
   }
   static CreateDiffBarChart<T extends { name: string }>(
     title: string,
+    subTitle: string,
     data: T[],
     toSeriesStrategy: (_: T[], versionTag1: string, versionTag2: string) => any[],
     versionTag1: string,
@@ -49,7 +50,8 @@ export default class BarChartUtils {
         ...BarChartUtils.DefaultOptions(
           title,
           stacked,
-          data.map(({ name }) => name)
+          data.map(({ name }) => name),
+          subTitle,
         ),
         ...overwriteOpts,
       },
@@ -60,13 +62,18 @@ export default class BarChartUtils {
   static DefaultOptions(
     title: string,
     stacked: boolean,
-    categories: any[]
+    categories: any[],
+    subTitle: string = "",
   ): ApexOptions {
     return {
       title: {
         text: title,
         align: "center",
       },
+      subtitle: {
+        text: subTitle,
+        align: "center",
+      }, 
       chart: {
         type: "bar",
         stacked,
