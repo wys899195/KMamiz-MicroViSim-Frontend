@@ -12,7 +12,6 @@ import { Card, FormControlLabel, FormGroup, Switch } from "@mui/material";
 import { DependencyGraphFactory } from "../classes/DependencyGraphFactory";
 import {
   useHoverHighlight,
-  useGraphObsoleteNodes,
   DependencyGraphUtils,
 } from "../classes/DependencyGraphUtils";
 import ViewportUtils from "../classes/ViewportUtils";
@@ -85,10 +84,6 @@ export default function DependencyGraph() {
   const [displayInfo, setDisplayInfo] = useState<TDisplayNodeInfo | null>(null);
   const [showEndpoint, setShowEndpoint] = useState(true);
 
-  /***graph obsolete info***/
-  const [graphRawData, setGraphRawData] = useState<any>();
-  const [graphObsoleteNodesInfo, setGraphObsoleteNodesInfo] = useGraphObsoleteNodes();
-
   useLayoutEffect(() => {
     const unsubscribe = ViewportUtils.getInstance().subscribe(([vw, vh]) =>
       setSize([vw, vh])
@@ -119,37 +114,6 @@ export default function DependencyGraph() {
   }, [displayInfo]);
 
   useEffect(() => {
-    const updateGraphObsoleteNodesInfo = () => {
-      if (graphData) {
-        const nextGraphObsoleteNodesInfo = DependencyGraphUtils.findObsoleteNodes(graphData);
-        setGraphObsoleteNodesInfo(nextGraphObsoleteNodesInfo);
-      }
-    };
-
-    // Start the interval timer
-    const timer = setInterval(updateGraphObsoleteNodesInfo, 1000); // 10 seconds
-
-    // Immediately execute once after starting the timer
-    updateGraphObsoleteNodesInfo();
-    
-    return () => {
-      clearInterval(timer);
-    };
-  }, [graphData]); // Reset the timer when graphData changes
-
-  useEffect(() => {
-    const next = (nextData?: TGraphData) => {
-      if (nextData) {
-        setGraphRawData(nextData);
-      }
-    };
-    const unSub = GraphService.getInstance().subscribeToEndpointDependencyGraph(next);
-    return () => {
-      unSub();
-    };
-  }, [showEndpoint]);
-
-  useEffect(() => {
     const next = (nextData?: TGraphData) => {
       const nextRawData = JSON.stringify(nextData);
       if (rawDataRef.current === nextRawData) return;
@@ -164,6 +128,7 @@ export default function DependencyGraph() {
       }
       rawDataRef.current = nextRawData;
       if (nextData) {
+        console.log("GraphDataeaeae:",nextData)
         setGraphData(DependencyGraphUtils.ProcessData(nextData));
       }
     };
@@ -184,13 +149,12 @@ export default function DependencyGraph() {
             ref={graphRef}
             width={size[0]}
             height={size[1]}
-            graphData={DependencyGraphUtils.filterDeprecatedNodeAndLinks(graphData,graphObsoleteNodesInfo)}
+            graphData={graphData}
             {...DependencyGraphFactory.Create(
               highlightInfo,
               setHighlightInfo,
               graphRef,
-              setDisplayInfo,
-              graphObsoleteNodesInfo
+              setDisplayInfo
             )}
           />
         </Suspense>

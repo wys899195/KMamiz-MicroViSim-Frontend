@@ -72,7 +72,7 @@ export default function ServiceInfo(props: {
           </ListItemIcon>
           <ListItemText
             primary={`Combined Risk: ${roundNumber(
-              sumField("avgRisk", services) / services.length
+              services.length > 0 ? sumField("avgRisk", services) / services.length : 0
             )}`}
           />
         </ListItem>

@@ -1,7 +1,6 @@
 import { Dispatch, SetStateAction, useState } from "react";
 import { TGraphData, TLink, TNode } from "../entities/TGraphData";
 import { Color } from "./ColorUtils";
-import Config from "../../Config";
 
 // to highlight node in the dependency graph
 export type HighlightInfo = {
@@ -19,42 +18,6 @@ const useHoverHighlight = (): [
     focusNode: null,
   });
   return [highlight, setHighlight];
-};
-
-
-// to show deprecated service or endpoint
-const parseThresholdToMilliseconds = (thresholdStr:string): number => {
-  if (!thresholdStr) return 0;
-  const regex = /(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?/;
-  const match = thresholdStr.match(regex);
-  if (!match) return 0;
-
-  const days = match[1] ? parseInt(match[1], 10) : 0;
-  const hours = match[2] ? parseInt(match[2], 10) : 0;
-  const minutes = match[3] ? parseInt(match[3], 10) : 0;
-  const seconds = match[4] ? parseInt(match[4], 10) : 0;
-
-  return ((days * 86400) + (hours * 3600) + (minutes * 60) + seconds) * 1000;
-}
-const GRAPH_IDLE_NODE_THRESHOLD = parseThresholdToMilliseconds(Config.InactiveEndpointThreshold || "");
-const GRAPH_DEPRECATED_NODE_THRESHOLD = Math.max(GRAPH_IDLE_NODE_THRESHOLD, parseThresholdToMilliseconds(Config.DeprecatedEndpointThreshold || ""));
-
-export type GraphObsoleteNodesInfo = {
-  inactiveNodeIds: Set<string>; 
-  deprecatedNodeIds: Set<string>; 
-  deprecatedLinkIds: Set<string>; 
-}
-
-const useGraphObsoleteNodes = (): [
-  GraphObsoleteNodesInfo,
-  Dispatch<SetStateAction<GraphObsoleteNodesInfo>>
-] => {
-  const [graphObsoleteNodes, setGraphObsoleteNodes] = useState<GraphObsoleteNodesInfo>({
-    inactiveNodeIds: new Set<string>(),
-    deprecatedNodeIds: new Set<string>(),
-    deprecatedLinkIds: new Set<string>(),
-  });
-  return [graphObsoleteNodes, setGraphObsoleteNodes];
 };
 
 // to compare two dependency graphs
@@ -124,63 +87,8 @@ export class DependencyGraphUtils {
     return graphData;
   }
 
-  static filterDeprecatedNodeAndLinks(data: TGraphData,graphObsoleteNodesInfo: GraphObsoleteNodesInfo):TGraphData{
-    if (!data){
-      return {
-        nodes:[],
-        links:[]
-      }
-    }
-    console.log("graphObsoleteNodesInfo:",graphObsoleteNodesInfo)
-    const { deprecatedNodeIds, deprecatedLinkIds } = graphObsoleteNodesInfo;
-    const filteredNodes = data.nodes.filter(
-      (node) => !deprecatedNodeIds.has(node.id)
-    );
-    const filteredLinks = data.links.filter(
-      (link) => !deprecatedLinkIds.has(DependencyGraphUtils.TLinkToId(link))
-    );
-    return {
-      nodes:filteredNodes,
-      links:filteredLinks
-    }
-  }
-
   static TLinkToId(link:TLink):string {
     return `${link.source}==>${link.target}`
-  }
-
-  static findObsoleteNodes(graphData:TGraphData):GraphObsoleteNodesInfo {
-    if (!graphData){
-      return {
-        inactiveNodeIds: new Set<string>(),
-        deprecatedNodeIds: new Set<string>(),
-        deprecatedLinkIds: new Set<string>(),
-      }
-    }else{
-      console.log("graphDataaa:",graphData)
-      const now = Date.now();
-      const inactiveTimestamp = now - GRAPH_IDLE_NODE_THRESHOLD;
-      const deprecatedTimestamp = now - GRAPH_DEPRECATED_NODE_THRESHOLD ;
-      const inactiveNodeIds = graphData.nodes
-      .filter(node => node.id !== "null" && node.lastTimestamp < inactiveTimestamp)
-      .map(node => node.id);
-      const deprecatedNodeIds = graphData.nodes
-      .filter(node => node.id !== "null" && node.lastTimestamp < deprecatedTimestamp)
-      .map(node => node.id);
-
-      const deprecatedLinkIds = graphData.links
-      .filter(link => deprecatedNodeIds.includes(link.target))
-      .map(link => this.TLinkToId(link));
-
-      console.log("inactiveNodeIds:",inactiveNodeIds);
-      console.log("deprecatedNodeIds:",deprecatedNodeIds)
-      console.log("deprecatedLinkIds:",deprecatedLinkIds)
-      return {
-        inactiveNodeIds:  new Set(inactiveNodeIds),
-        deprecatedNodeIds: new Set(deprecatedNodeIds),
-        deprecatedLinkIds: new Set(deprecatedLinkIds)
-      }
-    }
   }
 
   static toServiceDependencyGraph(endpointGraph:TGraphData){
@@ -434,7 +342,5 @@ export class DependencyGraphUtils {
 }
 
 export { useHoverHighlight };
-
-export { useGraphObsoleteNodes };
 
 export { useGraphDifference };
