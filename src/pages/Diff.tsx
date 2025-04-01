@@ -200,7 +200,7 @@ export default function Diff() {
         <Grid container padding={showPageHeader ? 1 : 0} spacing={0.5} className={classes.pageHeader}>
           {showPageHeader &&
             <Grid item xs={5}>
-              <Typography variant="h5">Diff</Typography>
+              <Typography variant="h5">Difference</Typography>
             </Grid>
           }
           {showPageHeader &&

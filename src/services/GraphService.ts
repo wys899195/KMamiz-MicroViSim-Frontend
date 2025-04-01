@@ -182,6 +182,24 @@ export default class GraphService {
     return res.ok;
   }
 
+  async getDependencyGraphBySimulateYaml(yamlData: string) {
+    const res = await fetch(`${this.prefix}/graph/simulate/yamlToDependency`, {
+      method: "POST",
+      body: JSON.stringify({ yamlData }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  
+    if (res.ok) {
+      const graph = await res.json();
+      return graph;
+    } else {
+      const errorText = await res.text();
+      throw new Error(`Failed to generate dependency graph. status: ${res.statusText} error:  ${errorText}`);
+    }
+  }
+
   subscribeToEndpointDependencyGraph(next: (data?: TGraphData) => void) {
     return DataView.getInstance().subscribe<TGraphData>(
       `${this.prefix}/graph/dependency/endpoint`,

@@ -80,6 +80,7 @@ export default function DependencyGraph() {
   const query = useMemo(() => new URLSearchParams(search), [search]);
   const [size, setSize] = useState([0, 0]);
   const [graphData, setGraphData] = useState<any>();
+  const [endpointGraphData, setEndpointGraphData] = useState<any>();
   const [highlightInfo, setHighlightInfo] = useHoverHighlight();
   const [displayInfo, setDisplayInfo] = useState<TDisplayNodeInfo | null>(null);
   const [showEndpoint, setShowEndpoint] = useState(true);
@@ -128,7 +129,6 @@ export default function DependencyGraph() {
       }
       rawDataRef.current = nextRawData;
       if (nextData) {
-        console.log("GraphDataeaeae:",nextData)
         setGraphData(DependencyGraphUtils.ProcessData(nextData));
       }
     };
@@ -140,6 +140,20 @@ export default function DependencyGraph() {
       unSub();
     };
   }, [showEndpoint]);
+
+  useEffect(() => {
+    const next = (nextData?: TGraphData) => {
+      if (nextData) {
+        console.log(JSON.stringify(nextData));
+        setEndpointGraphData(nextData);
+      }
+    };
+
+    const unSub = GraphService.getInstance().subscribeToEndpointDependencyGraph(next);
+    return () => {
+      unSub();
+    };
+  }, []);
 
   return (
     <div className={classes.root}>

@@ -23,6 +23,7 @@ import {
   NotificationsActive,
   StackedLineChart,
 } from "@mui/icons-material";
+import FlashOnIcon from "@mui/icons-material/FlashOn"; 
 import { useNavigate } from "react-router-dom";
 import Alert from "./Alert";
 import AlertManager from "../services/AlertManager";
@@ -42,11 +43,12 @@ export default function Header() {
 
   const routes = [
     { name: "Dependency Graph", path: "/", icon: <BubbleChart /> },
-    { name: "Difference", path: "/diff", icon: <Difference /> },
     { name: "Metrics", path: "/metrics", icon: <StackedLineChart /> },
     { name: "Insights", path: "/insights", icon: <BarChart /> },
     { name: "Endpoints", path: "/endpoints", icon: <LocalOffer /> },
     { name: "Interfaces", path: "/interfaces", icon: <Code /> },
+    { name: "Difference", path: "/diff", icon: <Difference /> },
+    { name: "Simulation", path: "/simulation", icon: <FlashOnIcon /> },
   ];
 
   return (
