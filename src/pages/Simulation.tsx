@@ -89,7 +89,6 @@ export default function Simulation() {
   /***window size control***/
   const rwdWidth = 1300
   const [pageSize, setPageSize] = useState([0, 0]);
-  const [gridSize, setGridSize] = useState(12);
   const [graphWidthRate, setCanvasWidthRate] = useState(0.5);
   const [graphHeightRate, setCanvasHeightRate] = useState(0.75);
   const [editorWidth, setEditorWidth] = useState(45);
@@ -98,13 +97,15 @@ export default function Simulation() {
   const graphDataRef = useRef<any>();
   const rawGraphDataRef = useRef<string>();
 
-  const [yamlInput, setYamlInput] = useState('');
+  const [yamlInput, setYamlInput] = useState(() => {
+    return localStorage.getItem("inityamlInput") || "";
+  });
   const [parsedYaml, setParsedYaml] = useState(null);
   const [graphData, setGraphData] = useState<any>();
+  const [rawGraphData, setRawGraphData] = useState<any>();
   const [loading, setLoading] = useState(false);
 
   const [graphDifferenceInfo, setGraphDifferenceInfo] = useGraphDifference();
-  const [lineNumbers, setLineNumbers] = useState("1"); 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const handleParseYamlClick = async () => {
@@ -120,9 +121,6 @@ export default function Simulation() {
         if (rawGraphDataRef.current === nextRawGraphData) return;
         if (!rawGraphDataRef.current) {
           const timer = setInterval(() => {
-            if (!graphData) {
-              console.log("ppgg")
-            }
             if (!graphData) return;
             clearInterval(timer);
             setTimeout(() => {
@@ -133,8 +131,10 @@ export default function Simulation() {
         }
 
         rawGraphDataRef.current = nextRawGraphData;
+        setRawGraphData(JSON.parse(nextRawGraphData));
         setGraphData(DependencyGraphUtils.ProcessData(nextGraphData));
         console.log(graphData);
+        localStorage.setItem("inityamlInput", yamlInput);
       }
     } catch (error) {
       alert(error);
@@ -146,16 +146,15 @@ export default function Simulation() {
 
 
   useEffect(() => {
-    if (textareaRef.current) {
-      enableTabToIndent(textareaRef.current); // 啟用 Tab 縮排功能
+    if (yamlInput) {
+      handleParseYamlClick();
     }
-  }, []);
+  }, []); 
 
   /***useEffect for window size control***/
   useEffect(() => {
     const unsubscribe = [
       ViewportUtils.getInstance().subscribe(([vw]) =>{
-        setGridSize(vw > rwdWidth ? 6 : 12)
         setCanvasWidthRate(vw > rwdWidth ? 0.55 : 0.55);
         setCanvasHeightRate(vw > rwdWidth ? 0.9 : 0.9);
       }),
@@ -208,6 +207,12 @@ export default function Simulation() {
     setYamlInput(value || "");
 };
 
+  const createNewVersion = async () => {
+    if (!graphData) return;
+    await GraphService.getInstance().addTaggeddDiffData(rawGraphData);
+    window.location.replace("/diff");
+  };
+
   return (
     <div className={classes.container}>
       <div
@@ -241,6 +246,16 @@ export default function Simulation() {
           >
             {loading ? 'Parsing...' : 'Go!'}
           </Button>
+
+
+          <Button 
+          variant="contained" 
+          color="primary"
+          onClick={createNewVersion}
+          disabled={loading}
+          >
+            {loading ? 'Parsing...' : 'create as a new version'}
+          </Button>
         </div>
       </div>
 
@@ -253,7 +268,7 @@ export default function Simulation() {
         className={classes.graphContainer}
         style={{ width: `${100 - editorWidth}%` }}
       >
-        <h1>Dependency Graph</h1>
+        <Typography variant="h5">Dependency Graph</Typography>
         <div className="dependency-graph" id="dependency-graph">
           <Suspense fallback={<Loading />}>
             <ForceGraph2D

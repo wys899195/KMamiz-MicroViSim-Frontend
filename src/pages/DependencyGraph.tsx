@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { Card, FormControlLabel, FormGroup, Switch } from "@mui/material";
+import { Card, FormControlLabel, FormGroup, Switch, Button } from "@mui/material";
 import { DependencyGraphFactory } from "../classes/DependencyGraphFactory";
 import {
   useHoverHighlight,
@@ -132,7 +132,7 @@ export default function DependencyGraph() {
         setGraphData(DependencyGraphUtils.ProcessData(nextData));
       }
     };
-
+    
     const unSub = showEndpoint
       ? GraphService.getInstance().subscribeToEndpointDependencyGraph(next)
       : GraphService.getInstance().subscribeToServiceDependencyGraph(next);
@@ -155,8 +155,32 @@ export default function DependencyGraph() {
     };
   }, []);
 
+  const handleSimulationClick = async () => {
+    if (!endpointGraphData) {
+      alert("No endpoint graph data available!");
+      return;
+    }
+  
+    try {
+      const yamlStr = await GraphService.getInstance().getSimulateYamlByEndpointDependencyGraph(endpointGraphData);
+      localStorage.setItem("inityamlInput", yamlStr);
+      navigate("/simulation");
+    } catch (error) {
+      console.error("Failed to generate YAML:", error);
+      alert("Failed to generate YAML. Check the console for details.");
+    }
+  };
+
   return (
     <div className={classes.root}>
+      <Button 
+        variant="contained" 
+        color="primary" 
+        onClick={handleSimulationClick}
+        style={{ position: "absolute", top: "5em", left: "1em", zIndex: 1000 }}
+      >
+        Simulation
+      </Button>
       <div>
         <Suspense fallback={<Loading />}>
           <ForceGraph2D

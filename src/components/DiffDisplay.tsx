@@ -228,8 +228,6 @@ export default function DiffDisplay(props: DiffDisplayProps) {
   }, [showGraphDiff]);
   useEffect(() => {
     if(newerEndpointGraphData && olderEndpointGraphData){
-      console.log("newerEndpointGraphData):",newerEndpointGraphData);
-      console.log("olderEndpointGraphData:",olderEndpointGraphData);
       const nextGraphDifferenceInfo = DependencyGraphUtils.CompareTwoGraphData(newerEndpointGraphData,olderEndpointGraphData,showEndpoint) ;
       const nextDiffGraphData = JSON.stringify(nextGraphDifferenceInfo.diffGraphData);
       if (!rawDiffGraphDataRef.current) {
@@ -507,25 +505,6 @@ export default function DiffDisplay(props: DiffDisplayProps) {
       <Grid item xs={gridSize} style={{ display: showGraphDiff ? 'none' : 'block' }}>
         <div className={classes.graphContainer}>
           <Grid item xs={12} className={classes.graphHeader}>
-            <h3 className={classes.graphTitle}>{newerVersionTag || latestVersionStr}</h3>
-          </Grid>
-          <Suspense fallback={<Loading />}>
-            <ForceGraph2D
-              ref={newerGraphDataRef}
-              width={pageSize[0] * graphWidthRate - 20}
-              height={pageSize[1] * graphHeightRate - 40}
-              graphData={newerGraphData}
-              {...DiffDependencyGraphFactory.Create(
-                graphDifferenceInfo,
-                false,
-              )}
-            />
-          </Suspense>
-        </div>
-      </Grid>
-      <Grid item xs={gridSize} style={{ display: showGraphDiff ? 'none' : 'block' }}>
-        <div className={classes.graphContainer}>
-          <Grid item xs={12} className={classes.graphHeader}>
             <h3 className={classes.graphTitle}>{olderVersionTag || latestVersionStr}</h3>
           </Grid>
           <Suspense fallback={<Loading />}>
@@ -542,6 +521,26 @@ export default function DiffDisplay(props: DiffDisplayProps) {
           </Suspense>
         </div>
       </Grid>
+      <Grid item xs={gridSize} style={{ display: showGraphDiff ? 'none' : 'block' }}>
+        <div className={classes.graphContainer}>
+          <Grid item xs={12} className={classes.graphHeader}>
+            <h3 className={classes.graphTitle}>{newerVersionTag || latestVersionStr}</h3>
+          </Grid>
+          <Suspense fallback={<Loading />}>
+            <ForceGraph2D
+              ref={newerGraphDataRef}
+              width={pageSize[0] * graphWidthRate - 20}
+              height={pageSize[1] * graphHeightRate - 40}
+              graphData={newerGraphData}
+              {...DiffDependencyGraphFactory.Create(
+                graphDifferenceInfo,
+                false,
+              )}
+            />
+          </Suspense>
+        </div>
+      </Grid>
+
 
       {/* Cohesion diff*/}
       <Grid item xs={12}>

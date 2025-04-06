@@ -171,6 +171,17 @@ export default class GraphService {
     return res.ok;
   }
 
+  async addTaggeddDiffData(endpointDependency: TGraphData) {
+    const res = await fetch(`${this.prefix}/graph/diffData/simulate`, {
+      method: "POST",
+      body: JSON.stringify(endpointDependency),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return res.ok;
+  }
+
   async deleteTaggedDiffData(tag: string) {
     const res = await fetch(`${this.prefix}/graph/diffData/tags`, {
       method: "DELETE",
@@ -197,6 +208,24 @@ export default class GraphService {
     } else {
       const errorText = await res.text();
       throw new Error(`Failed to generate dependency graph. status: ${res.statusText} error:  ${errorText}`);
+    }
+  }
+
+  async getSimulateYamlByEndpointDependencyGraph(endpointDependency: TGraphData) {
+    const res = await fetch(`${this.prefix}/graph/simulate/endpointDependencyToYaml`, {
+      method: "POST",
+      body: JSON.stringify(endpointDependency),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  
+    if (res.ok) {
+      const graph = await res.json();
+      return graph;
+    } else {
+      const errorText = await res.text();
+      throw new Error(`Failed to generate dependency simulation yaml. status: ${res.statusText} error:  ${errorText}`);
     }
   }
 
