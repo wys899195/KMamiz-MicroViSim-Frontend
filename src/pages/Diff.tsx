@@ -80,15 +80,14 @@ export default function Diff() {
   const [showPageHeader, setShowPageHeader] = useState(true);
   const latestVersionStr = "Latest";
   const [newVersionTag, setNewVersionTag] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState("");
 
 
   /***useEffects for tag control***/
   useEffect(() => {
     const q = query.get("q");
     if (q) {
-      const [olderVersionTag,newerVersionTag] = atob(
-        decodeURIComponent(q)
-      ).split("\t");
+      const [olderVersionTag,newerVersionTag] = decodeURIComponent(atob(q)).split("\t");
       setOlderVersionTag(olderVersionTag || "");
       setNewerVersionTag(newerVersionTag || "");
     }
@@ -120,7 +119,7 @@ export default function Diff() {
   }, [newerVersionTag]);
   useEffect(() => {
     const url = `${olderVersionTag}${newerVersionTag && `\t${newerVersionTag}`}`;
-    const encoded = encodeURIComponent(btoa(url));
+    const encoded = btoa(encodeURIComponent(url));
     navigate(`/diff${encoded && `?q=${encoded}`}`, {
       replace: true,
     });
@@ -177,9 +176,19 @@ export default function Diff() {
   /***constants for diff version control***/
   const createNewVersion = async () => {
     if (!newVersionTag) return;
-    await GraphService.getInstance().addTaggedDiffData(newVersionTag);
-    setNewVersionTag("");
-    window.location.replace("/diff");
+    if (newVersionTag == latestVersionStr) {
+      setNewVersionTag("");
+      setErrorMessage(`Version name cannot be set to "${latestVersionStr}"`);
+      return;
+    }
+    try {
+      await GraphService.getInstance().addTaggedDiffData(newVersionTag);
+      setNewVersionTag("");
+      window.location.replace("/diff");
+    } catch (error) {
+      setErrorMessage(`Failed to create version: ${error}`);
+    }
+
   };
   const deleteVersion = async (level: number) => {
     const tagToDelete = level === 0 ? olderVersionTag : level === 1 ? newerVersionTag :"";
@@ -207,13 +216,16 @@ export default function Diff() {
             <Grid item xs={7}>
               <Card variant="outlined" className={classes.actions}>
                 <TextField
+                  id="new-version-tag"
                   fullWidth
-                  label="Create New Version from Latest"
+                  label="New Version"
                   variant="outlined"
                   value={newVersionTag} 
                   onChange={(e) => setNewVersionTag(e.target.value)}
+                  error={!!errorMessage}
+                  helperText={errorMessage}
                 /> 
-                <Tooltip title="Create New Version from Latest">
+                <Tooltip title="New Version">
                   <Button 
                     variant="contained" 
                     onClick={() => createNewVersion()}  
