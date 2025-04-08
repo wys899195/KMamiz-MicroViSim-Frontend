@@ -130,7 +130,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
   const [pageSize, setPageSize] = useState([0, 0]);
   const [gridSize, setGridSize] = useState(12);
   const [graphWidthRate, setCanvasWidthRate] = useState(0.5);
-  const [graphHeightRate, setCanvasHeightRate] = useState(0.75);
+  const [graphHeightRate, setCanvasHeightRate] = useState(0.8);
 
 
   /***useEffect for window size control***/
@@ -139,7 +139,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
       ViewportUtils.getInstance().subscribe(([vw]) =>{
         setGridSize(vw > rwdWidth ? 6 : 12)
         setCanvasWidthRate(vw > rwdWidth ? 0.5 : 0.99);
-        setCanvasHeightRate(vw > rwdWidth ? 0.8 : 0.65);
+        setCanvasHeightRate(vw > rwdWidth ? 0.8 : 0.8);
       }),
     ];
     return () => {
@@ -490,7 +490,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
             <ForceGraph2D
               ref={diffGraphDataRef}
               width={pageSize[0] - 40}
-              height={pageSize[1] * graphHeightRate - 40}
+              height={pageSize[1] * graphHeightRate}
               graphData={diffGraphData}
               {...DiffDependencyGraphFactory.Create(
                 graphDifferenceInfo,

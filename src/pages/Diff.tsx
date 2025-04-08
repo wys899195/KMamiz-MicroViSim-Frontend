@@ -73,15 +73,18 @@ export default function Diff() {
   const navigate = useNavigate();
   const { search } = useLocation();
   const query = useMemo(() => new URLSearchParams(search), [search]);
+
+  // select version tag
+  const latestVersionStr = "Latest";
   const [labelMap, setLabelMap] = useState<MultiLevelMap>();
   const [newerVersionTag,setNewerVersionTag] = useState<string>("");
   const [olderVersionTag,setOlderVersionTag] = useState<string>("");
   const [uniqueLabelName,setUniqueLabelName] = useState<string>("");
   const [showPageHeader, setShowPageHeader] = useState(true);
-  const latestVersionStr = "Latest";
-  const [newVersionTag, setNewVersionTag] = useState<string>("");
-  const [errorMessage, setErrorMessage] = useState("");
 
+  // create new version tag
+  const [newVersionTagToCreate, setNewVersionTagToCreate] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   /***useEffects for tag control***/
   useEffect(() => {
@@ -175,15 +178,15 @@ export default function Diff() {
   };
   /***constants for diff version control***/
   const createNewVersion = async () => {
-    if (!newVersionTag) return;
-    if (newVersionTag == latestVersionStr) {
-      setNewVersionTag("");
+    if (!newVersionTagToCreate) return;
+    if (newVersionTagToCreate == latestVersionStr) {
+      setNewVersionTagToCreate("");
       setErrorMessage(`Version name cannot be set to "${latestVersionStr}"`);
       return;
     }
     try {
-      await GraphService.getInstance().addTaggedDiffData(newVersionTag);
-      setNewVersionTag("");
+      await GraphService.getInstance().addTaggedDiffData(newVersionTagToCreate);
+      setNewVersionTagToCreate("");
       window.location.replace("/diff");
     } catch (error) {
       setErrorMessage(`Failed to create version: ${error}`);
@@ -220,8 +223,8 @@ export default function Diff() {
                   fullWidth
                   label="New Version"
                   variant="outlined"
-                  value={newVersionTag} 
-                  onChange={(e) => setNewVersionTag(e.target.value)}
+                  value={newVersionTagToCreate} 
+                  onChange={(e) => setNewVersionTagToCreate(e.target.value)}
                   error={!!errorMessage}
                   helperText={errorMessage}
                 /> 
@@ -229,7 +232,7 @@ export default function Diff() {
                   <Button 
                     variant="contained" 
                     onClick={() => createNewVersion()}  
-                    disabled={!newVersionTag}
+                    disabled={!newVersionTagToCreate}
                   >
                     Create
                   </Button>
@@ -298,11 +301,11 @@ export default function Diff() {
         </Grid>
 
       
-      <Grid container padding={1} spacing={1} style={{ marginTop: showPageHeader ? '14.5em' : '2em' }}>
-        {uniqueLabelName && ( 
-          <DiffDisplay olderVersionTag={olderVersionTag} newerVersionTag={newerVersionTag} latestVersionStr={latestVersionStr}/> 
-        )}
-      </Grid>
+        <Grid container padding={1} spacing={1} style={{ marginTop: showPageHeader ? '14.5em' : '2em' }}>
+          {uniqueLabelName && (
+            <DiffDisplay olderVersionTag={olderVersionTag} newerVersionTag={newerVersionTag} latestVersionStr={latestVersionStr}/>
+          )}
+        </Grid>
     </Box>
   );
 
