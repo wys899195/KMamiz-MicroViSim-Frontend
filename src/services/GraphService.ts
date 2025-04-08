@@ -23,7 +23,7 @@ export default class GraphService {
   static getInstance = () => this.instance || (this.instance = new this());
   private constructor() {}
 
-  private readonly prefix = `${Config.ApiHost}${Config.ApiPrefix}`;
+  private readonly prefix = `${Config.apiPrefix}`;
 
   private subscribeToChord(next: (data?: TChordData) => void, path: string) {
     return DataView.getInstance().subscribe<RawChordData>(
@@ -191,42 +191,6 @@ export default class GraphService {
       },
     });
     return res.ok;
-  }
-
-  async getDependencyGraphBySimulateYaml(yamlData: string) {
-    const res = await fetch(`${this.prefix}/graph/simulate/yamlToDependency`, {
-      method: "POST",
-      body: JSON.stringify({ yamlData }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  
-    if (res.ok) {
-      const graph = await res.json();
-      return graph;
-    } else {
-      const errorText = await res.text();
-      throw new Error(`Failed to generate dependency graph. status: ${res.statusText} error:  ${errorText}`);
-    }
-  }
-
-  async getSimulateYamlByEndpointDependencyGraph(endpointDependency: TGraphData) {
-    const res = await fetch(`${this.prefix}/graph/simulate/endpointDependencyToYaml`, {
-      method: "POST",
-      body: JSON.stringify(endpointDependency),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  
-    if (res.ok) {
-      const graph = await res.json();
-      return graph;
-    } else {
-      const errorText = await res.text();
-      throw new Error(`Failed to generate dependency simulation yaml. status: ${res.statusText} error:  ${errorText}`);
-    }
   }
 
   subscribeToEndpointDependencyGraph(next: (data?: TGraphData) => void) {

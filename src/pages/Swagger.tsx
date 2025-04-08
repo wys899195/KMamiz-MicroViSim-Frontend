@@ -37,7 +37,7 @@ export default function Swagger() {
   const navigate = useNavigate();
   const { search } = useLocation();
   const query = useMemo(() => new URLSearchParams(search), [search]);
-  const swaggerPrefix = `${Config.ApiHost}${Config.ApiPrefix}/swagger/`;
+  const swaggerPrefix = `${Config.apiPrefix}/swagger/`;
   const id = `swagger-${Math.floor(Math.random() * 1000)}`;
   const tag = query.get("tag");
 

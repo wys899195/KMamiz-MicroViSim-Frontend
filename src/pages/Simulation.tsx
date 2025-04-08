@@ -15,6 +15,7 @@ import {
 } from "react";
 import ViewportUtils from "../classes/ViewportUtils";
 import GraphService from "../services/GraphService";
+import SimulationService from "../services/SimulationService";
 import ReactApexChart from "react-apexcharts";
 import BarChartUtils from "../classes/BarChartUtils";
 import { Element } from 'react-scroll';
@@ -115,7 +116,7 @@ export default function Simulation() {
     setLoading(true); 
 
     try {
-      const nextGraphData = await GraphService.getInstance().getDependencyGraphBySimulateYaml(yamlInput);
+      const nextGraphData = await SimulationService.getInstance().getDependencyGraphBySimulateYaml(yamlInput);
       if (nextGraphData) {
         const nextRawGraphData = JSON.stringify(nextGraphData);
         if (rawGraphDataRef.current === nextRawGraphData) return;

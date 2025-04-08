@@ -11,7 +11,7 @@ export default class DataService {
   static getInstance = () => this.instance || (this.instance = new this());
   private constructor() {}
 
-  private readonly prefix = `${Config.ApiHost}${Config.ApiPrefix}`;
+  private readonly prefix = `${Config.apiPrefix}`;
 
   private async get<T>(path: string) {
     const res = await fetch(path);

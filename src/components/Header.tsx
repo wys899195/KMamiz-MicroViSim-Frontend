@@ -1,3 +1,4 @@
+import Config from "../../Config";
 import {
   AppBar,
   Toolbar,
@@ -48,7 +49,9 @@ export default function Header() {
     { name: "Endpoints", path: "/endpoints", icon: <LocalOffer /> },
     { name: "Interfaces", path: "/interfaces", icon: <Code /> },
     { name: "Difference", path: "/diff", icon: <Difference /> },
-    { name: "Simulation", path: "/simulation", icon: <FlashOnIcon /> },
+    ...(Config.backendConfig.SimulatorMode ? [
+      { name: "Simulation", path: "/simulation", icon: <FlashOnIcon /> },
+    ] : []),
   ];
 
   return (

@@ -1,3 +1,4 @@
+import Config from "../Config";
 import React, { lazy, Suspense } from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
@@ -27,7 +28,9 @@ ReactDOM.render(
           <Route path="/interfaces" element={<Interfaces />} />
           <Route path="/swagger/:service" element={<Swagger />} />
           <Route path="/diff" element={<Difference />} />
-          <Route path="/simulation" element={<Simulation />} />
+          {Config.backendConfig.SimulatorMode && (
+            <Route path="/simulation" element={<Simulation />} />
+          )}
         </Routes>
       </Suspense>
     </BrowserRouter>

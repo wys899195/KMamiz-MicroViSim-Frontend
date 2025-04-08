@@ -16,6 +16,7 @@ import {
 } from "../classes/DependencyGraphUtils";
 import ViewportUtils from "../classes/ViewportUtils";
 import GraphService from "../services/GraphService";
+import SimulationService from "../services/SimulationService";
 import { TGraphData } from "../entities/TGraphData";
 import { TDisplayNodeInfo } from "../entities/TDisplayNodeInfo";
 import Loading from "../components/Loading";
@@ -162,7 +163,7 @@ export default function DependencyGraph() {
     }
   
     try {
-      const yamlStr = await GraphService.getInstance().getSimulateYamlByEndpointDependencyGraph(endpointGraphData);
+      const yamlStr = await SimulationService.getInstance().getSimulateYamlByEndpointDependencyGraph(endpointGraphData);
       localStorage.setItem("inityamlInput", yamlStr);
       navigate("/simulation");
     } catch (error) {
