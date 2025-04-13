@@ -61,7 +61,7 @@ export default function InterfaceDisplay(props: InterfaceDisplayProps) {
   if (!props.uniqueLabelName) return <></>;
   const classes = useStyles();
   const [existing, setExisting] =
-    useState<{ req?: string; res?: string; time: Date }[]>();
+    useState<{ req?: string; res?: string; time: Date ,status:string,autoLabel:string}[]>();
   const [tagged, setTagged] = useState<TTaggedInterface[]>();
   const [selected, setSelected] = useState<SchemaItem>();
   const [addable, setAddable] = useState<boolean>();
@@ -98,20 +98,43 @@ export default function InterfaceDisplay(props: InterfaceDisplayProps) {
         if (!res) return;
         const map = new Map<
           string,
-          { req?: string; res?: string; time: Date }
+          { req?: string; res?: string; time: Date ,status:string}
         >();
+        console.log("res=",res)
         res.schemas
           .map((s) => ({ ...s, time: new Date(s.time) }))
           .forEach((s) =>
-            map.set(`${s.requestSchema || ""}\t${s.responseSchema || ""}`, {
+            map.set(`${s.status}\t${s.requestSchema || ""}\t${s.responseSchema || ""}`, {
               req: s.requestSchema,
               res: s.responseSchema,
               time: s.time,
+              status: s.status
             })
           );
-        setExisting(
-          [...map.values()].sort((a, b) => b.time.getTime() - a.time.getTime())
-        );
+
+        const sorted = [...map.values()].sort((a, b) => {
+          if (a.status < b.status) return -1;
+          if (a.status > b.status) return 1;
+          return b.time.getTime() - a.time.getTime();
+        });
+
+        const seenStatus = new Map<string, boolean>();
+
+        const newExsiting = sorted.map((item) => {
+          const alreadyMarked = seenStatus.get(item.status);
+          let autoLabel = '';
+
+          if (!alreadyMarked) {
+            autoLabel = `Auto-${item.status} (Latest)`;
+            seenStatus.set(item.status, true);
+          } else {
+            autoLabel = `Auto-${item.status} (${item.time.toLocaleString()})`;
+          }
+
+          return { ...item, autoLabel };
+        });
+
+        setExisting(newExsiting);
       });
     DataService.getInstance()
       .getTaggedInterface(props.uniqueLabelName)
@@ -126,12 +149,10 @@ export default function InterfaceDisplay(props: InterfaceDisplayProps) {
         name: t.userLabel,
       })) || []
     ).concat(
-      existing?.map((e, id) => ({
+      existing?.map((e) => ({
         req: e.req || "",
         res: e.res || "",
-        name: `${
-          id === 0 ? "Latest" : e.time.toLocaleString()
-        } - (Auto: ${id})`,
+        name: e.autoLabel,
       })) || []
     );
   }, [tagged, existing]);
@@ -210,18 +231,16 @@ export default function InterfaceDisplay(props: InterfaceDisplayProps) {
             <Typography variant="h6">Schemas</Typography>
             <Card variant="outlined" className={classes.radio}>
               <FormControl>
-                {existing?.map((s, id) => (
+                {existing?.map((e, id) => (
                   <Tooltip
                     placement="right"
                     key={`label-${id}`}
-                    title={`Created at: ${s.time.toLocaleString()}`}
+                    title={`Created at: ${e.time.toLocaleString()}`}
                   >
                     <FormControlLabel
                       value={id}
                       control={<Radio />}
-                      label={`${
-                        id === 0 ? "Latest" : s.time.toLocaleString()
-                      } - (Auto: ${id})`}
+                      label={`${e.autoLabel}`}
                     />
                   </Tooltip>
                 ))}
