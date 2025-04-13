@@ -93,44 +93,36 @@ export default function Metrics() {
     { name: "Latency (Coefficient of Variation)", field: "latencyCV" },
   ];
 
+  const statisticsTimeOptions = [
+    { label: 'last 10 min', value: 600 },
+    { label: 'last 30 min', value: 1800 },
+    { label: 'last 1 hr'  , value: 3600 },
+    { label: 'last 3 hr'  , value: 10800 },
+    { label: 'last 6 hr'  , value: 21600 },
+    { label: 'last 12 hr' , value: 43200 },
+    { label: 'last 1 day' , value: 86400 },
+    { label: 'last 7 days', value: 604800 },
+  ];
+
   return (
     <Box className={classes.root}>
       <Grid container padding={1} spacing={0.5} className={classes.pageHeader}>
         <Grid item xs={12} margin="1em 1em 0 0" >
-          <FormControl className={classes.select}>
-            <InputLabel id="lt-label">LastTimes</InputLabel>
-            <Select
-              labelId="lt-label"
-              label="LastTimes"
-              onChange={(e) => setLastTimes(+e.target.value)}
-              value={lastTimes}
-            >
-            <MenuItem key={`lt-item-10m`} value={600}>
-              {'last 10 min'}
-            </MenuItem>
-            <MenuItem key={`lt-item-30m`} value={1800}>
-              {'last 30 min'}
-            </MenuItem>
-            <MenuItem key={`lt-item-1h`} value={3600}>
-              {'last 1 hr'}
-            </MenuItem>
-            <MenuItem key={`lt-item-3h`} value={10800}>
-              {'last 3 hr'}
-            </MenuItem>
-            <MenuItem key={`lt-item-6h`} value={21600}>
-              {'last 6 hr'}
-            </MenuItem>
-            <MenuItem key={`lt-item-12h`} value={43200}>
-              {'last 12 hr'}
-            </MenuItem>
-            <MenuItem key={`lt-item-1d`} value={86400}>
-              {'last 1 day'}
-            </MenuItem>
-            <MenuItem key={`lt-item-7d`} value={604800}>
-              {'last 7 days'}
-            </MenuItem>
-            </Select>
-          </FormControl>
+        <FormControl className={classes.select}>
+          <InputLabel id="lt-label">LastTimes</InputLabel>
+          <Select
+            labelId="lt-label"
+            label="LastTimes"
+            onChange={(e) => setLastTimes(+e.target.value)}
+            value={lastTimes}
+          >
+            {statisticsTimeOptions.map((option) => (
+              <MenuItem key={`lt-item-${option.value}`} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
         </Grid>
       </Grid>
       <Grid container className={classes.pageBody}>
