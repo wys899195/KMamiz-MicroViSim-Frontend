@@ -114,34 +114,31 @@ export default function Simulation() {
       return;
     }
     setLoading(true); 
-
-    try {
-      const nextGraphData = await SimulationService.getInstance().getDependencyGraphBySimulateYaml(yamlInput);
-      if (nextGraphData) {
-        const nextRawGraphData = JSON.stringify(nextGraphData);
-        if (rawGraphDataRef.current === nextRawGraphData) return;
-        if (!rawGraphDataRef.current) {
-          const timer = setInterval(() => {
-            if (!graphData) return;
-            clearInterval(timer);
-            setTimeout(() => {
-              graphData.zoom(3, 0);
-              graphData.centerAt(0, 0);
-            }, 10);
-          });
-        }
-
-        rawGraphDataRef.current = nextRawGraphData;
-        setRawGraphData(JSON.parse(nextRawGraphData));
-        setGraphData(DependencyGraphUtils.ProcessData(nextGraphData));
-        console.log(graphData);
-        localStorage.setItem("inityamlInput", yamlInput);
+    const {graph,message,resStatus} = await SimulationService.getInstance().getDependencyGraphBySimulateYaml(yamlInput);
+    const nextGraphData = graph;
+    console.log("statuss",resStatus)
+    if (resStatus >= 400) {
+      alert(`Failed to generate dependency graph.\n\n[error message]\n${message}`)
+    } else if (nextGraphData) {
+      const nextRawGraphData = JSON.stringify(nextGraphData);
+      if (rawGraphDataRef.current === nextRawGraphData) return;
+      if (!rawGraphDataRef.current) {
+        const timer = setInterval(() => {
+          if (!graphData) return;
+          clearInterval(timer);
+          setTimeout(() => {
+            graphData.zoom(3, 0);
+            graphData.centerAt(0, 0);
+          }, 10);
+        });
       }
-    } catch (error) {
-      alert(error);
-    } finally {
-      setLoading(false);
+      rawGraphDataRef.current = nextRawGraphData;
+      setRawGraphData(JSON.parse(nextRawGraphData));
+      setGraphData(DependencyGraphUtils.ProcessData(nextGraphData));
+      console.log(graphData);
+      localStorage.setItem("inityamlInput", yamlInput);
     }
+    setLoading(false);
   };
   
 

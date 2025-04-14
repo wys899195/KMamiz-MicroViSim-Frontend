@@ -24,13 +24,13 @@ export default class SimulationService {
         "Content-Type": "application/json",
       },
     });
-  
-    if (res.ok) {
-      const graph = await res.json();
-      return graph;
-    } else {
-      const errorText = await res.text();
-      throw new Error(`Failed to generate dependency graph. status: ${res.statusText} error:  ${errorText}`);
+    
+    const resBody =  await res.json();
+    console.log("resBody resBody =",JSON.stringify(resBody))
+    return {
+      graph:resBody.graph,
+      message:resBody.message,
+      resStatus:res.status
     }
   }
 
