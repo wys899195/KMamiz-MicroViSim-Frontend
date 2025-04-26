@@ -23,7 +23,7 @@ export default class GraphService {
   static getInstance = () => this.instance || (this.instance = new this());
   private constructor() {}
 
-  private readonly prefix = `${Config.ApiHost}${Config.ApiPrefix}`;
+  private readonly prefix = `${Config.apiPrefix}`;
 
   private subscribeToChord(next: (data?: TChordData) => void, path: string) {
     return DataView.getInstance().subscribe<RawChordData>(
@@ -171,17 +171,6 @@ export default class GraphService {
     return res.ok;
   }
 
-  async addTaggeddDiffData(endpointDependency: TGraphData) {
-    const res = await fetch(`${this.prefix}/graph/diffData/simulate`, {
-      method: "POST",
-      body: JSON.stringify(endpointDependency),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    return res.ok;
-  }
-
   async deleteTaggedDiffData(tag: string) {
     const res = await fetch(`${this.prefix}/graph/diffData/tags`, {
       method: "DELETE",
@@ -193,40 +182,29 @@ export default class GraphService {
     return res.ok;
   }
 
-  async getDependencyGraphBySimulateYaml(yamlData: string) {
-    const res = await fetch(`${this.prefix}/graph/simulate/yamlToDependency`, {
-      method: "POST",
-      body: JSON.stringify({ yamlData }),
-      headers: {
-        "Content-Type": "application/json",
-      },
+  toServiceDependencyGraph(endpointGraph: TGraphData): TGraphData {
+    const linkSet = new Set<string>();
+    endpointGraph.links.forEach((l) => {
+      const source = l.source.split("\t").slice(0, 2).join("\t");
+      const target = l.target.split("\t").slice(0, 2).join("\t");
+      linkSet.add(`${source}\n${target}`);
     });
-  
-    if (res.ok) {
-      const graph = await res.json();
-      return graph;
-    } else {
-      const errorText = await res.text();
-      throw new Error(`Failed to generate dependency graph. status: ${res.statusText} error:  ${errorText}`);
-    }
-  }
 
-  async getSimulateYamlByEndpointDependencyGraph(endpointDependency: TGraphData) {
-    const res = await fetch(`${this.prefix}/graph/simulate/endpointDependencyToYaml`, {
-      method: "POST",
-      body: JSON.stringify(endpointDependency),
-      headers: {
-        "Content-Type": "application/json",
-      },
+    const links = [...linkSet]
+      .map((l) => l.split("\n"))
+      .map(([source, target]) => ({ source, target }));
+
+    const nodes = endpointGraph.nodes.filter((n) => n.id === n.group);
+    nodes.forEach((n) => {
+      n.linkInBetween = links.filter((l) => l.source === n.id);
+      n.dependencies = n.linkInBetween.map((l) => l.target);
     });
-  
-    if (res.ok) {
-      const graph = await res.json();
-      return graph;
-    } else {
-      const errorText = await res.text();
-      throw new Error(`Failed to generate dependency simulation yaml. status: ${res.statusText} error:  ${errorText}`);
-    }
+
+    const serviceGraph: TGraphData = {
+      nodes,
+      links,
+    };
+    return serviceGraph;
   }
 
   subscribeToEndpointDependencyGraph(next: (data?: TGraphData) => void) {

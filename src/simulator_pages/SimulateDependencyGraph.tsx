@@ -1,6 +1,6 @@
 import {
   Card, FormControlLabel, FormGroup, Switch, Grid, Typography,
-  Box,  Button,  Tooltip, FormControl,TextareaAutosize,
+  Box, Button, Tooltip, FormControl, TextareaAutosize,
   MenuItem, Select, InputLabel,
 } from "@mui/material";
 import { enableTabToIndent } from "indent-textarea";
@@ -15,10 +15,11 @@ import {
 } from "react";
 import ViewportUtils from "../classes/ViewportUtils";
 import GraphService from "../services/GraphService";
+import SimulationService from "../services/SimulationService";
 import ReactApexChart from "react-apexcharts";
 import BarChartUtils from "../classes/BarChartUtils";
 import { Element } from 'react-scroll';
-import { 
+import {
   DiffDependencyGraphFactory
 } from "../classes/DiffDependencyGraphFactory";
 import {
@@ -34,7 +35,7 @@ import { TInsightDiffCohesion } from "../entities/TInsightDiffCohesion";
 import { TInsightDiffCoupling } from "../entities/TInsightDiffCoupling";
 import { TInsightDiffInstability } from "../entities/TInsightDiffInstability";
 import Loading from "../components/Loading";
-import { 
+import {
 
 } from "@mui/material";
 import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
@@ -72,10 +73,10 @@ const useStyles = makeStyles(() => ({
   },
   textField: {
     resize: 'none',
-    width: '100%', 
+    width: '100%',
     overflowY: 'auto',
     height: '80vh',
-    border: '1px solid black' 
+    border: '1px solid black'
   },
   buttonContainer: {
     marginTop: '16px',
@@ -100,23 +101,24 @@ export default function Simulation() {
   const [yamlInput, setYamlInput] = useState(() => {
     return localStorage.getItem("inityamlInput") || "";
   });
-  const [parsedYaml, setParsedYaml] = useState(null);
   const [graphData, setGraphData] = useState<any>();
   const [rawGraphData, setRawGraphData] = useState<any>();
   const [loading, setLoading] = useState(false);
 
   const [graphDifferenceInfo, setGraphDifferenceInfo] = useGraphDifference();
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const handleParseYamlClick = async () => {
     if (!yamlInput) {
       return;
     }
-    setLoading(true); 
-
+    setLoading(true);
     try {
-      const nextGraphData = await GraphService.getInstance().getDependencyGraphBySimulateYaml(yamlInput);
-      if (nextGraphData) {
+      const { graph, message, resStatus } = await SimulationService.getInstance().getDependencyGraphBySimulateYaml(yamlInput);
+      const nextGraphData = graph;
+      if (resStatus >= 400) {
+        alert(`Failed to generate dependency graph.\n\n[error message]\n${message}`);
+        console.log(`${message}`)
+      } else if (nextGraphData) {
         const nextRawGraphData = JSON.stringify(nextGraphData);
         if (rawGraphDataRef.current === nextRawGraphData) return;
         if (!rawGraphDataRef.current) {
@@ -129,32 +131,28 @@ export default function Simulation() {
             }, 10);
           });
         }
-
         rawGraphDataRef.current = nextRawGraphData;
         setRawGraphData(JSON.parse(nextRawGraphData));
         setGraphData(DependencyGraphUtils.ProcessData(nextGraphData));
-        console.log(graphData);
         localStorage.setItem("inityamlInput", yamlInput);
       }
-    } catch (error) {
-      alert(error);
     } finally {
       setLoading(false);
     }
   };
-  
+
 
 
   useEffect(() => {
     if (yamlInput) {
       handleParseYamlClick();
     }
-  }, []); 
+  }, []);
 
   /***useEffect for window size control***/
   useEffect(() => {
     const unsubscribe = [
-      ViewportUtils.getInstance().subscribe(([vw]) =>{
+      ViewportUtils.getInstance().subscribe(([vw]) => {
         setCanvasWidthRate(vw > rwdWidth ? 0.55 : 0.55);
         setCanvasHeightRate(vw > rwdWidth ? 0.9 : 0.9);
       }),
@@ -205,12 +203,6 @@ export default function Simulation() {
 
   const handleEditorChange = (value: string | undefined) => {
     setYamlInput(value || "");
-};
-
-  const createNewVersion = async () => {
-    if (!graphData) return;
-    await GraphService.getInstance().addTaggeddDiffData(rawGraphData);
-    window.location.replace("/diff");
   };
 
   return (
@@ -221,7 +213,7 @@ export default function Simulation() {
       >
 
         <MonacoEditor
-          className={classes.textField} 
+          className={classes.textField}
           value={yamlInput}
           onChange={handleEditorChange}
           language="yaml"
@@ -233,35 +225,25 @@ export default function Simulation() {
             wordWrap: "on",
             tabSize: 2,
             autoIndent: "advanced",
-            formatOnType: true, 
+            formatOnType: true,
             suggestOnTriggerCharacters: true,
           }}
         />
         <div className={classes.buttonContainer}>
-          <Button 
-          variant="contained" 
-          color="primary"
-          onClick={handleParseYamlClick}
-          disabled={loading}
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleParseYamlClick}
+            disabled={loading}
           >
             {loading ? 'Parsing...' : 'Go!'}
-          </Button>
-
-
-          <Button 
-          variant="contained" 
-          color="primary"
-          onClick={createNewVersion}
-          disabled={loading}
-          >
-            {loading ? 'Parsing...' : 'create as a new version'}
           </Button>
         </div>
       </div>
 
       <div
         className={classes.divider}
-        onMouseDown={() => setIsResizing(true)} 
+        onMouseDown={() => setIsResizing(true)}
       ></div>
 
       <div
