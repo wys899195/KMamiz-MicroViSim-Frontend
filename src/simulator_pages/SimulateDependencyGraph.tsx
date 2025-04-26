@@ -101,13 +101,11 @@ export default function Simulation() {
   const [yamlInput, setYamlInput] = useState(() => {
     return localStorage.getItem("inityamlInput") || "";
   });
-  const [parsedYaml, setParsedYaml] = useState(null);
   const [graphData, setGraphData] = useState<any>();
   const [rawGraphData, setRawGraphData] = useState<any>();
   const [loading, setLoading] = useState(false);
 
   const [graphDifferenceInfo, setGraphDifferenceInfo] = useGraphDifference();
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const handleParseYamlClick = async () => {
     if (!yamlInput) {
@@ -207,12 +205,6 @@ export default function Simulation() {
     setYamlInput(value || "");
   };
 
-  const createNewVersion = async () => {
-    if (!graphData) return;
-    await GraphService.getInstance().addTaggeddDiffData(rawGraphData);
-    window.location.replace("/diff");
-  };
-
   return (
     <div className={classes.container}>
       <div
@@ -245,16 +237,6 @@ export default function Simulation() {
             disabled={loading}
           >
             {loading ? 'Parsing...' : 'Go!'}
-          </Button>
-
-
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={createNewVersion}
-            disabled={loading}
-          >
-            {loading ? 'Parsing...' : 'create as a new version'}
           </Button>
         </div>
       </div>

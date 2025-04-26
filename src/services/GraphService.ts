@@ -171,17 +171,6 @@ export default class GraphService {
     return res.ok;
   }
 
-  async addTaggeddDiffData(endpointDependency: TGraphData) {
-    const res = await fetch(`${this.prefix}/graph/diffData/simulate`, {
-      method: "POST",
-      body: JSON.stringify(endpointDependency),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    return res.ok;
-  }
-
   async deleteTaggedDiffData(tag: string) {
     const res = await fetch(`${this.prefix}/graph/diffData/tags`, {
       method: "DELETE",
@@ -191,6 +180,31 @@ export default class GraphService {
       },
     });
     return res.ok;
+  }
+
+  toServiceDependencyGraph(endpointGraph: TGraphData): TGraphData {
+    const linkSet = new Set<string>();
+    endpointGraph.links.forEach((l) => {
+      const source = l.source.split("\t").slice(0, 2).join("\t");
+      const target = l.target.split("\t").slice(0, 2).join("\t");
+      linkSet.add(`${source}\n${target}`);
+    });
+
+    const links = [...linkSet]
+      .map((l) => l.split("\n"))
+      .map(([source, target]) => ({ source, target }));
+
+    const nodes = endpointGraph.nodes.filter((n) => n.id === n.group);
+    nodes.forEach((n) => {
+      n.linkInBetween = links.filter((l) => l.source === n.id);
+      n.dependencies = n.linkInBetween.map((l) => l.target);
+    });
+
+    const serviceGraph: TGraphData = {
+      nodes,
+      links,
+    };
+    return serviceGraph;
   }
 
   subscribeToEndpointDependencyGraph(next: (data?: TGraphData) => void) {

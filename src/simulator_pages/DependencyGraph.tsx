@@ -16,6 +16,7 @@ import {
 } from "../classes/DependencyGraphUtils";
 import ViewportUtils from "../classes/ViewportUtils";
 import GraphService from "../services/GraphService";
+import SimulationService from "../services/SimulationService";
 import { TGraphData } from "../entities/TGraphData";
 import { TDisplayNodeInfo } from "../entities/TDisplayNodeInfo";
 import Loading from "../components/Loading";
@@ -132,7 +133,7 @@ export default function DependencyGraph() {
         setGraphData(DependencyGraphUtils.ProcessData(nextData));
       }
     };
-    
+
     const unSub = showEndpoint
       ? GraphService.getInstance().subscribeToEndpointDependencyGraph(next)
       : GraphService.getInstance().subscribeToServiceDependencyGraph(next);
@@ -155,41 +156,67 @@ export default function DependencyGraph() {
     };
   }, []);
 
+  const handleSimulationClick = async () => {
+    if (!endpointGraphData) {
+      alert("No endpoint graph data available!");
+      return;
+    }
+
+    try {
+      const yamlStr = await SimulationService.getInstance().getSimulateYamlByEndpointDependencyGraph(endpointGraphData);
+      localStorage.setItem("inityamlInput", yamlStr);
+      navigate("/simulate-dependencyGraph");
+    } catch (error) {
+      console.error("Failed to generate YAML:", error);
+      alert("Failed to generate YAML. Check the console for details.");
+    }
+  };
 
   return (
     <div className={classes.root}>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleSimulationClick}
+        style={{ position: "absolute", top: "5em", left: "1em", zIndex: 1000 }}
+      >
+        Simulation
+      </Button>
       <div>
+        <div>
+          <Suspense fallback={<Loading />}>
+            <ForceGraph2D
+              ref={graphRef}
+              width={size[0]}
+              height={size[1]}
+              graphData={graphData}
+              {...DependencyGraphFactory.Create(
+                highlightInfo,
+                setHighlightInfo,
+                graphRef,
+                setDisplayInfo
+              )}
+            />
+          </Suspense>
+        </div>
         <Suspense fallback={<Loading />}>
-          <ForceGraph2D
-            ref={graphRef}
-            width={size[0]}
-            height={size[1]}
-            graphData={graphData}
-            {...DependencyGraphFactory.Create(
-              highlightInfo,
-              setHighlightInfo,
-              graphRef,
-              setDisplayInfo
-            )}
-          />
+          {displayInfo && <InformationWindow info={displayInfo} />}
         </Suspense>
+        <Card className={classes.switch}>
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showEndpoint}
+                  onChange={(e) => setShowEndpoint(e.target.checked)}
+                />
+              }
+              label="Show endpoints"
+            />
+          </FormGroup>
+        </Card>
       </div>
-      <Suspense fallback={<Loading />}>
-        {displayInfo && <InformationWindow info={displayInfo} />}
-      </Suspense>
-      <Card className={classes.switch}>
-        <FormGroup>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={showEndpoint}
-                onChange={(e) => setShowEndpoint(e.target.checked)}
-              />
-            }
-            label="Show endpoints"
-          />
-        </FormGroup>
-      </Card>
     </div>
+
   );
 }

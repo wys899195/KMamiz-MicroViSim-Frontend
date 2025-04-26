@@ -17,7 +17,7 @@ export default class SimulationService {
   }
 
   async getDependencyGraphBySimulateYaml(yamlData: string) {
-    const res = await fetch(`${this.prefix}/simulation/yamlToDependency`, {
+    const res = await fetch(`${this.prefix}/simulation/yamlToEndpointDependency`, {
       method: "POST",
       body: JSON.stringify({ yamlData }),
       headers: {
@@ -51,4 +51,21 @@ export default class SimulationService {
       throw new Error(`Failed to generate dependency simulation yaml. status: ${res.statusText} error:  ${errorText}`);
     }
   }
+
+  async retrieveDataBySimulateYaml(yamlData: string) {
+    const res = await fetch(`${this.prefix}/simulation/retrieveDataByYAML`, {
+      method: "POST",
+      body: JSON.stringify({ yamlData }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    
+    const resBody =  await res.json();
+    return {
+      message:resBody.message,
+      resStatus:res.status
+    }
+  }
+
 }
