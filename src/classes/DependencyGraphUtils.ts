@@ -314,13 +314,13 @@ export class DependencyGraphUtils {
       const { x, y } = node;
       ctx.beginPath();
       if (node.id === node.group) {
-        const r = DependencyGraphUtils.GraphBasicSettings.nodeRelSize * 1;
+        const r = DependencyGraphUtils.GraphBasicSettings.nodeRelSize * 0.85;
         DependencyGraphUtils.DrawHexagon(x, y, r, ctx);
       } else {
         ctx.arc(
           x,
           y,
-          DependencyGraphUtils.GraphBasicSettings.nodeRelSize * 1.65,
+          DependencyGraphUtils.GraphBasicSettings.nodeRelSize * 1.45,
           0,
           2 * Math.PI,
           false
