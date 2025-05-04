@@ -125,49 +125,33 @@ export default function Simulation() {
         className={classes.editor}
         style={{ width: `100%` }}
       >
+        <Grid container spacing={2}>
 
-        <MonacoEditor
-          className={classes.textField}
-          value={yamlInput}
-          onChange={handleEditorChange}
-          language="yaml"
-          theme="light"
-          height="80vh"
-          options={{
-            minimap: { enabled: false },
-            lineNumbers: "on",
-            wordWrap: "on",
-            tabSize: 2,
-            autoIndent: "advanced",
-            formatOnType: true,
-            suggestOnTriggerCharacters: true,
-          }}
-        />
-        <div className={classes.buttonContainer}>
-
-          <Grid item xs={5} justifyContent="center">
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleParseYamlClick}
-              disabled={loading}
-            >
-              {loading ? 'Processing...' : '開始模擬'}
-            </Button>
+          <Grid item xs={3} justifyContent="center" alignItems="center">
+            <Card variant="outlined" className={classes.actions}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleParseYamlClick}
+                disabled={loading || !yamlInput}
+              >
+                {loading ? 'Processing...' : 'start simulate'}
+              </Button>
+            </Card>
           </Grid>
-          <Grid item xs={7}>
+          <Grid item xs={9}>
             <Card variant="outlined" className={classes.actions}>
               <TextField
                 id="new-version-tag"
                 fullWidth
-                label="New Version"
+                label="Save simulator data as a new version for the comparator in the production environment."
                 variant="outlined"
                 value={newVersionTagToCreate}
                 onChange={(e) => setNewVersionTagToCreate(e.target.value)}
                 error={!!errorMessage}
                 helperText={errorMessage}
               />
-              <Tooltip title="New Version">
+              <Tooltip title="Save simulator data as a new version for the comparator in the production environment.">
                 <Button
                   variant="contained"
                   onClick={() => createNewVersion()}
@@ -179,7 +163,30 @@ export default function Simulation() {
               </Tooltip>
             </Card>
           </Grid>
-        </div>
+
+          <Grid item xs={12}>
+            <MonacoEditor
+              className={classes.textField}
+              value={yamlInput}
+              onChange={handleEditorChange}
+              language="yaml"
+              theme="light"
+              height="75vh"
+              options={{
+                minimap: { enabled: false },
+                lineNumbers: "on",
+                wordWrap: "on",
+                tabSize: 2,
+                autoIndent: "advanced",
+                formatOnType: true,
+                suggestOnTriggerCharacters: true,
+              }}
+            />
+          </Grid>
+        </Grid>
+
+
+
       </div>
     </div>
   );

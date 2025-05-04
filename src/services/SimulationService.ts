@@ -16,17 +16,19 @@ export default class SimulationService {
     return (await res.json()) as T;
   }
 
-  async getDependencyGraphBySimulateYaml(yamlData: string) {
-    const res = await fetch(`${this.prefix}/simulation/yamlToEndpointDependency`, {
+  async getDependencyGraphBySimulateYaml(yamlData: string,showEndpoint:boolean) {
+    const res = await fetch(`${this.prefix}/simulation/yamlToDependency`, {
       method: "POST",
-      body: JSON.stringify({ yamlData }),
+      body: JSON.stringify({ 
+        yamlData,
+        showEndpoint,
+      }),
       headers: {
         "Content-Type": "application/json",
       },
     });
     
     const resBody =  await res.json();
-    console.log("resBody resBody =",JSON.stringify(resBody))
     return {
       graph:resBody.graph,
       message:resBody.message,

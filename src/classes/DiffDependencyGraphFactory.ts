@@ -12,16 +12,6 @@ export class DiffDependencyGraphFactory {
       return {
         ...DependencyGraphUtils.GraphBasicSettings,
         linkDirectionalArrowLength: () => 3,
-        linkDirectionalArrowColor: (link: any) => {
-          const linkId = DependencyGraphUtils.TLinkToId({ source: link.source.id, target: link.target.id });
-          if (addedLinkIds.includes(linkId)) {
-            return 'rgba(0, 128, 0, 1)';
-          }
-          if (deletedLinkIds.includes(linkId)) {
-            return 'rgba(255, 0, 0, 1)';
-          }
-          return '';
-        },
         linkWidth: (link: any) =>
           addedLinkIds.includes(DependencyGraphUtils.TLinkToId({ source: link.source.id, target: link.target.id }))
             || deletedLinkIds.includes(DependencyGraphUtils.TLinkToId({ source: link.source.id, target: link.target.id }))
@@ -39,7 +29,7 @@ export class DiffDependencyGraphFactory {
         },
         linkLineDash: (link: any) => {
           if (deletedLinkIds.includes(DependencyGraphUtils.TLinkToId({ source: link.source.id, target: link.target.id }))) {
-            return [3, 3];
+            return [2, 2];
           }
           return [];
         },
