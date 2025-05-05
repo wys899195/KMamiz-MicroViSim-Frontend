@@ -1,4 +1,5 @@
-import { DependencyGraphUtils, GraphDifferenceInfo } from "./DependencyGraphUtils";
+import { DependencyGraphUtils } from "./DependencyGraphUtils";
+import { DiffDisplayUtils, GraphDifferenceInfo } from "./DiffDisplayUtils";
 
 export class DiffDependencyGraphFactory {
   private constructor() { }
@@ -35,7 +36,7 @@ export class DiffDependencyGraphFactory {
         },
 
         nodeCanvasObject: (node: any, ctx: any) =>
-          DependencyGraphUtils.PaintNodeRingForShowDifference(
+          DiffDisplayUtils.PaintNodeRingForShowDifference(
             node,
             ctx,
             addedNodeIds.includes(node.id),
@@ -54,7 +55,7 @@ export class DiffDependencyGraphFactory {
         linkWidth: 1,
         linkDirectionalParticleWidth: 4,
         nodeCanvasObject: (node: any, ctx: any) =>
-          DependencyGraphUtils.PaintNodeRingForShowDifference(
+          DiffDisplayUtils.PaintNodeRingForShowDifference(
             node,
             ctx,
             false,

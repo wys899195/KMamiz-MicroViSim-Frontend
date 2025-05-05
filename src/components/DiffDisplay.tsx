@@ -13,6 +13,7 @@ import {
 } from "react";
 import ViewportUtils from "../classes/ViewportUtils";
 import GraphService from "../services/GraphService";
+import DiffComparatorService from "../services/DiffComparatorService";
 import ReactApexChart from "react-apexcharts";
 import BarChartUtils from "../classes/BarChartUtils";
 import { Element } from 'react-scroll';
@@ -21,9 +22,11 @@ import {
 } from "../classes/DiffDependencyGraphFactory";
 import {
   useGraphDifference,
+  DiffDisplayUtils,
+} from "../classes/DiffDisplayUtils";
+import {
   DependencyGraphUtils,
 } from "../classes/DependencyGraphUtils";
-
 import { TGraphData } from "../entities/TGraphData";
 import { TTotalServiceInterfaceCohesion } from "../entities/TTotalServiceInterfaceCohesion";
 import { TServiceCoupling } from "../entities/TServiceCoupling";
@@ -33,8 +36,6 @@ import { TInsightDiffCoupling } from "../entities/TInsightDiffCoupling";
 import { TInsightDiffInstability } from "../entities/TInsightDiffInstability";
 import Loading from "./Loading";
 
-const CodeDisplay = lazy(() => import("./CodeDisplay"));
-const InterfaceDiffDisplay = lazy(() => import("./InterfaceDiffDisplay"));
 const ForceGraph2D = lazy(() => import("react-force-graph-2d"));
 
 type DiffDisplayProps = {
@@ -42,10 +43,6 @@ type DiffDisplayProps = {
   newerVersionTag: string;
   latestVersionStr: string;
 };
-type SchemaItem = { req: string; res: string; id: number; bounded?: boolean };
-
-
-
 
 const useStyles = makeStyles(() => ({
   actions: {
@@ -76,7 +73,6 @@ const useStyles = makeStyles(() => ({
 }));
 export default function DiffDisplay(props: DiffDisplayProps) {
   if (!props.newerVersionTag || !props.olderVersionTag) return <></>;
-  console.log("props:", props)
   const classes = useStyles();
   const olderVersionTag = props.olderVersionTag;
   const newerVersionTag = props.newerVersionTag;
@@ -158,59 +154,22 @@ export default function DiffDisplay(props: DiffDisplayProps) {
   }, []);
 
   /***  useEffect for graph diff  ***/
-  //the older version
+  //graph data
   useEffect(() => {
-    GraphService.getInstance().getTaggedDependencyGraph(true, olderVersionTag).then((nextRawDataV2) => {
-      if (nextRawDataV2) {
-        setOlderEndpointGraphData(nextRawDataV2);
-      }
-    });
-    GraphService.getInstance().getTaggedDependencyGraph(showEndpoint, olderVersionTag).then((nextOlderGraphData) => {
-      if (nextOlderGraphData) {
-        const nextRawOlderGraphData = JSON.stringify(nextOlderGraphData);
-        if (olderRawGraphDataRef.current === nextRawOlderGraphData) return;
-        if (!olderRawGraphDataRef.current) {
-          const timer = setInterval(() => {
-            if (!olderGraphDataRef.current) return;
-            clearInterval(timer);
-            setTimeout(() => {
-              olderGraphDataRef.current.zoom(3, 0);
-              olderGraphDataRef.current.centerAt(0, 0);
-            }, 10);
-          });
-        }
-        olderRawGraphDataRef.current = nextRawOlderGraphData;
-        ;
-        setOlderGraphData(DependencyGraphUtils.ProcessData(nextOlderGraphData));
-      }
-    });
+    fetchVersionGraphData(
+      olderVersionTag,
+      olderVersionTag === latestVersionStr,
+      false,
+    );
   }, [showEndpoint, olderVersionTag]);
-  //the newer version
   useEffect(() => {
-    GraphService.getInstance().getTaggedDependencyGraph(true, newerVersionTag).then((nextNewerEndpointGraphData) => {
-      if (nextNewerEndpointGraphData) {
-        setNewerEndpointGraphData(nextNewerEndpointGraphData);
-      }
-    });
-    GraphService.getInstance().getTaggedDependencyGraph(showEndpoint, newerVersionTag).then((nextNewerGraphData) => {
-      if (nextNewerGraphData) {
-        const nextRawNewerGraphData = JSON.stringify(nextNewerGraphData);
-        if (newerRawGraphDataRef.current === nextRawNewerGraphData) return;
-        if (!newerRawGraphDataRef.current) {
-          const timer = setInterval(() => {
-            if (!newerGraphDataRef.current) return;
-            clearInterval(timer);
-            setTimeout(() => {
-              newerGraphDataRef.current.zoom(3, 0);
-              newerGraphDataRef.current.centerAt(0, 0);
-            }, 10);
-          });
-        }
-        newerRawGraphDataRef.current = nextRawNewerGraphData;
-        setNewerGraphData(DependencyGraphUtils.ProcessData(nextNewerGraphData));
-      }
-    });
+    fetchVersionGraphData(
+      newerVersionTag,
+      newerVersionTag === latestVersionStr,
+      true,
+    );
   }, [showEndpoint, newerVersionTag]);
+
   //graph diff 
   useEffect(() => {
     if (!showGraphDiff && newerGraphDataRef.current) {
@@ -228,7 +187,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
   }, [showGraphDiff]);
   useEffect(() => {
     if (newerEndpointGraphData && olderEndpointGraphData) {
-      const nextGraphDifferenceInfo = DependencyGraphUtils.CompareTwoGraphData(newerEndpointGraphData, olderEndpointGraphData, showEndpoint);
+      const nextGraphDifferenceInfo = DiffDisplayUtils.CompareTwoGraphData(newerEndpointGraphData, olderEndpointGraphData, showEndpoint);
       const nextDiffGraphData = JSON.stringify(nextGraphDifferenceInfo.diffGraphData);
       if (!rawDiffGraphDataRef.current) {
         const timer = setInterval(() => {
@@ -252,201 +211,115 @@ export default function DiffDisplay(props: DiffDisplayProps) {
 
 
   /***useEffect for insight diff***/
-  //the older version
+  // insight data
   useEffect(() => {
-    //Cohesion
-    GraphService.getInstance().getTaggedServiceCohesion(olderVersionTag).then((nextCohesionDataV2) => {
-      if (nextCohesionDataV2) {
-        setOlderCohesionData(nextCohesionDataV2);
-      }
-    });
-    //Coupling
-    GraphService.getInstance().getTaggedServiceCoupling(olderVersionTag).then((nextCouplingDataV2) => {
-      if (nextCouplingDataV2) {
-        setOlderCouplingData(nextCouplingDataV2);
-      }
-    });
-    //Instability
-    GraphService.getInstance().getTaggedServiceInstability(olderVersionTag).then((nextInstabilityDataV2) => {
-      if (nextInstabilityDataV2) {
-        setOlderInstabilityData(nextInstabilityDataV2);
-      }
-    });
+    fetchServiceInsights(
+      olderVersionTag,
+      olderVersionTag === latestVersionStr,
+      setOlderCohesionData,
+      setOlderCouplingData,
+      setOlderInstabilityData
+    );
   }, [olderVersionTag]);
-  //the newer version
   useEffect(() => {
-    //Cohesion
-    GraphService.getInstance().getTaggedServiceCohesion(newerVersionTag).then((nextNewerCohesionData) => {
-      if (nextNewerCohesionData) {
-        setNewerCohesionData(nextNewerCohesionData);
-      }
-    });
-    //Coupling
-    GraphService.getInstance().getTaggedServiceCoupling(newerVersionTag).then((nextNewerCouplingData) => {
-      if (nextNewerCouplingData) {
-        setNewerCouplingData(nextNewerCouplingData);
-      }
-    });
-    //Instability
-    GraphService.getInstance().getTaggedServiceInstability(newerVersionTag).then((nextNewerInstabilityData) => {
-      if (nextNewerInstabilityData) {
-        setNewerInstabilityData(nextNewerInstabilityData);
-      }
-    });
+    fetchServiceInsights(
+      newerVersionTag,
+      newerVersionTag === latestVersionStr,
+      setNewerCohesionData,
+      setNewerCouplingData,
+      setNewerInstabilityData
+    );
   }, [newerVersionTag]);
 
   //insight diff
   useEffect(() => {
-    const newDataDiff = mergeCohesionData(olderCohesionData, newerCohesionData);
+    const newDataDiff = DiffDisplayUtils.mergeCohesionDiffData(olderCohesionData, newerCohesionData);
     setCohesionDiff(newDataDiff);
   }, [olderCohesionData, newerCohesionData]);
 
   useEffect(() => {
-    const newDataDiff = mergeCouplingData(olderCouplingData, newerCouplingData);
+    const newDataDiff = DiffDisplayUtils.mergeCouplingDiffData(olderCouplingData, newerCouplingData);
     setCouplingDiff(newDataDiff);
   }, [olderCouplingData, newerCouplingData]);
 
   useEffect(() => {
-    const newDataDiff = mergeInstabilityData(olderInstabilityData, newerinstabilityData);
+    const newDataDiff = DiffDisplayUtils.mergeInstabilityDiffData(olderInstabilityData, newerinstabilityData);
     setInstabilityDiff(newDataDiff);
   }, [olderInstabilityData, newerinstabilityData]);
 
+  const fetchVersionGraphData = async (
+    tag: string,
+    isLatestVersion: boolean,
+    isNewerVersion: boolean,
+  ) => {
+    let endpointGraph: TGraphData | null = null;
+    let graph: TGraphData | null = null;
 
-  const mergeCohesionData = (
-    datav1: TTotalServiceInterfaceCohesion[],
-    datav2: TTotalServiceInterfaceCohesion[]
-  ): TInsightDiffCohesion[] => {
-    const allServiceNames = new Set([
-      ...datav1.map(item => item.name),
-      ...datav2.map(item => item.name),
-    ]);
-    const mergedData: TInsightDiffCohesion[] = [];
+    if (isLatestVersion) {
+      endpointGraph = await GraphService.getInstance().getDependencyGraph(true);
+      graph = await GraphService.getInstance().getDependencyGraph(showEndpoint);
+    } else {
+      const res = await DiffComparatorService.getInstance().getTaggedDependencyGraphs(tag);
+      endpointGraph = JSON.parse(JSON.stringify(res.endpointGraph));
+      graph = showEndpoint
+        ? JSON.parse(JSON.stringify(res.endpointGraph))
+        : JSON.parse(JSON.stringify(res.serviceGraph));
+    }
 
-    allServiceNames.forEach(serviceName => {
-      const v1 = datav1.find(item => item.name === serviceName) || {
-        uniqueServiceName: serviceName,
-        name: serviceName,
-        dataCohesion: 0,
-        usageCohesion: 0,
-        totalInterfaceCohesion: 0,
-        endpointCohesion: [],
-        totalEndpoints: 0,
-        consumers: []
-      };
-      const v2 = datav2.find(item => item.name === serviceName) || {
-        uniqueServiceName: serviceName,
-        name: serviceName,
-        dataCohesion: 0,
-        usageCohesion: 0,
-        totalInterfaceCohesion: 0,
-        endpointCohesion: [],
-        totalEndpoints: 0,
-        consumers: []
-      };
-      const diff: TInsightDiffCohesion = {
-        uniqueServiceName: serviceName,
-        name: serviceName,
-        dataCohesionV1: v1.dataCohesion,
-        usageCohesionV1: v1.usageCohesion,
-        totalInterfaceCohesionV1: v1.totalInterfaceCohesion,
-        dataCohesionV2: v2.dataCohesion,
-        usageCohesionV2: v2.usageCohesion,
-        totalInterfaceCohesionV2: v2.totalInterfaceCohesion
-      };
-      mergedData.push(diff);
-    });
-    return mergedData;
+    if (endpointGraph) {
+      isNewerVersion ? setNewerEndpointGraphData(endpointGraph) : setOlderEndpointGraphData(endpointGraph);
+    }
+
+    if (graph) {
+      const rawGraph = JSON.stringify(graph);
+      const rawRef = isNewerVersion ? newerRawGraphDataRef : olderRawGraphDataRef;
+      const graphRef = isNewerVersion ? newerGraphDataRef : olderGraphDataRef;
+      const setGraphData = isNewerVersion ? setNewerGraphData : setOlderGraphData;
+
+      if (rawRef.current === rawGraph) return;
+
+      if (!rawRef.current) {
+        const timer = setInterval(() => {
+          if (!graphRef.current) return;
+          clearInterval(timer);
+          setTimeout(() => {
+            graphRef.current.zoom(3, 0);
+            graphRef.current.centerAt(0, 0);
+          }, 10);
+        });
+      }
+
+      rawRef.current = rawGraph;
+      setGraphData(DependencyGraphUtils.ProcessData(graph));
+    }
   };
 
-  const mergeCouplingData = (
-    datav1: TServiceCoupling[],
-    datav2: TServiceCoupling[]
-  ): TInsightDiffCoupling[] => {
-    const allServiceNames = new Set([
-      ...datav1.map(item => item.name),
-      ...datav2.map(item => item.name),
-    ]);
-
-    const mergedData: TInsightDiffCoupling[] = [];
-
-    allServiceNames.forEach(serviceName => {
-      const v1 = datav1.find(item => item.name === serviceName) || {
-        uniqueServiceName: serviceName,
-        name: serviceName,
-        ais: 0,
-        ads: 0,
-        acs: 0,
-      };
-      const v2 = datav2.find(item => item.name === serviceName) || {
-        uniqueServiceName: serviceName,
-        name: serviceName,
-        ais: 0,
-        ads: 0,
-        acs: 0,
-      };
-
-      const diff: TInsightDiffCoupling = {
-        uniqueServiceName: serviceName,
-        name: serviceName,
-        aisV1: v1.ais,
-        adsV1: v1.ads,
-        acsV1: v1.acs,
-        aisV2: v2.ais,
-        adsV2: v2.ads,
-        acsV2: v2.acs,
-      };
-
-      mergedData.push(diff);
-    });
-    return mergedData;
+  const fetchServiceInsights = async (
+    tag: string,
+    isLatestVersion: boolean,
+    setCohesion: (data: TTotalServiceInterfaceCohesion[]) => void,
+    setCoupling: (data: TServiceCoupling[]) => void,
+    setInstability: (data: TServiceInstability[]) => void
+  ) => {
+    if (isLatestVersion) {
+      const [cohesionData, couplingData, instabilityData] = await Promise.all([
+        GraphService.getInstance().getServiceCohesion(),
+        GraphService.getInstance().getServiceCoupling(),
+        GraphService.getInstance().getServiceInstability(),
+      ]);
+      if (cohesionData) setCohesion(cohesionData);
+      if (couplingData) setCoupling(couplingData);
+      if (instabilityData) setInstability(instabilityData);
+    } else {
+      const insights = await DiffComparatorService.getInstance().getTaggedServiceInsights(tag);
+      if (insights) {
+        const { cohesionData, couplingData, instabilityData } = insights;
+        if (cohesionData) setCohesion(cohesionData);
+        if (couplingData) setCoupling(couplingData);
+        if (instabilityData) setInstability(instabilityData);
+      }
+    }
   };
-
-  const mergeInstabilityData = (
-    datav1: TServiceInstability[],
-    datav2: TServiceInstability[]
-  ): TInsightDiffInstability[] => {
-    const allServiceNames = new Set([
-      ...datav1.map(item => item.name),
-      ...datav2.map(item => item.name),
-    ]);
-
-    const mergedData: TInsightDiffInstability[] = [];
-
-    allServiceNames.forEach(serviceName => {
-      const v1 = datav1.find(item => item.name === serviceName) || {
-        uniqueServiceName: serviceName,
-        name: serviceName,
-        dependingBy: 0,
-        dependingOn: 0,
-        instability: 0,
-      };
-
-      const v2 = datav2.find(item => item.name === serviceName) || {
-        uniqueServiceName: serviceName,
-        name: serviceName,
-        dependingBy: 0,
-        dependingOn: 0,
-        instability: 0,
-      };
-
-      const diff: TInsightDiffInstability = {
-        uniqueServiceName: serviceName,
-        name: serviceName,
-        dependingByV1: v1.dependingBy,
-        dependingOnV1: v1.dependingOn,
-        instabilityV1: v1.instability,
-        dependingByV2: v2.dependingBy,
-        dependingOnV2: v2.dependingOn,
-        instabilityV2: v2.instability,
-      };
-
-      mergedData.push(diff);
-    });
-
-    return mergedData;
-  };
-
-
 
   return (
     <>
@@ -454,8 +327,8 @@ export default function DiffDisplay(props: DiffDisplayProps) {
       <Grid item xs={12}>
         <Element name="Graph Difference Title">
           <Typography variant="h6">
-          Differences in Dependency Graph:&ensp;
-            <span style={{ color: '#FF6666' }}>{olderVersionTag}</span>
+            Differences in Dependency Graph:&ensp;
+            <span style={{ color: '#FFA500' }}>{olderVersionTag}</span>
             &ensp;vs&ensp;
             <span style={{ color: '#00a2ff' }}>{newerVersionTag}</span>
           </Typography>

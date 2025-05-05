@@ -1,7 +1,6 @@
 import Config from "../../Config";
 import { Color } from "../classes/ColorUtils";
 import { TLineChartData } from "../entities/TLineChartData";
-import { TTaggedDiffData } from "../entities/TTaggedDiffData";
 import { TChordData, TChordRadius } from "../entities/TChordData";
 import { TGraphData } from "../entities/TGraphData";
 import { TServiceCoupling } from "../entities/TServiceCoupling";
@@ -76,14 +75,6 @@ export default class GraphService {
     return await GraphService.getInstance().get<TGraphData>(path);
   }
 
-  async getTaggedDependencyGraph(showEndpoint: boolean,tag: string | null) {
-    if(!tag){
-      return this.getDependencyGraph(showEndpoint)
-    }
-    const path = `${this.prefix}/graph/taggedDependency/${showEndpoint ? "endpoint" : "service"}?tag=${tag}`;
-    return await GraphService.getInstance().get<TGraphData>(path);
-  }
-
   async getAreaLineData(uniqueServiceName?: string, notBefore?: number) {
     const postfix = uniqueServiceName
       ? `/${encodeURIComponent(uniqueServiceName)}`
@@ -122,91 +113,6 @@ export default class GraphService {
     return await GraphService.getInstance().get<TServiceCoupling[]>(path);
   }
 
-  async getTaggedServiceCohesion(tag: string | null,namespace?: string) {
-    if(!tag){
-      return this.getServiceCohesion(namespace);
-    }
-    const path = `${this.prefix}/graph/taggedCohesion${
-      namespace ? `/${encodeURIComponent(namespace)}` : ""
-    }?tag=${tag}`;
-    return await GraphService.getInstance().get<TTotalServiceInterfaceCohesion[]>(path);
-  }
-  async getTaggedServiceInstability(tag: string | null,namespace?: string) {
-    if(!tag){
-      return this.getServiceInstability(namespace);
-    }
-    const path = `${this.prefix}/graph/taggedInstability${
-      namespace ? `/${encodeURIComponent(namespace)}` : ""
-    }?tag=${tag}`;
-    return await GraphService.getInstance().get<TServiceInstability[]>(path);
-  }
-  async getTaggedServiceCoupling(tag: string | null,namespace?: string) {
-    if(!tag){
-      return this.getServiceCoupling(namespace);
-    }
-    const path = `${this.prefix}/graph/taggedCoupling${
-      namespace ? `/${encodeURIComponent(namespace)}` : ""
-    }?tag=${tag}`;
-    return await GraphService.getInstance().get<TServiceCoupling[]>(path);
-  }
-
-
-
-  async getTagsOfDiffdata() {
-    return (
-      (await this.get<{ tag: string; time: number }[]>(
-        `${this.prefix}/graph/diffData/tags`
-      )) || []
-    );
-  }
-
-  async addTaggedDiffData(tag: string) {
-    const res = await fetch(`${this.prefix}/graph/diffData/tags`, {
-      method: "POST",
-      body: JSON.stringify({tag}),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    return res.ok;
-  }
-
-  async deleteTaggedDiffData(tag: string) {
-    const res = await fetch(`${this.prefix}/graph/diffData/tags`, {
-      method: "DELETE",
-      body: JSON.stringify({tag}),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    return res.ok;
-  }
-
-  toServiceDependencyGraph(endpointGraph: TGraphData): TGraphData {
-    const linkSet = new Set<string>();
-    endpointGraph.links.forEach((l) => {
-      const source = l.source.split("\t").slice(0, 2).join("\t");
-      const target = l.target.split("\t").slice(0, 2).join("\t");
-      linkSet.add(`${source}\n${target}`);
-    });
-
-    const links = [...linkSet]
-      .map((l) => l.split("\n"))
-      .map(([source, target]) => ({ source, target }));
-
-    const nodes = endpointGraph.nodes.filter((n) => n.id === n.group);
-    nodes.forEach((n) => {
-      n.linkInBetween = links.filter((l) => l.source === n.id);
-      n.dependencies = n.linkInBetween.map((l) => l.target);
-    });
-
-    const serviceGraph: TGraphData = {
-      nodes,
-      links,
-    };
-    return serviceGraph;
-  }
-
   subscribeToEndpointDependencyGraph(next: (data?: TGraphData) => void) {
     return DataView.getInstance().subscribe<TGraphData>(
       `${this.prefix}/graph/dependency/endpoint`,
@@ -220,31 +126,6 @@ export default class GraphService {
       (_, data) => next(data)
     );
   }
-
-  // subscribeToTaggedEndpointDependencyGraph(
-  //   next: (data?: TGraphData) => void,
-  //   tag:string | null,
-  // ) {
-  //   if(!tag){
-  //     return this.subscribeToEndpointDependencyGraph(next)
-  //   }
-  //   return DataView.getInstance().subscribe<TGraphData>(
-  //     `${this.prefix}/graph/taggedDependency/endpoint?tag=${tag}`,
-  //     (_, data) => next(data)
-  //   );
-  // }
-  // subscribeToTaggedServiceDependencyGraph(
-  //   next: (data?: TGraphData) => void,
-  //   tag:string | null,
-  // ) {
-  //   if(!tag){
-  //     return this.subscribeToServiceDependencyGraph(next)
-  //   }
-  //   return DataView.getInstance().subscribe<TGraphData>(
-  //     `${this.prefix}/graph/taggedDependency/service?tag=${tag}`,
-  //     (_, data) => next(data)
-  //   );
-  // }
 
   subscribeToLineChartData(
     next: (data?: TLineChartData) => void,

@@ -1,5 +1,5 @@
 import {
-  Card, FormControlLabel, FormGroup, Switch, Grid, Typography,Button,
+  Card, FormControlLabel, FormGroup, Switch, Typography,Button,
 } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import {
@@ -13,18 +13,11 @@ import {
 import ViewportUtils from "../classes/ViewportUtils";
 import GraphService from "../services/GraphService";
 import SimulationService from "../services/SimulationService";
-import {
-  DiffDependencyGraphFactory
-} from "../classes/DiffDependencyGraphFactory";
-import {
-  useGraphDifference,
-  DependencyGraphUtils,
-} from "../classes/DependencyGraphUtils";
+import { DiffDependencyGraphFactory } from "../classes/DiffDependencyGraphFactory";
+import { DependencyGraphUtils } from "../classes/DependencyGraphUtils";
+import { useGraphDifference } from "../classes/DiffDisplayUtils";
 
 import Loading from "../components/Loading";
-import {
-
-} from "@mui/material";
 import MonacoEditor from "@monaco-editor/react";
 
 const ForceGraph2D = lazy(() => import("react-force-graph-2d"));

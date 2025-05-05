@@ -1,25 +1,16 @@
 import {
-  Card, FormControlLabel, FormGroup, Switch, Grid, Typography,
-  Box, Button, Tooltip, FormControl, TextareaAutosize,
-  MenuItem, Select, InputLabel, TextField,
+  Card, Grid, Button, Tooltip, TextField,
 } from "@mui/material";
-import { enableTabToIndent } from "indent-textarea";
 import { makeStyles } from "@mui/styles";
 import {
-  lazy,
-  Suspense,
-  useEffect,
-  useLayoutEffect,
-  useRef,
   useState,
 } from "react";
-import ViewportUtils from "../classes/ViewportUtils";
 import SimulationService from "../services/SimulationService";
 import {
 
 } from "@mui/material";
 import MonacoEditor from "@monaco-editor/react";
-import GraphService from "../services/GraphService";
+import DiffComparatorService from "../services/DiffComparatorService";
 
 const useStyles = makeStyles(() => ({
   container: {
@@ -92,7 +83,7 @@ export default function Simulation() {
 
       if (resStatus >= 400) {
         alert(`Failed to simulate data retrival.\n\n[error message]\n${message}`);
-        console.log(`${message}`)
+        console.error(`${message}`)
       } else {
         alert(`ok!`);
       }
@@ -113,7 +104,7 @@ export default function Simulation() {
       return;
     }
     try {
-      await GraphService.getInstance().addTaggedDiffData(newVersionTagToCreate);
+      await DiffComparatorService.getInstance().addTaggedDiffData(newVersionTagToCreate);
     } catch (error) {
       setErrorMessage(`Failed to create version: ${error}`);
     }

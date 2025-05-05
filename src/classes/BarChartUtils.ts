@@ -178,7 +178,7 @@ export default class BarChartUtils {
     };
   }
 
-  static StackMixedChartOverwriteTOpts<T>(
+  static StackMixedDiffChartOverwriteOpts<T>(
     data: T[],
     strategy: {
       x: (d: T) => string | number;
@@ -189,7 +189,6 @@ export default class BarChartUtils {
         dataPointIndex: number
       ) => string;
     },
-    overwriteYAxis = 0
   ) {
     return {
       stroke: {
@@ -201,7 +200,7 @@ export default class BarChartUtils {
           return value === 0 ? '0' : value.toString();
         },
         style: {
-          colors: ['#000000', '#000000'], // version1 ，version2 显示蓝色
+          colors: ['#000000', '#000000'],
         }
       },
       tooltip: {
@@ -418,7 +417,7 @@ export default class BarChartUtils {
     versionTag1: string,
     versionTag2: string,
   ): ApexOptions {
-    const base = BarChartUtils.StackMixedChartOverwriteTOpts(
+    const base = BarChartUtils.StackMixedDiffChartOverwriteOpts(
       cohesionDiff,
       {
         x: (d) => d.name,
@@ -426,8 +425,7 @@ export default class BarChartUtils {
         tooltip: (y) => {
           return y.toString();
         },
-      },
-      1
+      }
     );
 
     const { maxY, maxRY } = cohesionDiff.reduce(
@@ -445,7 +443,7 @@ export default class BarChartUtils {
           title: {
             text: `TSIC (${versionTag1})`,
             style: {
-              color: "#FF6666",
+              color: "#FFA500",
             },
           },
           ...BarChartUtils.generateTick(1),
@@ -471,7 +469,7 @@ export default class BarChartUtils {
     versionTag1: string,
     versionTag2: string,
   ): ApexOptions {
-    const base = BarChartUtils.StackMixedChartOverwriteTOpts(
+    const base = BarChartUtils.StackMixedDiffChartOverwriteOpts(
       couplingDiff,
       {
         x: (d) => d.name,
@@ -479,8 +477,7 @@ export default class BarChartUtils {
         tooltip: (y) => {
           return y.toString();
         },
-      },
-      1
+      }
     );
 
     const { maxY} = couplingDiff.reduce(
@@ -497,7 +494,7 @@ export default class BarChartUtils {
           title: {
             text: `ACS (${versionTag1})`,
             style: {
-              color: "#FF6666",
+              color: "#FFA500",
             },
           },
           ...BarChartUtils.generateTick(maxY),
@@ -521,7 +518,7 @@ export default class BarChartUtils {
     versionTag1: string,
     versionTag2: string,
   ): ApexOptions {
-    const base = BarChartUtils.StackMixedChartOverwriteTOpts(
+    const base = BarChartUtils.StackMixedDiffChartOverwriteOpts(
       instabilityDiff,
       {
         x: (d) => d.name,
@@ -529,8 +526,7 @@ export default class BarChartUtils {
         tooltip: (y) => {
           return y.toString();
         },
-      },
-      1
+      }
     );
 
     const { maxY} = instabilityDiff.reduce(
@@ -547,7 +543,7 @@ export default class BarChartUtils {
           title: {
             text: `SDP (${versionTag1})`,
             style: {
-              color: "#FF6666",
+              color: "#FFA500",
             },
           },
           min: 0,
@@ -698,10 +694,10 @@ export default class BarChartUtils {
     fields: { f: string; name: string }[],
     data: any[]
   ) {
-    fields = fields.slice(0, 2); //只取前兩個，即version1 與 version2
+    fields = fields.slice(0, 2); // Only take the first two, i.e., the old version and the new version
     return fields.map(({ f, name }, index) => ({
       name,
-      color: index === 0 ? '#FF6666' : '#00a2ff',
+      color: index === 0 ? '#FFA500' : '#00a2ff',
       data: data.map((c) => BarChartUtils.roundToDisplay(c[f])),
     }));
   }

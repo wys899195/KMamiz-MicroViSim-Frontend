@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
 import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
-import GraphService from "../services/GraphService";
+import DiffComparatorService from "../services/DiffComparatorService";
 import { useLocation, useNavigate } from "react-router-dom";
 import DiffDisplay from "../components/DiffDisplay";
 
@@ -94,25 +94,35 @@ export default function Diff() {
       setOlderVersionTag(olderVersionTag || "");
       setNewerVersionTag(newerVersionTag || "");
     }
-    GraphService.getInstance().getTagsOfDiffdata().then((tags) => {
-      const newLabelMap: MultiLevelMap = {};
-      const sortedTags = tags.sort((a, b) => b.time - a.time);// sort descending by time
-
-      // other version tag
-      sortedTags.forEach((tagI) => {
-        const tempOlderVersionTag = JSON.stringify(tagI);
-        newLabelMap[tempOlderVersionTag] = {[JSON.stringify({tag:latestVersionStr,time:0})]: {}}// The latest version can always be selected as the "newer" version in the comparison
-        sortedTags.forEach((tagJ) => {
-          const tempNewerVersionTag = JSON.stringify(tagJ);
-          if (tagJ.time > tagI.time) {
-            newLabelMap[tempOlderVersionTag][tempNewerVersionTag] = {};
-          }
-        });
-      });
-      console.log(newLabelMap)
-      setLabelMap(newLabelMap);
-    });
   }, []);
+
+  useEffect(() => {
+    const next = (nextData?: { tag: string; time: number }[]) => {
+      if (nextData) {
+        const newLabelMap: MultiLevelMap = {};
+        const sortedTags = nextData.sort((a, b) => b.time - a.time);// sort descending by time
+  
+        // other version tag
+        sortedTags.forEach((tagI) => {
+          const tempOlderVersionTag = JSON.stringify(tagI);
+          newLabelMap[tempOlderVersionTag] = {[JSON.stringify({tag:latestVersionStr,time:0})]: {}}// The latest version can always be selected as the "newer" version in the comparison
+          sortedTags.forEach((tagJ) => {
+            const tempNewerVersionTag = JSON.stringify(tagJ);
+            if (tagJ.time > tagI.time) {
+              newLabelMap[tempOlderVersionTag][tempNewerVersionTag] = {};
+            }
+          });
+        });
+        setLabelMap(newLabelMap);
+      }
+    };
+
+    const unSub = DiffComparatorService.getInstance().subscribeToDiffdataTags(next);
+    return () => {
+      unSub();
+    };
+  }, []);
+
   useEffect(() => {
     if (newerVersionTag) {
       setUniqueLabelName(
@@ -177,7 +187,7 @@ export default function Diff() {
       return;
     }
     try {
-      await GraphService.getInstance().addTaggedDiffData(newVersionTagToCreate);
+      await DiffComparatorService.getInstance().addTaggedDiffData(newVersionTagToCreate);
       setNewVersionTagToCreate("");
       window.location.replace("/diff");
     } catch (error) {
@@ -188,7 +198,7 @@ export default function Diff() {
   const deleteVersion = async (level: number) => {
     const tagToDelete = level === 0 ? olderVersionTag : level === 1 ? newerVersionTag :"";
     if (!tagToDelete || tagToDelete === latestVersionStr) return;
-    await GraphService.getInstance().deleteTaggedDiffData(tagToDelete);
+    await DiffComparatorService.getInstance().deleteTaggedDiffData(tagToDelete);
     window.location.replace("/diff");
   };
   const shouldDisableDeleteButton = (level: number):boolean => {
