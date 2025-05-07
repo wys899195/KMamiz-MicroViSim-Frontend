@@ -9,7 +9,7 @@ import { DataView } from "./DataView";
 export default class DataService {
   private static instance?: DataService;
   static getInstance = () => this.instance || (this.instance = new this());
-  private constructor() {}
+  private constructor() { }
 
   private readonly prefix = `${Config.apiPrefix}`;
 
@@ -20,16 +20,14 @@ export default class DataService {
   }
 
   async getAggregatedData(namespace?: string) {
-    const path = `${this.prefix}/data/aggregate${
-      namespace ? "/" + encodeURIComponent(namespace) : ""
-    }`;
+    const path = `${this.prefix}/data/aggregate${namespace ? "/" + encodeURIComponent(namespace) : ""
+      }`;
     return await DataService.getInstance().get<TAggregatedData>(path);
   }
 
   async getHistoricalData(namespace?: string) {
-    const path = `${this.prefix}/data/history${
-      namespace ? "/" + encodeURIComponent(namespace) : ""
-    }`;
+    const path = `${this.prefix}/data/history${namespace ? "/" + encodeURIComponent(namespace) : ""
+      }`;
     return await DataService.getInstance().get<THistoricalData[]>(path);
   }
 
@@ -40,6 +38,17 @@ export default class DataService {
     return (
       (await DataService.getInstance().get<IEndpointDataType>(path)) ||
       undefined
+    );
+  }
+
+  async getEndpointDataTypesMap(uniqueLabelNames: string[]) {
+    const query = uniqueLabelNames
+      .map(name => `labelNames=${encodeURIComponent(name)}`)
+      .join("&");
+    const path = `${this.prefix}/data/dataTypesMap?${query}`;
+    return (
+      (await DataService.getInstance().get<Record<string, IEndpointDataType>>(path)) ||
+      {}
     );
   }
 
@@ -78,9 +87,8 @@ export default class DataService {
   }
 
   async getTaggedInterface(uniqueLabelName: string) {
-    const path = `${
-      this.prefix
-    }/data/interface?uniqueLabelName=${encodeURIComponent(uniqueLabelName)}`;
+    const path = `${this.prefix
+      }/data/interface?uniqueLabelName=${encodeURIComponent(uniqueLabelName)}`;
     return (
       (await DataService.getInstance().get<TTaggedInterface[]>(path)) || []
     );
@@ -115,11 +123,9 @@ export default class DataService {
     filter?: string,
     notBefore = 86400000
   ) {
-    const url = `${this.prefix}/data/aggregate${
-      namespace ? "/" + encodeURIComponent(namespace) : ""
-    }?notBefore=${notBefore}${
-      filter ? `&filter=${encodeURIComponent(filter)}` : ""
-    }`;
+    const url = `${this.prefix}/data/aggregate${namespace ? "/" + encodeURIComponent(namespace) : ""
+      }?notBefore=${notBefore}${filter ? `&filter=${encodeURIComponent(filter)}` : ""
+      }`;
     return DataView.getInstance().subscribe<TAggregatedData>(url, (_, data) => {
       next(data);
     });
@@ -129,9 +135,8 @@ export default class DataService {
     next: (data: THistoricalData[]) => void,
     namespace?: string
   ) {
-    const url = `${this.prefix}/data/history${
-      namespace ? "/" + encodeURIComponent(namespace) : ""
-    }`;
+    const url = `${this.prefix}/data/history${namespace ? "/" + encodeURIComponent(namespace) : ""
+      }`;
     return DataView.getInstance().subscribe<THistoricalData[]>(
       url,
       (_, data) => {

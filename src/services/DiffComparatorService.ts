@@ -3,6 +3,7 @@ import { TGraphData } from "../entities/TGraphData";
 import { TServiceCoupling } from "../entities/TServiceCoupling";
 import { TServiceInstability } from "../entities/TServiceInstability";
 import { TTotalServiceInterfaceCohesion } from "../entities/TTotalServiceInterfaceCohesion";
+import TEndpointDataType from "../entities/TEndpointDataType";
 import { DataView } from "./DataView";
 
 export default class DiffComparatorService {
@@ -76,6 +77,11 @@ export default class DiffComparatorService {
       couplingData: [],
       instabilityData: [],
     };
+  }
+
+  async getTaggedEndpointDataTypesMap(tag: string) {
+    const path = `${this.prefix}/diffComparator/taggedDataTypesMap?tag=${tag}`;
+    return await DiffComparatorService.getInstance().get<Record<string, TEndpointDataType>>(path) || {};
   }
 
   subscribeToDiffdataTags(

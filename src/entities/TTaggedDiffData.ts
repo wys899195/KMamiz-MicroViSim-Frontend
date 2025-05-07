@@ -2,6 +2,7 @@ import { TGraphData } from "./TGraphData";
 import { TTotalServiceInterfaceCohesion } from "./TTotalServiceInterfaceCohesion";
 import { TServiceCoupling } from "./TServiceCoupling";
 import { TServiceInstability } from "./TServiceInstability";
+import TEndpointDataType from "./TEndpointDataType";
 
 export type TTaggedDiffData = {
   _id?: string;
@@ -11,6 +12,7 @@ export type TTaggedDiffData = {
   cohesionData:TTotalServiceInterfaceCohesion[];
   couplingData:TServiceCoupling[];
   instabilityData:TServiceInstability[];
+  endpointDataTypes: Record<string, TEndpointDataType>;
 };
 
 export type TagWithTime = {

@@ -34,7 +34,9 @@ import { TServiceInstability } from "../entities/TServiceInstability";
 import { TInsightDiffCohesion } from "../entities/TInsightDiffCohesion";
 import { TInsightDiffCoupling } from "../entities/TInsightDiffCoupling";
 import { TInsightDiffInstability } from "../entities/TInsightDiffInstability";
+import TEndpointDataType from "../entities/TEndpointDataType";
 import Loading from "./Loading";
+import DataService from "../services/DataService";
 
 const ForceGraph2D = lazy(() => import("react-force-graph-2d"));
 
@@ -89,12 +91,16 @@ export default function DiffDisplay(props: DiffDisplayProps) {
   const newerRawGraphDataRef = useRef<string>();
   const [newerGraphData, setNewerGraphData] = useState<any>();
   const [newerEndpointGraphData, setNewerEndpointGraphData] = useState<TGraphData | null>(null);
+
+  // endpoint data types map
+  const [olderEndpointDataTypesMap, setOlderEndpointDataTypesMap] = useState<Record<string, TEndpointDataType>>({});
+  const [newerEndpointDataTypesMap, setNewerEndpointDataTypesMap] = useState<Record<string, TEndpointDataType>>({});
+
   // the diff graph data
   const diffGraphDataRef = useRef<any>();
   const rawDiffGraphDataRef = useRef<string>();
   // graph diff info
   const [diffGraphData, setDiffGraphData] = useState<any>();
-  const [rawDiffGraphData, setRawDiffGraphData] = useState<TGraphData | null>(null);
   const [graphDifferenceInfo, setGraphDifferenceInfo] = useGraphDifference();
 
   // graph display control
@@ -169,6 +175,15 @@ export default function DiffDisplay(props: DiffDisplayProps) {
       true,
     );
   }, [showEndpoint, newerVersionTag]);
+
+  //endpointDataType data
+  useEffect(() => {
+    fetchEndpointDataTypesMap(olderVersionTag, olderVersionTag === latestVersionStr, olderEndpointGraphData, setOlderEndpointDataTypesMap);
+  }, [olderEndpointGraphData]);
+  
+  useEffect(() => {
+    fetchEndpointDataTypesMap(newerVersionTag, newerVersionTag === latestVersionStr, newerEndpointGraphData, setNewerEndpointDataTypesMap);
+  }, [newerEndpointGraphData]);
 
   //graph diff 
   useEffect(() => {
@@ -319,6 +334,20 @@ export default function DiffDisplay(props: DiffDisplayProps) {
         if (instabilityData) setInstability(instabilityData);
       }
     }
+  };
+
+  const fetchEndpointDataTypesMap = async (
+    tag: string,
+    isLatestVersion: boolean,
+    graphData: TGraphData | null,
+    setEndpointDataTypesMap: (data: Record<string, TEndpointDataType>) => void
+  ) => {
+    const nodeIds = graphData?.nodes.map((node) => node.id) || [];
+    const nextEndpointDataTypesMap = isLatestVersion
+      ? await DiffComparatorService.getInstance().getTaggedEndpointDataTypesMap(tag)
+      : await DataService.getInstance().getEndpointDataTypesMap(nodeIds);
+
+    setEndpointDataTypesMap(nextEndpointDataTypesMap);
   };
 
   return (
