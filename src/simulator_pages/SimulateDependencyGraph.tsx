@@ -252,7 +252,7 @@ export default function Simulation() {
             disabled={loading}
             className={classes.button}
           >
-            {loading ? 'Loading...' : 'Load YAML from current dependency graph'}
+            {loading ? 'Loading...' : 'Generate YAML from current dependency graph'}
           </Button>
         </div>
       </div>

@@ -85,13 +85,43 @@ export default function Simulation() {
         alert(`Failed to simulate data retrival.\n\n[error message]\n${message}`);
         console.error(`${message}`)
       } else {
+        setYamlInput("");
         alert(`ok!`);
       }
     } finally {
       setLoading(false);
-      setYamlInput("")
     }
   };
+
+  const handleGenerateYamlClick = async () => {
+    if (!yamlInput) {
+      await fetchStaticYamlStr();
+    } else {
+      const result = window.confirm("There is YAML content currently in the editor,the content will be overwritten. Are you sure?");
+      if (result) {
+        await fetchStaticYamlStr();
+      } else {
+        return;
+      }
+    }
+  };
+  
+  const fetchStaticYamlStr = async () => {
+    setLoading(true);
+    try {
+      const { staticYamlStr, message } = await SimulationService.getInstance().generateStaticYamlFromCurrentData();
+
+      if (message != "ok") {
+        alert(`${message}`);
+        console.error(`${message}`)
+      } else {
+        setYamlInput(staticYamlStr);
+        alert(`ok!`);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const handleEditorChange = (value: string | undefined) => {
     setYamlInput(value || "");
@@ -118,19 +148,29 @@ export default function Simulation() {
       >
         <Grid container spacing={2}>
 
-          <Grid item xs={3} justifyContent="center" alignItems="center">
+          <Grid item xs={6} justifyContent="center" alignItems="center">
             <Card variant="outlined" className={classes.actions}>
               <Button
                 variant="contained"
                 color="primary"
                 onClick={handleParseYamlClick}
                 disabled={loading || !yamlInput}
+                sx={{ textTransform: 'none' }}
               >
-                {loading ? 'Processing...' : 'start simulate'}
+                {loading ? 'Processing...' : 'Start Simulate'}
+              </Button>
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={handleGenerateYamlClick}
+                disabled={loading}
+                sx={{ textTransform: 'none' }}
+              >
+                {loading ? 'Processing...' : 'Generate Yaml from Current Data'}
               </Button>
             </Card>
           </Grid>
-          <Grid item xs={9}>
+          <Grid item xs={6}>
             <Card variant="outlined" className={classes.actions}>
               <TextField
                 id="new-version-tag"

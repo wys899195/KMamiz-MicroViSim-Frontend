@@ -33,6 +33,7 @@ export default function Header() {
   const [isOpen, setOpen] = useState(false);
   const [hasAlert, setHasAlert] = useState(false);
   const navigate = useNavigate();
+  const pageTitle = Config.backendConfig.SimulatorMode ? "KMamiz (Simulator)" : "KMamiz";
 
   useEffect(() => {
     const unSub = AlertManager.getInstance().listen(
@@ -85,7 +86,7 @@ export default function Header() {
             </List>
           </Drawer>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            KMamiz
+            {pageTitle}
           </Typography>
 
           <Tooltip
