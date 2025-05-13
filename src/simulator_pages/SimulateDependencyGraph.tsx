@@ -1,9 +1,6 @@
 import {
-  Card, FormControlLabel, FormGroup, Switch, Grid, Typography,
-  Box, Button, Tooltip, FormControl, TextareaAutosize,
-  MenuItem, Select, InputLabel,
+  Card, FormControlLabel, FormGroup, Switch, Typography,Button,
 } from "@mui/material";
-import { enableTabToIndent } from "indent-textarea";
 import { makeStyles } from "@mui/styles";
 import {
   lazy,
@@ -16,31 +13,11 @@ import {
 import ViewportUtils from "../classes/ViewportUtils";
 import GraphService from "../services/GraphService";
 import SimulationService from "../services/SimulationService";
-import ReactApexChart from "react-apexcharts";
-import BarChartUtils from "../classes/BarChartUtils";
-import { Element } from 'react-scroll';
-import {
-  DiffDependencyGraphFactory
-} from "../classes/DiffDependencyGraphFactory";
-import {
-  useGraphDifference,
-  DependencyGraphUtils,
-} from "../classes/DependencyGraphUtils";
+import { DiffDependencyGraphFactory } from "../classes/DiffDependencyGraphFactory";
+import { DependencyGraphUtils } from "../classes/DependencyGraphUtils";
+import { useGraphDifference } from "../classes/DiffDisplayUtils";
 
-import { TGraphData } from "../entities/TGraphData";
-import { TTotalServiceInterfaceCohesion } from "../entities/TTotalServiceInterfaceCohesion";
-import { TServiceCoupling } from "../entities/TServiceCoupling";
-import { TServiceInstability } from "../entities/TServiceInstability";
-import { TInsightDiffCohesion } from "../entities/TInsightDiffCohesion";
-import { TInsightDiffCoupling } from "../entities/TInsightDiffCoupling";
-import { TInsightDiffInstability } from "../entities/TInsightDiffInstability";
 import Loading from "../components/Loading";
-import {
-
-} from "@mui/material";
-import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
-import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
-import { useLocation, useNavigate } from "react-router-dom";
 import MonacoEditor from "@monaco-editor/react";
 
 const ForceGraph2D = lazy(() => import("react-force-graph-2d"));
@@ -50,6 +27,12 @@ const useStyles = makeStyles(() => ({
     display: 'flex',
     height: '100vh',
     flexDirection: 'row',
+  },
+  switch: {
+    position: "absolute",
+    top: "4.5em",
+    right: "1em",
+    paddingLeft: "0.8em",
   },
   editor: {
     width: '45%',
@@ -80,8 +63,17 @@ const useStyles = makeStyles(() => ({
   },
   buttonContainer: {
     marginTop: '16px',
-  }
+    display: 'flex', 
+    justifyContent: 'space-between', 
+    width: '100%',
+    flexWrap: 'wrap',
+  },
+  button: {
+    textTransform: 'none',
+    margin: '0.8px',
+  },
 }));
+
 
 export default function Simulation() {
   const classes = useStyles();
@@ -98,9 +90,10 @@ export default function Simulation() {
   const graphDataRef = useRef<any>();
   const rawGraphDataRef = useRef<string>();
 
-  const [yamlInput, setYamlInput] = useState(() => {
-    return localStorage.getItem("inityamlInput") || "";
-  });
+  const [showEndpoint, setShowEndpoint] = useState(true);
+
+  const [yamlContent, setYamlContent] = useState('');
+  const [editorYamlContent, setEditorYamlContent] = useState(''); // initial value is yamlContent
   const [graphData, setGraphData] = useState<any>();
   const [rawGraphData, setRawGraphData] = useState<any>();
   const [loading, setLoading] = useState(false);
@@ -108,16 +101,20 @@ export default function Simulation() {
   const [graphDifferenceInfo, setGraphDifferenceInfo] = useGraphDifference();
 
   const handleParseYamlClick = async () => {
-    if (!yamlInput) {
+    setYamlContent(editorYamlContent);
+  };
+
+  const loadingGraphByYamlContent = async () => {
+    if (!yamlContent) {
       return;
     }
     setLoading(true);
     try {
-      const { graph, message, resStatus } = await SimulationService.getInstance().getDependencyGraphBySimulateYaml(yamlInput);
+      const { graph, message, resStatus } = await SimulationService.getInstance().getDependencyGraphBySimulateYaml(yamlContent,showEndpoint);
       const nextGraphData = graph;
       if (resStatus >= 400) {
         alert(`Failed to generate dependency graph.\n\n[error message]\n${message}`);
-        console.log(`${message}`)
+        console.error(`${message}`)
       } else if (nextGraphData) {
         const nextRawGraphData = JSON.stringify(nextGraphData);
         if (rawGraphDataRef.current === nextRawGraphData) return;
@@ -134,20 +131,33 @@ export default function Simulation() {
         rawGraphDataRef.current = nextRawGraphData;
         setRawGraphData(JSON.parse(nextRawGraphData));
         setGraphData(DependencyGraphUtils.ProcessData(nextGraphData));
-        localStorage.setItem("inityamlInput", yamlInput);
+        localStorage.setItem("inityamlInput", yamlContent);
       }
     } finally {
       setLoading(false);
     }
   };
 
-
+  const loadYamlContentByCurrentDependency = async () => {
+    setLoading(true);
+    try {
+      const endpointGraphData = await GraphService.getInstance().getDependencyGraph(true);
+      if (endpointGraphData) {
+        const nestYamlContent = await SimulationService.getInstance().getSimulateYamlByEndpointDependencyGraph(endpointGraphData);
+        setYamlContent(nestYamlContent);
+        setEditorYamlContent(nestYamlContent);
+      }
+    } catch (error) {
+      console.error("Failed to generate simulation YAML from the current dependency graph:", error);
+    }finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    if (yamlInput) {
-      handleParseYamlClick();
-    }
-  }, []);
+    loadingGraphByYamlContent();
+  }, [showEndpoint,yamlContent]);
+
 
   /***useEffect for window size control***/
   useEffect(() => {
@@ -173,7 +183,7 @@ export default function Simulation() {
   }, []);
   useEffect(() => {
     if (graphDataRef.current) {
-      graphDataRef.current.zoom(3, 0);
+      graphDataRef.current.zoom(4, 0);
       graphDataRef.current.centerAt(0, 0);
     }
 
@@ -201,10 +211,6 @@ export default function Simulation() {
     };
   }, [isResizing]);
 
-  const handleEditorChange = (value: string | undefined) => {
-    setYamlInput(value || "");
-  };
-
   return (
     <div className={classes.container}>
       <div
@@ -214,8 +220,8 @@ export default function Simulation() {
 
         <MonacoEditor
           className={classes.textField}
-          value={yamlInput}
-          onChange={handleEditorChange}
+          value={yamlContent}
+          onChange={(value) => setEditorYamlContent(value || "")}
           language="yaml"
           theme="light"
           height="80vh"
@@ -234,9 +240,19 @@ export default function Simulation() {
             variant="contained"
             color="primary"
             onClick={handleParseYamlClick}
-            disabled={loading}
+            disabled={loading || !editorYamlContent}
+            className={classes.button}
           >
-            {loading ? 'Parsing...' : 'Go!'}
+            {loading ? 'Loading...' : 'Generate Dependency graph'}
+          </Button>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={loadYamlContentByCurrentDependency}
+            disabled={loading}
+            className={classes.button}
+          >
+            {loading ? 'Loading...' : 'Generate YAML from current dependency graph'}
           </Button>
         </div>
       </div>
@@ -266,6 +282,20 @@ export default function Simulation() {
           </Suspense>
         </div>
       </div>
+
+      <Card className={classes.switch}>
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showEndpoint}
+                  onChange={(e) => setShowEndpoint(e.target.checked)}
+                />
+              }
+              label="Show endpoints"
+            />
+          </FormGroup>
+        </Card>
     </div>
   );
 }

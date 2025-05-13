@@ -144,7 +144,6 @@ export default function DependencyGraph() {
   useEffect(() => {
     const next = (nextData?: TGraphData) => {
       if (nextData) {
-        console.log(JSON.stringify(nextData));
         setEndpointGraphData(nextData);
       }
     };

@@ -20,33 +20,6 @@ const useHoverHighlight = (): [
   return [highlight, setHighlight];
 };
 
-// to compare two dependency graphs
-export type GraphDifferenceInfo = {
-  // display at the Overview area
-  addedNodeIds: string[]; 
-  deletedNodeIds: string[];
-  addedLinkIds: string[]; 
-  deletedLinkIds: string[];
-  diffGraphData: TGraphData;
-};
-
-const useGraphDifference = (): [
-  GraphDifferenceInfo,
-  Dispatch<SetStateAction<GraphDifferenceInfo>>
-] => {
-  const [graphDifference, setGraphDifference] = useState<GraphDifferenceInfo>({
-    addedNodeIds: [],
-    deletedNodeIds: [],
-    addedLinkIds: [],
-    deletedLinkIds: [],
-    diffGraphData: {
-      nodes: [],
-      links: []
-    }
-  });
-  return [graphDifference, setGraphDifference];
-};
-
 export class DependencyGraphUtils {
   private constructor() {}
 
@@ -114,76 +87,6 @@ export class DependencyGraphUtils {
       links,
     };
     return serviceGraph;
-  }
-
-  static CompareTwoGraphData(newData:TGraphData,oldData:TGraphData,showEndpoint:boolean):GraphDifferenceInfo{
-    if (!newData || !oldData){
-      return {
-        addedNodeIds: [],
-        deletedNodeIds: [],
-        addedLinkIds: [],
-        deletedLinkIds: [],
-        diffGraphData: {
-          nodes: [],
-          links: []
-        }
-      }
-    }else{
-      if (!showEndpoint) {
-        newData = this.toServiceDependencyGraph(newData);
-        oldData = this.toServiceDependencyGraph(oldData);
-      }
-
-      // ids of all nodes
-      const nodeIdsInNewData: string[] = newData.nodes.map(node => node.id);
-      const nodeIdsInOldData: string[] = oldData.nodes.map(node => node.id);
-      const addedNodeIds: Set<string> = new Set(nodeIdsInNewData.filter(id => !nodeIdsInOldData.includes(id)));
-      const deletedNodeIds: Set<string> = new Set(nodeIdsInOldData.filter(id => !nodeIdsInNewData.includes(id)));
-
-      // ids of all links excluding external nodes
-      const linkIdsInNewData: string[] = newData.links.map(link => this.TLinkToId(link));
-      const linkIdsInOldData: string[] = oldData.links.map(link => this.TLinkToId(link));
-      const addedLinkIds: Set<string> = new Set(linkIdsInNewData.filter(id => !linkIdsInOldData.includes(id)));
-      const deletedLinkIds: Set<string> = new Set(linkIdsInOldData.filter(id => !linkIdsInNewData.includes(id)));
-
-      const mergedNodes = [
-        ...newData.nodes,
-        ...oldData.nodes
-          .filter(node => deletedNodeIds.has(node.id))
-      ];
-
-      const mergedLinks = [
-        ...newData.links,
-        ...oldData.links
-          .filter(link => deletedLinkIds.has(this.TLinkToId(link)))
-      ];
-
-      const diffGraphData:TGraphData = {
-        nodes: mergedNodes,
-        links: mergedLinks
-      }
-
-      
-      // console.log("CompareTwoGraphData result:",{
-      //   newData:newData,
-      //   oldData:oldData,
-      //   linkIdsInNewData: Array.from(linkIdsInNewData),
-      //   linkIdsInOldData: Array.from(linkIdsInOldData),
-      //   addedNodeIds: Array.from(addedNodeIds),
-      //   deletedNodeIds: Array.from(deletedNodeIds),
-      //   addedLinkIds: Array.from(addedLinkIds),
-      //   deletedLinkIds: Array.from(deletedLinkIds),
-      //   diffGraphData:diffGraphData
-      // })
-
-      return {
-        addedNodeIds: Array.from(addedNodeIds),
-        deletedNodeIds: Array.from(deletedNodeIds),
-        addedLinkIds: Array.from(addedLinkIds),
-        deletedLinkIds: Array.from(deletedLinkIds),
-        diffGraphData:diffGraphData
-      }
-    }
   }
 
   static DrawHexagon(x: any, y: any, r: number, ctx: CanvasRenderingContext2D) {
@@ -294,46 +197,6 @@ export class DependencyGraphUtils {
 
   }
 
-  static PaintNodeRingForShowDifference(
-    node: any,
-    ctx: CanvasRenderingContext2D,
-    isAddedNode: boolean,
-    isDeletedNode: boolean
-  ) {
-    // add ring just for difference nodes
-    if (isAddedNode && isDeletedNode){
-      // do nothing
-    }
-    else if(isAddedNode || isDeletedNode){
-      if (isAddedNode){
-        ctx.fillStyle = 'rgba(0, 255, 0, 0.5)';
-      }
-      else if(isDeletedNode){
-        ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
-      }
-      const { x, y } = node;
-      ctx.beginPath();
-      if (node.id === node.group) {
-        const r = DependencyGraphUtils.GraphBasicSettings.nodeRelSize * 1;
-        DependencyGraphUtils.DrawHexagon(x, y, r, ctx);
-      } else {
-        ctx.arc(
-          x,
-          y,
-          DependencyGraphUtils.GraphBasicSettings.nodeRelSize * 1.65,
-          0,
-          2 * Math.PI,
-          false
-        );
-      }
-      ctx.fill();
-    }
-
-    // paint underlying style on top of ring
-    const color = Color.generateFromString(node.group);
-    DependencyGraphUtils.PaintNode(node, color.hex, ctx);
-  }
-
   static ZoomOnClick(node: any, graphRef: any) {
     if (!graphRef.current) return;
     graphRef.current.centerAt(node.x, node.y, 800);
@@ -342,5 +205,3 @@ export class DependencyGraphUtils {
 }
 
 export { useHoverHighlight };
-
-export { useGraphDifference };

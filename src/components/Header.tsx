@@ -33,6 +33,7 @@ export default function Header() {
   const [isOpen, setOpen] = useState(false);
   const [hasAlert, setHasAlert] = useState(false);
   const navigate = useNavigate();
+  const pageTitle = Config.backendConfig.SimulatorMode ? "KMamiz (Simulator)" : "KMamiz";
 
   useEffect(() => {
     const unSub = AlertManager.getInstance().listen(
@@ -44,6 +45,9 @@ export default function Header() {
 
   const routes = [
     { name: "Dependency Graph", path: "/", icon: <BubbleChart /> },
+    ...(Config.backendConfig.SimulatorMode ? [
+      { name: "DependencyGraph Simulation", path: "/simulate-dependencyGraph", icon: <BubbleChart /> },
+    ] : []),
     { name: "Metrics", path: "/metrics", icon: <StackedLineChart /> },
     { name: "Insights", path: "/insights", icon: <BarChart /> },
     { name: "Endpoints", path: "/endpoints", icon: <LocalOffer /> },
@@ -53,7 +57,6 @@ export default function Header() {
       { name: "Difference", path: "/diff", icon: <Difference /> },
     ] : []),
     ...(Config.backendConfig.SimulatorMode ? [
-      { name: "SimulateDependencyGraph", path: "/simulate-dependencyGraph", icon: <FlashOnIcon /> },
       { name: "Simulation", path: "/simulation", icon: <FlashOnIcon /> },
     ] : []),
   ];
@@ -83,7 +86,7 @@ export default function Header() {
             </List>
           </Drawer>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            KMamiz
+            {pageTitle}
           </Typography>
 
           <Tooltip

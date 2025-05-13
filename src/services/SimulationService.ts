@@ -6,7 +6,7 @@ import { TGraphData } from "../entities/TGraphData";
 export default class SimulationService {
   private static instance?: SimulationService;
   static getInstance = () => this.instance || (this.instance = new this());
-  private constructor() {}
+  private constructor() { }
 
   private readonly prefix = `${Config.apiPrefix}`;
 
@@ -16,21 +16,23 @@ export default class SimulationService {
     return (await res.json()) as T;
   }
 
-  async getDependencyGraphBySimulateYaml(yamlData: string) {
-    const res = await fetch(`${this.prefix}/simulation/yamlToEndpointDependency`, {
+  async getDependencyGraphBySimulateYaml(yamlData: string, showEndpoint: boolean) {
+    const res = await fetch(`${this.prefix}/simulation/yamlToDependency`, {
       method: "POST",
-      body: JSON.stringify({ yamlData }),
+      body: JSON.stringify({
+        yamlData,
+        showEndpoint,
+      }),
       headers: {
         "Content-Type": "application/json",
       },
     });
-    
-    const resBody =  await res.json();
-    console.log("resBody resBody =",JSON.stringify(resBody))
+
+    const resBody = await res.json();
     return {
-      graph:resBody.graph,
-      message:resBody.message,
-      resStatus:res.status
+      graph: resBody.graph,
+      message: resBody.message,
+      resStatus: res.status
     }
   }
 
@@ -42,7 +44,7 @@ export default class SimulationService {
         "Content-Type": "application/json",
       },
     });
-  
+
     if (res.ok) {
       const graph = await res.json();
       return graph;
@@ -60,12 +62,24 @@ export default class SimulationService {
         "Content-Type": "application/json",
       },
     });
-    
-    const resBody =  await res.json();
+
+    const resBody = await res.json();
     return {
-      message:resBody.message,
-      resStatus:res.status
+      message: resBody.message,
+      resStatus: res.status
     }
   }
 
+  async generateStaticYamlFromCurrentData() {
+    const path = `${this.prefix}/simulation/generateStaticYaml`;
+    return await SimulationService.getInstance().get<
+      {
+        staticYamlStr: string,
+        message: string
+      }
+    >(path) || {
+      staticYamlStr: '',
+      message: 'Error while trying to fetching static Simulation Yaml, Please check the response details for more information.'
+    };
+  }
 }

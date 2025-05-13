@@ -1,25 +1,16 @@
 import {
-  Card, FormControlLabel, FormGroup, Switch, Grid, Typography,
-  Box, Button, Tooltip, FormControl, TextareaAutosize,
-  MenuItem, Select, InputLabel, TextField,
+  Card, Grid, Button, Tooltip, TextField,
 } from "@mui/material";
-import { enableTabToIndent } from "indent-textarea";
 import { makeStyles } from "@mui/styles";
 import {
-  lazy,
-  Suspense,
-  useEffect,
-  useLayoutEffect,
-  useRef,
   useState,
 } from "react";
-import ViewportUtils from "../classes/ViewportUtils";
 import SimulationService from "../services/SimulationService";
 import {
 
 } from "@mui/material";
 import MonacoEditor from "@monaco-editor/react";
-import GraphService from "../services/GraphService";
+import DiffComparatorService from "../services/DiffComparatorService";
 
 const useStyles = makeStyles(() => ({
   container: {
@@ -92,15 +83,45 @@ export default function Simulation() {
 
       if (resStatus >= 400) {
         alert(`Failed to simulate data retrival.\n\n[error message]\n${message}`);
-        console.log(`${message}`)
+        console.error(`${message}`)
       } else {
+        setYamlInput("");
         alert(`ok!`);
       }
     } finally {
       setLoading(false);
-      setYamlInput("")
     }
   };
+
+  const handleGenerateYamlClick = async () => {
+    if (!yamlInput) {
+      await fetchStaticYamlStr();
+    } else {
+      const result = window.confirm("There is YAML content currently in the editor,the content will be overwritten. Are you sure?");
+      if (result) {
+        await fetchStaticYamlStr();
+      } else {
+        return;
+      }
+    }
+  };
+  
+  const fetchStaticYamlStr = async () => {
+    setLoading(true);
+    try {
+      const { staticYamlStr, message } = await SimulationService.getInstance().generateStaticYamlFromCurrentData();
+
+      if (message != "ok") {
+        alert(`${message}`);
+        console.error(`${message}`)
+      } else {
+        setYamlInput(staticYamlStr);
+        alert(`ok!`);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const handleEditorChange = (value: string | undefined) => {
     setYamlInput(value || "");
@@ -113,7 +134,7 @@ export default function Simulation() {
       return;
     }
     try {
-      await GraphService.getInstance().addTaggedDiffData(newVersionTagToCreate);
+      await DiffComparatorService.getInstance().addTaggedDiffData(newVersionTagToCreate);
     } catch (error) {
       setErrorMessage(`Failed to create version: ${error}`);
     }
@@ -125,49 +146,43 @@ export default function Simulation() {
         className={classes.editor}
         style={{ width: `100%` }}
       >
+        <Grid container spacing={2}>
 
-        <MonacoEditor
-          className={classes.textField}
-          value={yamlInput}
-          onChange={handleEditorChange}
-          language="yaml"
-          theme="light"
-          height="80vh"
-          options={{
-            minimap: { enabled: false },
-            lineNumbers: "on",
-            wordWrap: "on",
-            tabSize: 2,
-            autoIndent: "advanced",
-            formatOnType: true,
-            suggestOnTriggerCharacters: true,
-          }}
-        />
-        <div className={classes.buttonContainer}>
-
-          <Grid item xs={5} justifyContent="center">
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleParseYamlClick}
-              disabled={loading}
-            >
-              {loading ? 'Processing...' : '開始模擬'}
-            </Button>
+          <Grid item xs={6} justifyContent="center" alignItems="center">
+            <Card variant="outlined" className={classes.actions}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleParseYamlClick}
+                disabled={loading || !yamlInput}
+                sx={{ textTransform: 'none' }}
+              >
+                {loading ? 'Processing...' : 'Start Simulate'}
+              </Button>
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={handleGenerateYamlClick}
+                disabled={loading}
+                sx={{ textTransform: 'none' }}
+              >
+                {loading ? 'Processing...' : 'Generate Yaml from Current Data'}
+              </Button>
+            </Card>
           </Grid>
-          <Grid item xs={7}>
+          <Grid item xs={6}>
             <Card variant="outlined" className={classes.actions}>
               <TextField
                 id="new-version-tag"
                 fullWidth
-                label="New Version"
+                label="Save simulator data as a new version for the comparator in the production environment."
                 variant="outlined"
                 value={newVersionTagToCreate}
                 onChange={(e) => setNewVersionTagToCreate(e.target.value)}
                 error={!!errorMessage}
                 helperText={errorMessage}
               />
-              <Tooltip title="New Version">
+              <Tooltip title="Save simulator data as a new version for the comparator in the production environment.">
                 <Button
                   variant="contained"
                   onClick={() => createNewVersion()}
@@ -179,7 +194,30 @@ export default function Simulation() {
               </Tooltip>
             </Card>
           </Grid>
-        </div>
+
+          <Grid item xs={12}>
+            <MonacoEditor
+              className={classes.textField}
+              value={yamlInput}
+              onChange={handleEditorChange}
+              language="yaml"
+              theme="light"
+              height="75vh"
+              options={{
+                minimap: { enabled: false },
+                lineNumbers: "on",
+                wordWrap: "on",
+                tabSize: 2,
+                autoIndent: "advanced",
+                formatOnType: true,
+                suggestOnTriggerCharacters: true,
+              }}
+            />
+          </Grid>
+        </Grid>
+
+
+
       </div>
     </div>
   );
