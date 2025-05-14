@@ -4,13 +4,18 @@ import {
 import { makeStyles } from "@mui/styles";
 import {
   useState,
+  useEffect,
 } from "react";
 import SimulationService from "../services/SimulationService";
-import {
-
-} from "@mui/material";
+import DataService from "../services/DataService";
+import ViewportUtils from "../classes/ViewportUtils";
 import MonacoEditor from "@monaco-editor/react";
 import DiffComparatorService from "../services/DiffComparatorService";
+
+import Swal from 'sweetalert2'
+import withReactContent from 'sweetalert2-react-content'
+
+const MySwal = withReactContent(Swal);
 
 const useStyles = makeStyles(() => ({
   container: {
@@ -27,13 +32,27 @@ const useStyles = makeStyles(() => ({
     gap: "1em",
     padding: "1em",
   },
+  buttonGroups: {
+    height: '3em',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: '1em',
+    padding: '1em',
+    minHeight: '4.2em',
+  },
+  button: {
+    textTransform: 'none',
+    overflow: 'hidden',
+    whiteSpace: 'nowrap',
+    minHeight: '2em',
+  },
   editor: {
     width: '45%',
     padding: '10px',
     borderRight: '5px solid #ccc',
     display: 'flex',
     flexDirection: 'column',
-    height: '90vh',
+    height: '70vh',
   },
   graphContainer: {
     width: '65%',
@@ -73,7 +92,23 @@ export default function Simulation() {
   const [newVersionTagToCreate, setNewVersionTagToCreate] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const handleParseYamlClick = async () => {
+  /***window size control***/
+  const rwdWidth = 1300
+  const [gridSize, setGridSize] = useState(12);
+
+  /***useEffect for window size control***/
+  useEffect(() => {
+    const unsubscribe = [
+      ViewportUtils.getInstance().subscribe(([vw]) => {
+        setGridSize(vw > rwdWidth ? 6 : 12)
+      }),
+    ];
+    return () => {
+      unsubscribe.forEach((un) => un());
+    };
+  }, []);
+
+  const handleStartSimulateClick = async () => {
     if (!yamlInput) {
       return;
     }
@@ -97,31 +132,106 @@ export default function Simulation() {
     if (!yamlInput) {
       await fetchStaticYamlStr();
     } else {
-      const result = window.confirm("There is YAML content currently in the editor,the content will be overwritten. Are you sure?");
-      if (result) {
+      const result = await MySwal.fire({
+        icon: 'warning',
+        title: 'Are you sure?',
+        text: 'After confirmation, the YAML content in the editor will be overwritten.',
+        showCancelButton: true,
+        confirmButtonText: 'Confirm',
+        confirmButtonColor: '#d33',
+        cancelButtonText: 'Cancel',
+      });
+
+      if (result.isConfirmed) {
         await fetchStaticYamlStr();
       } else {
         return;
       }
     }
   };
-  
+
+  const handleCloneDataClick = async () => {
+    const result = await MySwal.fire({
+      icon: 'warning',
+      title: 'Are you sure?',
+      html: `
+        It will clone the simulator data from the KMamiz production environment.
+         <strong style="color: red;">All data in the simulator will be overwritten!</strong><br />
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Confirm',
+      confirmButtonColor: '#d33',
+      cancelButtonText: 'Cancel',
+    });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+    setLoading(true);
+
+    try {
+      await MySwal.fire({
+        title: <p>Cloning data...</p>,
+        didOpen: () => {
+          MySwal.showLoading();
+        },
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        backdrop: true,
+        didRender: async () => {
+          const { isSuccess, message } =
+            await DataService.getInstance().cloneDataFromProductionService();
+
+          if (isSuccess) {
+            await MySwal.fire({
+              icon: 'success',
+              title: 'Success',
+            });
+          } else {
+            await MySwal.fire({
+              icon: 'error',
+              title: 'Failed',
+              text: message,
+            });
+          }
+        },
+      });
+    } catch (error) {
+      console.error('Error during cloning process:', error);
+      await MySwal.fire({
+        icon: 'error',
+        title: 'An error occurred',
+        text: 'Something went wrong during the cloning process. Please try again.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchStaticYamlStr = async () => {
     setLoading(true);
     try {
       const { staticYamlStr, message } = await SimulationService.getInstance().generateStaticYamlFromCurrentData();
 
-      if (message != "ok") {
-        alert(`${message}`);
-        console.error(`${message}`)
+      if (message !== 'ok') {
+        await MySwal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: message,
+        });
+        console.error(message);
       } else {
         setYamlInput(staticYamlStr);
-        alert(`ok!`);
+        await MySwal.fire({
+          icon: 'success',
+          title: 'Success',
+        });
       }
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   const handleEditorChange = (value: string | undefined) => {
     setYamlInput(value || "");
@@ -148,29 +258,46 @@ export default function Simulation() {
       >
         <Grid container spacing={2}>
 
-          <Grid item xs={6} justifyContent="center" alignItems="center">
-            <Card variant="outlined" className={classes.actions}>
+          <Grid item xs={gridSize} justifyContent="center" alignItems="center">
+            <Card variant="outlined" className={classes.buttonGroups}>
               <Button
                 variant="contained"
                 color="primary"
-                onClick={handleParseYamlClick}
+                onClick={handleStartSimulateClick}
                 disabled={loading || !yamlInput}
-                sx={{ textTransform: 'none' }}
+                className={classes.button}
               >
-                {loading ? 'Processing...' : 'Start Simulate'}
+                {loading ? 'Loading...' : 'Start Simulate'}
               </Button>
               <Button
                 variant="contained"
                 color="secondary"
                 onClick={handleGenerateYamlClick}
                 disabled={loading}
-                sx={{ textTransform: 'none' }}
+                className={classes.button}
               >
-                {loading ? 'Processing...' : 'Generate Yaml from Current Data'}
+                {loading ? 'Loading...' : 'Generate Yaml from Current Data'}
+              </Button>
+              <Button
+                variant="contained"
+                color="error"
+                onClick={handleCloneDataClick}
+                disabled={loading}
+                className={classes.button}
+              >
+                {loading ? 'Loading...' : 'clone data from KMamiz'}
+              </Button>
+              <Button
+                variant="contained"
+                color="success"
+                disabled={loading}
+                className={classes.button}
+              >
+                {loading ? 'Loading...' : 'Export Simulation Report'}
               </Button>
             </Card>
           </Grid>
-          <Grid item xs={6}>
+          <Grid item xs={gridSize}>
             <Card variant="outlined" className={classes.actions}>
               <TextField
                 id="new-version-tag"
@@ -189,12 +316,11 @@ export default function Simulation() {
                   disabled={!newVersionTagToCreate || loading}
 
                 >
-                  {loading ? 'Processing...' : 'Create'}
+                  {loading ? 'Loading...' : 'Create'}
                 </Button>
               </Tooltip>
             </Card>
           </Grid>
-
           <Grid item xs={12}>
             <MonacoEditor
               className={classes.textField}

@@ -19,6 +19,40 @@ export default class DataService {
     return (await res.json()) as T;
   }
 
+  async cloneDataFromProductionService(): Promise<{
+    isSuccess: boolean;
+    message: string;
+  }> {
+    if (Config.backendConfig.SimulatorMode) {
+      const path = `${this.prefix}/data/cloneDataFromProductionService`;
+      const res = await fetch(path, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const { message } = await res.json();
+
+      if (res.status === 201) {
+        return {
+          isSuccess: true,
+          message: message || "ok"
+        };
+      } else {
+        return {
+          isSuccess: false,
+          message: message || "Internal Server Error"
+        };
+      }
+    } else {
+      return {
+        isSuccess: false,
+        message: "The current server is not running in simulator mode."
+      };
+    }
+
+  }
+
   async getAggregatedData(namespace?: string) {
     const path = `${this.prefix}/data/aggregate${namespace ? "/" + encodeURIComponent(namespace) : ""
       }`;
