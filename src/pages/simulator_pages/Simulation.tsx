@@ -6,11 +6,11 @@ import {
   useState,
   useEffect,
 } from "react";
-import SimulationService from "../services/SimulationService";
-import DataService from "../services/DataService";
-import ViewportUtils from "../classes/ViewportUtils";
+import SimulationService from "../../services/SimulationService";
+import DataService from "../../services/DataService";
+import ViewportUtils from "../../classes/ViewportUtils";
 import MonacoEditor from "@monaco-editor/react";
-import DiffComparatorService from "../services/DiffComparatorService";
+import DiffComparatorService from "../../services/DiffComparatorService";
 
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
