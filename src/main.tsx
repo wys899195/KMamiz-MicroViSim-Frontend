@@ -14,8 +14,8 @@ const Interfaces = lazy(() => import("./pages/Interfaces"));
 const Swagger = lazy(() => import("./pages/Swagger"));
 const Difference = lazy(() => import("./pages/Diff"));
 
-const SimulateDependencyGraph = lazy(() => import("./simulator_pages/SimulateDependencyGraph"));
-const Simulation = lazy(() => import("./simulator_pages/Simulation"));
+const SimulateDependencyGraph = lazy(() => import("./pages/simulator_pages/SimulateDependencyGraph"));
+const Simulation = lazy(() => import("./pages/simulator_pages/Simulation"));
 
 ReactDOM.render(
   <React.StrictMode>

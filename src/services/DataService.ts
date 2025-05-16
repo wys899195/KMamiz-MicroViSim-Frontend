@@ -3,6 +3,7 @@ import { TAggregatedData } from "../entities/TAggregatedData";
 import IEndpointDataType from "../entities/TEndpointDataType";
 import { TEndpointLabel, TEndpointLabelType } from "../entities/TEndpointLabel";
 import { THistoricalData } from "../entities/THistoricalData";
+import { TServiceDisplayInfo } from "../entities/TServiceDisplayInfo";
 import { TTaggedInterface } from "../entities/TTaggedInterface";
 import { DataView } from "./DataView";
 
@@ -161,6 +162,17 @@ export default class DataService {
       }?notBefore=${notBefore}${filter ? `&filter=${encodeURIComponent(filter)}` : ""
       }`;
     return DataView.getInstance().subscribe<TAggregatedData>(url, (_, data) => {
+      next(data);
+    });
+  }
+
+  subscribeToServiceDisplayInfo(
+    next: (data?: TServiceDisplayInfo[]) => void,
+    filter?: string,
+  ) {
+    const url = `${this.prefix}/data/serviceDisplayInfo?${filter ? `filter=${encodeURIComponent(filter)}` : ""
+      }`;
+    return DataView.getInstance().subscribe<TServiceDisplayInfo[]>(url, (_, data) => {
       next(data);
     });
   }
