@@ -76,17 +76,6 @@ export default class DataService {
     );
   }
 
-  async getEndpointDataTypesMap(uniqueLabelNames: string[]) {
-    const query = uniqueLabelNames
-      .map(name => `labelNames=${encodeURIComponent(name)}`)
-      .join("&");
-    const path = `${this.prefix}/data/dataTypesMap?${query}`;
-    return (
-      (await DataService.getInstance().get<Record<string, IEndpointDataType>>(path)) ||
-      {}
-    );
-  }
-
   async getLabelMap() {
     const path = `${this.prefix}/data/label`;
     return (

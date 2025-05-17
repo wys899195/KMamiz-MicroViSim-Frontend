@@ -93,7 +93,7 @@ export default function Simulation() {
   const [errorMessage, setErrorMessage] = useState("");
 
   /***window size control***/
-  const rwdWidth = 1300
+  const rwdWidth = 1000;
   const [gridSize, setGridSize] = useState(12);
 
   /***useEffect for window size control***/
@@ -134,7 +134,7 @@ export default function Simulation() {
     } else {
       const result = await MySwal.fire({
         icon: 'warning',
-        title: 'Are you sure?',
+        title: 'This action cannot be undone. Are you sure you want to proceed?',
         text: 'After confirmation, the YAML content in the editor will be overwritten.',
         showCancelButton: true,
         confirmButtonText: 'Confirm',
@@ -153,10 +153,10 @@ export default function Simulation() {
   const handleCloneDataClick = async () => {
     const result = await MySwal.fire({
       icon: 'warning',
-      title: 'Are you sure?',
+      title: 'This action cannot be undone. Are you sure you want to proceed?',
       html: `
-        It will clone the simulator data from the KMamiz production environment.
-         <strong style="color: red;">All data in the simulator will be overwritten!</strong><br />
+        The simulator will clone data from the KMamiz production environment, and 
+         <strong style="color: red;">all existing data in the simulator will be overwritten!</strong><br />
       `,
       showCancelButton: true,
       confirmButtonText: 'Confirm',
@@ -201,8 +201,8 @@ export default function Simulation() {
       console.error('Error during cloning process:', error);
       await MySwal.fire({
         icon: 'error',
-        title: 'An error occurred',
-        text: 'Something went wrong during the cloning process. Please try again.',
+        title: 'An unexpected error occurred',
+        text: `Something went wrong while creating the version: ${error}`,
       });
     } finally {
       setLoading(false);
@@ -243,11 +243,46 @@ export default function Simulation() {
       setErrorMessage(`Version name cannot be set to "${latestVersionStr}"`);
       return;
     }
+    setLoading(true);
     try {
-      await DiffComparatorService.getInstance().addTaggedDiffData(newVersionTagToCreate);
+      await MySwal.fire({
+        title: 'Creating new version...',
+        didOpen: () => {
+          MySwal.showLoading();
+        },
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        backdrop: true,
+        didRender: async () => {
+          const isSuccess = await DiffComparatorService.getInstance().addTaggedDiffData(newVersionTagToCreate);
+
+          if (isSuccess) {
+            await MySwal.fire({
+              icon: 'success',
+              title: 'Version Created!',
+              html: `In the comparator of the KMamiz production environment, you can view the system architecture of version <strong style="color: blue;">"[from Simulator] ${newVersionTagToCreate}"</strong>. `
+            });
+            setNewVersionTagToCreate("");
+          } else {
+            await MySwal.fire({
+              icon: 'error',
+              title: 'Failed',
+              text: `Failed to create version`,
+            });
+          }
+        },
+      });
+
     } catch (error) {
-      setErrorMessage(`Failed to create version: ${error}`);
-    }
+      await MySwal.fire({
+        icon: 'error',
+        title: 'An unexpected error occurred',
+        text: `Something went wrong while creating the version: ${error}`,
+      });
+    } finally {
+      setLoading(false);
+    };
   };
 
   return (

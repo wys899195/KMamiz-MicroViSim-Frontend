@@ -8,28 +8,38 @@ export class DiffDependencyGraphFactory {
     graphDifferenceInfo: GraphDifferenceInfo,
     showDiff: boolean
   ) {
-    const { addedNodeIds, deletedNodeIds, addedLinkIds, deletedLinkIds } = graphDifferenceInfo;
+    const { addedNodeIds, deletedNodeIds, addedLinkIds, deletedLinkIds, changedEndpointNodesId } = graphDifferenceInfo;
+    const getNodeRingType = (nodeId: string): "added" | "deleted" | "changed" | "default" => {
+      if (addedNodeIds.includes(nodeId)) return "added";
+      if (deletedNodeIds.includes(nodeId)) return "deleted";
+      if (changedEndpointNodesId.includes(nodeId)) return "changed";
+      return "default";
+    };
+    const getLinkId = (link: any): string =>
+      DependencyGraphUtils.TLinkToId({ source: link.source.id, target: link.target.id });
+
+
     if (showDiff) {
       return {
         ...DependencyGraphUtils.GraphBasicSettings,
         linkDirectionalArrowLength: () => 3,
         linkWidth: (link: any) =>
-          addedLinkIds.includes(DependencyGraphUtils.TLinkToId({ source: link.source.id, target: link.target.id }))
-            || deletedLinkIds.includes(DependencyGraphUtils.TLinkToId({ source: link.source.id, target: link.target.id }))
+          addedLinkIds.includes(getLinkId(link))
+            || deletedLinkIds.includes(getLinkId(link))
             ? 1.5 : 1,
         linkDirectionalParticleWidth: (link: any) =>
           4,
         linkColor: (link: any) => {
-          if (addedLinkIds.includes(DependencyGraphUtils.TLinkToId({ source: link.source.id, target: link.target.id }))) {
+          if (addedLinkIds.includes(getLinkId(link))) {
             return 'rgba(0, 255, 0, 1)';
           }
-          if (deletedLinkIds.includes(DependencyGraphUtils.TLinkToId({ source: link.source.id, target: link.target.id }))) {
+          if (deletedLinkIds.includes(getLinkId(link))) {
             return 'rgba(255, 0, 0, 1)';
           }
           return '';
         },
         linkLineDash: (link: any) => {
-          if (deletedLinkIds.includes(DependencyGraphUtils.TLinkToId({ source: link.source.id, target: link.target.id }))) {
+          if (deletedLinkIds.includes(getLinkId(link))) {
             return [2, 2];
           }
           return [];
@@ -39,8 +49,7 @@ export class DiffDependencyGraphFactory {
           DiffDisplayUtils.PaintNodeRingForShowDifference(
             node,
             ctx,
-            addedNodeIds.includes(node.id),
-            deletedNodeIds.includes(node.id)
+            getNodeRingType(node.id)
           ),
 
         onNodeClick: (node: any) => { },
@@ -58,8 +67,7 @@ export class DiffDependencyGraphFactory {
           DiffDisplayUtils.PaintNodeRingForShowDifference(
             node,
             ctx,
-            false,
-            false
+            "default"
           ),
         onNodeClick: (node: any) => { },
         onNodeHover: (node: any) => { },

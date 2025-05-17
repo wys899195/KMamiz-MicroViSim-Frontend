@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useState } from "react";
 import { TGraphData } from "../entities/TGraphData";
 import { Color } from "./ColorUtils";
-import {DependencyGraphUtils} from "./DependencyGraphUtils"
+import { DependencyGraphUtils } from "./DependencyGraphUtils"
 
 import { TTotalServiceInterfaceCohesion } from "../entities/TTotalServiceInterfaceCohesion";
 import { TServiceCoupling } from "../entities/TServiceCoupling";
@@ -9,16 +9,22 @@ import { TServiceInstability } from "../entities/TServiceInstability";
 import { TInsightDiffCohesion } from "../entities/TInsightDiffCohesion";
 import { TInsightDiffCoupling } from "../entities/TInsightDiffCoupling";
 import { TInsightDiffInstability } from "../entities/TInsightDiffInstability";
+import TEndpointDataType from "../entities/TEndpointDataType";
 
 // to compare two dependency graphs
 export type GraphDifferenceInfo = {
   // display at the Overview area
-  addedNodeIds: string[]; 
+  addedNodeIds: string[];
   deletedNodeIds: string[];
-  addedLinkIds: string[]; 
+  addedLinkIds: string[];
   deletedLinkIds: string[];
   diffGraphData: TGraphData;
+
+  diffInfoMap: Map<string, EndpointDataTypeDifferenceInfo>;
+  changedEndpointNodesId: string[];
 };
+
+type TNodeRingType = "added" | "deleted" | "changed" | "default";
 
 const useGraphDifference = (): [
   GraphDifferenceInfo,
@@ -32,16 +38,32 @@ const useGraphDifference = (): [
     diffGraphData: {
       nodes: [],
       links: []
-    }
+    },
+    diffInfoMap: new Map<string, EndpointDataTypeDifferenceInfo>(),
+    changedEndpointNodesId: [],
   });
   return [graphDifference, setGraphDifference];
 };
 
-export class DiffDisplayUtils {
-  private constructor() {}
+// to compare each endpoint datatype in two dependency graphs
+type EndpointDataTypeDifferenceInfo = {
+  isRequestSchemaEqual: boolean;
+  isRequestContentTypeEqual: boolean;
+  responseSchemaDiffStatusCodes: string[];
+  responseContentTypeDiffStatusCodes: string[];
+}
 
-  static CompareTwoGraphData(newData:TGraphData,oldData:TGraphData,showEndpoint:boolean):GraphDifferenceInfo{
-    if (!newData || !oldData){
+
+export class DiffDisplayUtils {
+  private constructor() { }
+
+  static CompareTwoGraphData(
+    newData: TGraphData,
+    oldData: TGraphData,
+    oldEndpointDatatypeMap: Record<string, TEndpointDataType>,
+    newEndpointDatatypeMap: Record<string, TEndpointDataType>,
+  ): GraphDifferenceInfo {
+    if (!newData || !oldData) {
       return {
         addedNodeIds: [],
         deletedNodeIds: [],
@@ -50,14 +72,11 @@ export class DiffDisplayUtils {
         diffGraphData: {
           nodes: [],
           links: []
-        }
+        },
+        diffInfoMap: new Map<string, EndpointDataTypeDifferenceInfo>(),
+        changedEndpointNodesId: [],
       }
-    }else{
-      if (!showEndpoint) {
-        newData = DependencyGraphUtils.toServiceDependencyGraph(newData);
-        oldData = DependencyGraphUtils.toServiceDependencyGraph(oldData);
-      }
-
+    } else {
       // ids of all nodes
       const nodeIdsInNewData: string[] = newData.nodes.map(node => node.id);
       const nodeIdsInOldData: string[] = oldData.nodes.map(node => node.id);
@@ -82,12 +101,14 @@ export class DiffDisplayUtils {
           .filter(link => deletedLinkIds.has(DependencyGraphUtils.TLinkToId(link)))
       ];
 
-      const diffGraphData:TGraphData = {
+      const diffGraphData: TGraphData = {
         nodes: mergedNodes,
         links: mergedLinks
       }
 
-      
+      const { diffInfoMap, changedEndpointNodesId } = this.CompareDataTypeDifferenceInfoInTwoGraph(oldEndpointDatatypeMap, newEndpointDatatypeMap);
+      // console.log("changedEndpointNodesId=",JSON.stringify(changedEndpointNodesId,null,2));
+      // console.log("diffInfoMap=",diffInfoMap);
       // console.log("CompareTwoGraphData result:",{
       //   newData:newData,
       //   oldData:oldData,
@@ -97,7 +118,9 @@ export class DiffDisplayUtils {
       //   deletedNodeIds: Array.from(deletedNodeIds),
       //   addedLinkIds: Array.from(addedLinkIds),
       //   deletedLinkIds: Array.from(deletedLinkIds),
-      //   diffGraphData:diffGraphData
+      //   diffGraphData:diffGraphData,
+      //   diffInfoMap:diffInfoMap,
+      //   changedEndpointNodesId:changedEndpointNodesId
       // })
 
       return {
@@ -105,27 +128,117 @@ export class DiffDisplayUtils {
         deletedNodeIds: Array.from(deletedNodeIds),
         addedLinkIds: Array.from(addedLinkIds),
         deletedLinkIds: Array.from(deletedLinkIds),
-        diffGraphData:diffGraphData
+        diffGraphData: diffGraphData,
+        diffInfoMap: diffInfoMap,
+        changedEndpointNodesId: changedEndpointNodesId
       }
     }
+  }
+
+  private static CompareDataTypeDifferenceInfoInTwoGraph(
+    oldEndpointDatatypeMap: Record<string, TEndpointDataType>,
+    newEndpointDatatypeMap: Record<string, TEndpointDataType>
+  ) {
+    console.log("oldEndpointDatatypeMap=",JSON.stringify(oldEndpointDatatypeMap,null,2));
+    console.log("newEndpointDatatypeMap=",JSON.stringify(newEndpointDatatypeMap,null,2));
+    if (Object.keys(oldEndpointDatatypeMap).length === 0 || Object.keys(newEndpointDatatypeMap).length === 0) {
+      return {
+        diffInfoMap: new Map<string, EndpointDataTypeDifferenceInfo>(),
+        changedEndpointNodesId: [],
+      }
+    }
+    const diffInfoMap = new Map<string, EndpointDataTypeDifferenceInfo>();
+    const changedEndpointNodesId = new Set<string>();
+    for (const endpointId in newEndpointDatatypeMap) {
+      if (endpointId in oldEndpointDatatypeMap) {
+        const oldEndpointDatatype = oldEndpointDatatypeMap[endpointId];
+        const newEndpointDatatype = newEndpointDatatypeMap[endpointId];
+        const diffInfo: EndpointDataTypeDifferenceInfo = {
+          isRequestSchemaEqual: true,
+          isRequestContentTypeEqual: true,
+          responseSchemaDiffStatusCodes: [],
+          responseContentTypeDiffStatusCodes: [],
+        };
+
+        // compare requestSchema & requestContentType
+        const old200Schema = oldEndpointDatatype.schemas.find(s => s.status === "200");
+        const new200Schema = newEndpointDatatype.schemas.find(s => s.status === "200");
+        if (old200Schema && new200Schema) {
+          if ((old200Schema.requestSchema || "") !== (new200Schema.requestSchema || "")) {
+            diffInfo.isRequestSchemaEqual = false;
+          }
+          if ((old200Schema.requestContentType || "") !== (new200Schema.requestContentType || "")) {
+            diffInfo.isRequestContentTypeEqual = false;
+          }
+        } else if (old200Schema || new200Schema) {
+          // If one exists but the other does not, it is still considered change
+          diffInfo.isRequestSchemaEqual = false;
+          diffInfo.isRequestContentTypeEqual = false;
+        }
+
+        // Compare responseSchema and responseContentType for each status code
+        const allStatuses = new Set<string>();
+        oldEndpointDatatype.schemas.forEach(s => allStatuses.add(s.status));
+        newEndpointDatatype.schemas.forEach(s => allStatuses.add(s.status));
+        // console.log(allStatuses);
+        for (const status of allStatuses) {
+          const oldSchema = oldEndpointDatatype.schemas.find(s => s.status === status);
+          const newSchema = newEndpointDatatype.schemas.find(s => s.status === status);
+          // console.log(status)
+          // console.log(oldSchema);
+          // console.log(newSchema);
+          // compare responseSchema
+          if (oldSchema && newSchema) {
+            if ((oldSchema.responseSchema || "") !== (newSchema.responseSchema || "")) {
+              diffInfo.responseSchemaDiffStatusCodes.push(status);
+            }
+            if ((oldSchema.requestContentType || "") !== (newSchema.requestContentType || "")) {
+              diffInfo.responseContentTypeDiffStatusCodes.push(status);
+            }
+          } else {
+            // If one exists but the other does not, it is still considered change
+            // console.log("1234")
+            diffInfo.responseSchemaDiffStatusCodes.push(status);
+            diffInfo.responseContentTypeDiffStatusCodes.push(status);
+          }
+        }
+
+        diffInfoMap.set(endpointId, diffInfo);
+
+        // If there is any difference in the datatype between the two endpoints, record its id into changedEndpointNodesId
+        if (
+          !diffInfo.isRequestSchemaEqual ||
+          !diffInfo.isRequestContentTypeEqual ||
+          diffInfo.responseSchemaDiffStatusCodes.length > 0 ||
+          diffInfo.responseContentTypeDiffStatusCodes.length > 0
+        ) {
+          changedEndpointNodesId.add(endpointId);
+        }
+
+      }
+    }
+
+    return {
+      diffInfoMap: diffInfoMap,
+      changedEndpointNodesId: Array.from(changedEndpointNodesId),
+    };
   }
 
   static PaintNodeRingForShowDifference(
     node: any,
     ctx: CanvasRenderingContext2D,
-    isAddedNode: boolean,
-    isDeletedNode: boolean
+    nodeRingType: TNodeRingType
   ) {
     // add ring just for difference nodes
-    if (isAddedNode && isDeletedNode){
-      // do nothing
-    }
-    else if(isAddedNode || isDeletedNode){
-      if (isAddedNode){
+    if (nodeRingType !== "default") {
+      if (nodeRingType == "added") {
         ctx.fillStyle = 'rgba(0, 255, 0, 0.5)';
       }
-      else if(isDeletedNode){
+      else if (nodeRingType == "deleted") {
         ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+      }
+      else if (nodeRingType == "changed") {
+        ctx.fillStyle = 'rgba(255, 255, 0, 0.5)';
       }
       const { x, y } = node;
       ctx.beginPath();
