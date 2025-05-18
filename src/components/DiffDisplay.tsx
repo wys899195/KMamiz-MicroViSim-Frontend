@@ -302,7 +302,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
     const instabilityData = data.instabilityData;
 
     // get raw endpointDataTypesMap data
-    const endpointDataTypesMap = data.endpointDataTypes;
+    const endpointDataTypesMap = data.endpointDataTypesMap;
 
     // set graph data
     if (endpointGraph) {

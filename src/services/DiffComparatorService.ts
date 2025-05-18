@@ -60,7 +60,7 @@ export default class DiffComparatorService {
       cohesionData: [],
       couplingData: [],
       instabilityData: [],
-      endpointDataTypes: {},
+      endpointDataTypesMap: {},
     };
   }
 

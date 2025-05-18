@@ -12,7 +12,7 @@ export type TTaggedDiffData = {
   cohesionData:TTotalServiceInterfaceCohesion[];
   couplingData:TServiceCoupling[];
   instabilityData:TServiceInstability[];
-  endpointDataTypes: Record<string, TEndpointDataType>;
+  endpointDataTypesMap: Record<string, TEndpointDataType>;
 };
 
 export type TTaggedDiffDataWithTwoGraph = {
@@ -21,7 +21,7 @@ export type TTaggedDiffDataWithTwoGraph = {
   cohesionData:TTotalServiceInterfaceCohesion[];
   couplingData:TServiceCoupling[];
   instabilityData:TServiceInstability[];
-  endpointDataTypes: Record<string, TEndpointDataType>;
+  endpointDataTypesMap: Record<string, TEndpointDataType>;
 };
 
 export type TagWithTime = {
