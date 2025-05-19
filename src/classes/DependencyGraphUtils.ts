@@ -21,10 +21,10 @@ const useHoverHighlight = (): [
 };
 
 export class DependencyGraphUtils {
-  private constructor() {}
+  constructor() {}
 
   static readonly GraphBasicSettings = {
-    linkDirectionalArrowColor: () => "dimgray",
+    linkDirectionalArrowColor: () => "rgba(105, 105, 105, 1)",
     // linkDirectionalParticles: 1,
     linkDirectionalArrowRelPos: 1,
     nodeRelSize: 4,
@@ -58,10 +58,6 @@ export class DependencyGraphUtils {
       });
     });
     return graphData;
-  }
-
-  static TLinkToId(link:TLink):string {
-    return `${link.source}==>${link.target}`
   }
 
   static toServiceDependencyGraph(endpointGraph:TGraphData){

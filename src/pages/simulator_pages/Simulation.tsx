@@ -15,7 +15,7 @@ import DiffComparatorService from "../../services/DiffComparatorService";
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
 
-const MySwal = withReactContent(Swal);
+const SwalHandler = withReactContent(Swal);
 
 const useStyles = makeStyles(() => ({
   container: {
@@ -132,7 +132,7 @@ export default function Simulation() {
     if (!yamlInput) {
       await fetchStaticYamlStr();
     } else {
-      const result = await MySwal.fire({
+      const result = await SwalHandler.fire({
         icon: 'warning',
         title: 'This action cannot be undone. Are you sure you want to proceed?',
         text: 'After confirmation, the YAML content in the editor will be overwritten.',
@@ -151,7 +151,7 @@ export default function Simulation() {
   };
 
   const handleCloneDataClick = async () => {
-    const result = await MySwal.fire({
+    const result = await SwalHandler.fire({
       icon: 'warning',
       title: 'This action cannot be undone. Are you sure you want to proceed?',
       html: `
@@ -170,10 +170,10 @@ export default function Simulation() {
     setLoading(true);
 
     try {
-      await MySwal.fire({
+      await SwalHandler.fire({
         title: <p>Cloning data...</p>,
         didOpen: () => {
-          MySwal.showLoading();
+          SwalHandler.showLoading();
         },
         allowOutsideClick: false,
         allowEscapeKey: false,
@@ -184,12 +184,12 @@ export default function Simulation() {
             await DataService.getInstance().cloneDataFromProductionService();
 
           if (isSuccess) {
-            await MySwal.fire({
+            await SwalHandler.fire({
               icon: 'success',
               title: 'Success',
             });
           } else {
-            await MySwal.fire({
+            await SwalHandler.fire({
               icon: 'error',
               title: 'Failed',
               text: message,
@@ -199,10 +199,10 @@ export default function Simulation() {
       });
     } catch (error) {
       console.error('Error during cloning process:', error);
-      await MySwal.fire({
+      await SwalHandler.fire({
         icon: 'error',
-        title: 'An unexpected error occurred',
-        text: `Something went wrong while creating the version: ${error}`,
+        title: 'Unexpected Error',
+        text: `An unexpected error occurred while creating the version: ${error}`,
       });
     } finally {
       setLoading(false);
@@ -215,7 +215,7 @@ export default function Simulation() {
       const { staticYamlStr, message } = await SimulationService.getInstance().generateStaticYamlFromCurrentData();
 
       if (message !== 'ok') {
-        await MySwal.fire({
+        await SwalHandler.fire({
           icon: 'error',
           title: 'Error',
           text: message,
@@ -223,7 +223,7 @@ export default function Simulation() {
         console.error(message);
       } else {
         setYamlInput(staticYamlStr);
-        await MySwal.fire({
+        await SwalHandler.fire({
           icon: 'success',
           title: 'Success',
         });
@@ -245,10 +245,10 @@ export default function Simulation() {
     }
     setLoading(true);
     try {
-      await MySwal.fire({
+      await SwalHandler.fire({
         title: 'Creating new version...',
         didOpen: () => {
-          MySwal.showLoading();
+          SwalHandler.showLoading();
         },
         allowOutsideClick: false,
         allowEscapeKey: false,
@@ -258,14 +258,14 @@ export default function Simulation() {
           const isSuccess = await DiffComparatorService.getInstance().addTaggedDiffData(newVersionTagToCreate);
 
           if (isSuccess) {
-            await MySwal.fire({
+            await SwalHandler.fire({
               icon: 'success',
               title: 'Version Created!',
               html: `In the comparator of the KMamiz production environment, you can view the system architecture of version <strong style="color: blue;">"[from Simulator] ${newVersionTagToCreate}"</strong>. `
             });
             setNewVersionTagToCreate("");
           } else {
-            await MySwal.fire({
+            await SwalHandler.fire({
               icon: 'error',
               title: 'Failed',
               text: `Failed to create version`,
@@ -275,7 +275,7 @@ export default function Simulation() {
       });
 
     } catch (error) {
-      await MySwal.fire({
+      await SwalHandler.fire({
         icon: 'error',
         title: 'An unexpected error occurred',
         text: `Something went wrong while creating the version: ${error}`,

@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction, useState } from "react";
-import { TGraphData } from "../entities/TGraphData";
+import { TGraphData, TLink } from "../entities/TGraphData";
 import { Color } from "./ColorUtils";
 import { DependencyGraphUtils } from "./DependencyGraphUtils"
 
@@ -54,14 +54,23 @@ type EndpointDataTypeDifferenceInfo = {
 }
 
 
-export class DiffDisplayUtils {
-  private constructor() { }
+export class DiffDisplayUtils extends DependencyGraphUtils {
+
+  static readonly DiffGraphBasicSettings = {
+    // linkDirectionalParticles: 1,
+    linkDirectionalArrowRelPos: 1,
+    nodeRelSize: 4,
+    // nodeAutoColorBy: "group",
+    nodePointerAreaPaint: DiffDisplayUtils.PaintNode,
+    linkLabel: (d: any) => `${d.source.name} ➔ ${d.target.name}`,
+  };
 
   static CompareTwoGraphData(
     newData: TGraphData,
     oldData: TGraphData,
     oldEndpointDatatypeMap: Record<string, TEndpointDataType>,
     newEndpointDatatypeMap: Record<string, TEndpointDataType>,
+    showEndpoint: boolean
   ): GraphDifferenceInfo {
     if (!newData || !oldData) {
       return {
@@ -77,6 +86,10 @@ export class DiffDisplayUtils {
         changedEndpointNodesId: [],
       }
     } else {
+      if (!showEndpoint) {
+        newData = DependencyGraphUtils.toServiceDependencyGraph(newData);
+        oldData = DependencyGraphUtils.toServiceDependencyGraph(oldData);
+      }
       // ids of all nodes
       const nodeIdsInNewData: string[] = newData.nodes.map(node => node.id);
       const nodeIdsInOldData: string[] = oldData.nodes.map(node => node.id);
@@ -84,8 +97,8 @@ export class DiffDisplayUtils {
       const deletedNodeIds: Set<string> = new Set(nodeIdsInOldData.filter(id => !nodeIdsInNewData.includes(id)));
 
       // ids of all links excluding external nodes
-      const linkIdsInNewData: string[] = newData.links.map(link => DependencyGraphUtils.TLinkToId(link));
-      const linkIdsInOldData: string[] = oldData.links.map(link => DependencyGraphUtils.TLinkToId(link));
+      const linkIdsInNewData: string[] = newData.links.map(link => DiffDisplayUtils.TLinkToId(link));
+      const linkIdsInOldData: string[] = oldData.links.map(link => DiffDisplayUtils.TLinkToId(link));
       const addedLinkIds: Set<string> = new Set(linkIdsInNewData.filter(id => !linkIdsInOldData.includes(id)));
       const deletedLinkIds: Set<string> = new Set(linkIdsInOldData.filter(id => !linkIdsInNewData.includes(id)));
 
@@ -98,7 +111,7 @@ export class DiffDisplayUtils {
       const mergedLinks = [
         ...newData.links,
         ...oldData.links
-          .filter(link => deletedLinkIds.has(DependencyGraphUtils.TLinkToId(link)))
+          .filter(link => deletedLinkIds.has(DiffDisplayUtils.TLinkToId(link)))
       ];
 
       const diffGraphData: TGraphData = {
@@ -139,8 +152,8 @@ export class DiffDisplayUtils {
     oldEndpointDatatypeMap: Record<string, TEndpointDataType>,
     newEndpointDatatypeMap: Record<string, TEndpointDataType>
   ) {
-    console.log("oldEndpointDatatypeMap=",JSON.stringify(oldEndpointDatatypeMap,null,2));
-    console.log("newEndpointDatatypeMap=",JSON.stringify(newEndpointDatatypeMap,null,2));
+    // console.log("oldEndpointDatatypeMap=", JSON.stringify(oldEndpointDatatypeMap, null, 2));
+    // console.log("newEndpointDatatypeMap=", JSON.stringify(newEndpointDatatypeMap, null, 2));
     if (Object.keys(oldEndpointDatatypeMap).length === 0 || Object.keys(newEndpointDatatypeMap).length === 0) {
       return {
         diffInfoMap: new Map<string, EndpointDataTypeDifferenceInfo>(),
@@ -227,29 +240,31 @@ export class DiffDisplayUtils {
   static PaintNodeRingForShowDifference(
     node: any,
     ctx: CanvasRenderingContext2D,
-    nodeRingType: TNodeRingType
+    nodeRingType: TNodeRingType,
+    isFaded: boolean
   ) {
+    ctx.globalAlpha = isFaded ? 0.15 : 1;
     // add ring just for difference nodes
     if (nodeRingType !== "default") {
       if (nodeRingType == "added") {
-        ctx.fillStyle = 'rgba(0, 255, 0, 0.5)';
+        ctx.fillStyle = 'rgba(0, 255, 0, 0.7)';
       }
       else if (nodeRingType == "deleted") {
-        ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
       }
       else if (nodeRingType == "changed") {
-        ctx.fillStyle = 'rgba(255, 255, 0, 0.5)';
+        ctx.fillStyle = 'rgba(255, 165, 0, 0.7)';
       }
       const { x, y } = node;
       ctx.beginPath();
       if (node.id === node.group) {
-        const r = DependencyGraphUtils.GraphBasicSettings.nodeRelSize * 0.85;
-        DependencyGraphUtils.DrawHexagon(x, y, r, ctx);
+        const r = DiffDisplayUtils.DiffGraphBasicSettings.nodeRelSize * 0.85;
+        DiffDisplayUtils.DrawHexagon(x, y, r, ctx);
       } else {
         ctx.arc(
           x,
           y,
-          DependencyGraphUtils.GraphBasicSettings.nodeRelSize * 1.45,
+          DiffDisplayUtils.DiffGraphBasicSettings.nodeRelSize * 1.45,
           0,
           2 * Math.PI,
           false
@@ -257,10 +272,11 @@ export class DiffDisplayUtils {
       }
       ctx.fill();
     }
-
     // paint underlying style on top of ring
     const color = Color.generateFromString(node.group);
-    DependencyGraphUtils.PaintNode(node, color.hex, ctx);
+
+    DiffDisplayUtils.PaintNode(node, color.hex, ctx);
+    ctx.globalAlpha = 1;
   }
 
   static mergeCohesionDiffData = (
@@ -396,6 +412,11 @@ export class DiffDisplayUtils {
 
     return mergedData;
   };
+
+  static TLinkToId(link:TLink):string {
+    return `${link.source}==>${link.target}`
+  }
+
 
 }
 

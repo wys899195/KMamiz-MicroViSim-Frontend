@@ -6,7 +6,8 @@ export class DiffDependencyGraphFactory {
 
   static Create(
     graphDifferenceInfo: GraphDifferenceInfo,
-    showDiff: boolean
+    showDiff: boolean,
+    fadedNodeIds: string[] = []
   ) {
     const { addedNodeIds, deletedNodeIds, addedLinkIds, deletedLinkIds, changedEndpointNodesId } = graphDifferenceInfo;
     const getNodeRingType = (nodeId: string): "added" | "deleted" | "changed" | "default" => {
@@ -16,12 +17,14 @@ export class DiffDependencyGraphFactory {
       return "default";
     };
     const getLinkId = (link: any): string =>
-      DependencyGraphUtils.TLinkToId({ source: link.source.id, target: link.target.id });
+      DiffDisplayUtils.TLinkToId({ source: link.source.id, target: link.target.id });
 
+    const isFadeAllLinks = fadedNodeIds.length > 0;
 
     if (showDiff) {
       return {
-        ...DependencyGraphUtils.GraphBasicSettings,
+        ...DiffDisplayUtils.DiffGraphBasicSettings,
+        linkDirectionalArrowColor: () => `rgba(105, 105, 105, ${isFadeAllLinks ? 0.15 : 1})`,
         linkDirectionalArrowLength: () => 3,
         linkWidth: (link: any) =>
           addedLinkIds.includes(getLinkId(link))
@@ -31,12 +34,12 @@ export class DiffDependencyGraphFactory {
           4,
         linkColor: (link: any) => {
           if (addedLinkIds.includes(getLinkId(link))) {
-            return 'rgba(0, 255, 0, 1)';
+            return `rgba(0, 255, 0, ${isFadeAllLinks ? 0.15 : 1})`;
           }
           if (deletedLinkIds.includes(getLinkId(link))) {
-            return 'rgba(255, 0, 0, 1)';
+            return `rgba(255, 0, 0, ${isFadeAllLinks ? 0.15 : 1})`;
           }
-          return '';
+          return `rgba(0, 0, 0, ${isFadeAllLinks ? 0.15 : 0.2})`;
         },
         linkLineDash: (link: any) => {
           if (deletedLinkIds.includes(getLinkId(link))) {
@@ -44,14 +47,17 @@ export class DiffDependencyGraphFactory {
           }
           return [];
         },
+        nodeCanvasObject: (node: any, ctx: any) => {
+          const ringType = getNodeRingType(node.id);
+          const isFaded = fadedNodeIds.includes(node.id);
 
-        nodeCanvasObject: (node: any, ctx: any) =>
           DiffDisplayUtils.PaintNodeRingForShowDifference(
             node,
             ctx,
-            getNodeRingType(node.id)
-          ),
-
+            ringType,
+            isFaded,
+          );
+        },
         onNodeClick: (node: any) => { },
         onNodeHover: (node: any) => { },
         onLinkClick: (link: any) => { },
@@ -59,22 +65,23 @@ export class DiffDependencyGraphFactory {
       };
     } else {
       return {
-        ...DependencyGraphUtils.GraphBasicSettings,
+        ...DiffDisplayUtils.GraphBasicSettings,
         linkDirectionalArrowLength: 3,
         linkWidth: 1,
         linkDirectionalParticleWidth: 4,
-        nodeCanvasObject: (node: any, ctx: any) =>
+        nodeCanvasObject: (node: any, ctx: any) => {
           DiffDisplayUtils.PaintNodeRingForShowDifference(
             node,
             ctx,
-            "default"
-          ),
+            "default",
+            false,
+          );
+        },
         onNodeClick: (node: any) => { },
         onNodeHover: (node: any) => { },
         onLinkClick: (link: any) => { },
         onLinkHover: (link: any) => { },
       };
     }
-
   }
 }

@@ -1,11 +1,11 @@
 import Config from "../../Config";
-import { TTaggedDiffDataWithTwoGraph } from "../entities/TTaggedDiffData";
+import { TTaggedDiffData } from "../entities/TTaggedDiffData";
 import { DataView } from "./DataView";
 
 export default class DiffComparatorService {
   private static instance?: DiffComparatorService;
   static getInstance = () => this.instance || (this.instance = new this());
-  private constructor() {}
+  private constructor() { }
 
   private readonly prefix = `${Config.apiPrefix}`;
 
@@ -32,7 +32,7 @@ export default class DiffComparatorService {
   async addTaggedDiffData(tag: string) {
     const res = await fetch(`${this.prefix}/diffComparator/diffData`, {
       method: "POST",
-      body: JSON.stringify({tag}),
+      body: JSON.stringify({ tag }),
       headers: {
         "Content-Type": "application/json",
       },
@@ -43,7 +43,7 @@ export default class DiffComparatorService {
   async deleteTaggedDiffData(tag: string) {
     const res = await fetch(`${this.prefix}/diffComparator/diffData`, {
       method: "DELETE",
-      body: JSON.stringify({tag}),
+      body: JSON.stringify({ tag }),
       headers: {
         "Content-Type": "application/json",
       },
@@ -51,12 +51,12 @@ export default class DiffComparatorService {
     return res.ok;
   }
 
-  async getTaggedDiffData(tag: string): Promise<TTaggedDiffDataWithTwoGraph> {
+  async getTaggedDiffData(tag: string): Promise<TTaggedDiffData> {
     const path = `${this.prefix}/diffComparator/diffData?tag=${tag}`;
-    const result = await DiffComparatorService.getInstance().get<TTaggedDiffDataWithTwoGraph>(path);
+    const result = await DiffComparatorService.getInstance().get<TTaggedDiffData>(path);
     return result ?? {
-      endpointGraph: null,
-      serviceGraph: null,
+      tag: tag,
+      graphData: { nodes: [], links: [] },
       cohesionData: [],
       couplingData: [],
       instabilityData: [],
