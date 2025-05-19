@@ -1,12 +1,16 @@
-import React from 'react';
+import {
+  useEffect,
+  Fragment
+} from "react";
+
 import {
   List,
-  ListItem,
+  Button,
   ListItemIcon,
-  ListItemText,
   Box,
   Divider,
   Typography,
+  ListItemButton,
 } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -15,6 +19,8 @@ import {
 } from '@fortawesome/free-regular-svg-icons';
 import { faSquarePen } from '@fortawesome/free-solid-svg-icons';
 import { Color } from '../classes/ColorUtils';
+import { makeStyles } from '@mui/styles';
+
 
 const HexagonIcon = ({ serviceNodeId }: { serviceNodeId: string }) => {
   const color = Color.generateFromString(serviceNodeId).hex;
@@ -85,6 +91,9 @@ type Props = {
   deletedNodeIds: string[];
   changedEndpointNodesId: string[];
   showEndpoint: boolean;
+  selectedNodeId: string;
+  setSelectedNodeId: (nodeId: string) => void;
+  setShowChangeDetailNodeId: (endpointId: string) => void;
 };
 
 const renderIcon = (type: 'add' | 'delete' | 'change') => {
@@ -106,89 +115,144 @@ const renderIcon = (type: 'add' | 'delete' | 'change') => {
   return <FontAwesomeIcon icon={icon} style={{ color, fontSize: 18 }} />;
 };
 
+const useStyles = makeStyles(() => ({
+  sectionTitle: {
+    marginBottom: '8px',
+    marginTop: '16px',
+  },
+  sectionDivider: {
+    marginBottom: '16px',
+    borderTop: '3px solid #999',
+  },
+  listContainer: {
+    backgroundColor: 'white',
+    marginBottom: '16px',
+    borderRadius: '8px',
+    boxShadow: '0px 1px 3px rgba(0,0,0,0.2)',
+  },
+  iconBox: {
+    width: '24px',
+    textAlign: 'center',
+    marginRight: '8px',
+    flexShrink: 0,
+  },
+  listItem: {
+    '&:hover': {
+      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+    },
+    '&.Mui-selected': {
+      backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    },
+    '&.Mui-selected:hover': {
+      backgroundColor: 'rgba(0, 0, 0, 0.24)',
+    },
+  },
+  listItemIcon: {
+    minWidth: '36px',
+    flexShrink: 0,
+  },
+  listItemText: {
+    flexGrow: 1,
+    overflow: 'hidden',
+    whiteSpace: 'nowrap',
+    textOverflow: 'ellipsis',
+  },
+  root: {
+    maxHeight: '100%',
+    backgroundColor: '#fafafa',
+    padding: '0.2em 0.1em',
+  },
+}));
+
 export default function DiffMenu({
   addedNodeIds,
   deletedNodeIds,
   changedEndpointNodesId,
   showEndpoint,
+  selectedNodeId,
+  setSelectedNodeId,
+  setShowChangeDetailNodeId,
 }: Props) {
-  const addedServiceNodesSet = new Set(addedNodeIds.map(getServiceNodeId));
-  const deletedServiceNodesSet = new Set(deletedNodeIds.map(getServiceNodeId));
+  const classes = useStyles();
 
-  const filterServiceNodes = (nodeIds: string[], serviceNodesSet: Set<string>) =>
-    nodeIds.filter(
-      (nodeId) =>
-        serviceNodesSet.has(getServiceNodeId(nodeId)) &&
-        nodeId === getServiceNodeId(nodeId)
-    );
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-node-id]')) {
+        setSelectedNodeId('');
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [setSelectedNodeId]);
 
-  const filterEndpointNodes = (nodeIds: string[], serviceNodesSet: Set<string>) =>
-    nodeIds.filter(
-      (nodeId) =>
-        serviceNodesSet.has(getServiceNodeId(nodeId)) &&
-        nodeId !== getServiceNodeId(nodeId)
-    );
+  const getServices = (nodeIds: string[]) =>
+    nodeIds.filter((id) => id === getServiceNodeId(id));
 
-  // 服務分類
-  const addedServices = filterServiceNodes(addedNodeIds, addedServiceNodesSet);
-  const deletedServices = filterServiceNodes(deletedNodeIds, deletedServiceNodesSet);
+  const addedServices = getServices(addedNodeIds);
+  const deletedServices = getServices(deletedNodeIds);
 
-  // 端點分類
-  const addedEndpoints = filterEndpointNodes(addedNodeIds, addedServiceNodesSet);
-  const deletedEndpoints = filterEndpointNodes(deletedNodeIds, deletedServiceNodesSet);
+  const isSelected = (id: string) => selectedNodeId === id;
 
-  // === render Services ===
+  const handleClick = (id: string) => {
+    const newSelectedId = selectedNodeId === id ? '' : id;
+    setSelectedNodeId(newSelectedId);
+  };
+
   const renderServiceList = () => {
     const allServices = [
       ...addedServices.map((id) => ({ id, type: 'add' as const })),
       ...deletedServices.map((id) => ({ id, type: 'delete' as const })),
     ];
-    if (allServices.length === 0) return null;
 
     return (
       <>
-        <Typography variant="h6" sx={{ mb: 1, mt: 1 }}>
+        <Typography variant="h6" className={classes.sectionTitle}>
           Services
         </Typography>
-        <Divider sx={{ mb: 2, borderTop: '3px solid #999' }} />
-        <List
-          dense
-          sx={{ bgcolor: 'white', mb: 2, borderRadius: 1, boxShadow: 1 }}
-        >
-          {allServices.map(({ id, type }, idx) => (
-            <ListItem
-              key={`${type}-service-${id}`}
-              sx={{ borderBottom: idx !== allServices.length - 1 ? '1px solid #ccc' : 'none' }}
-            >
-              <Box sx={{ width: 24, textAlign: 'center', mr: 1 }}>
-                {renderIcon(type)}
-              </Box>
-              <ListItemIcon sx={{ minWidth: 36 }}>
-                <HexagonIcon serviceNodeId={id} />
-              </ListItemIcon>
-              <ListItemText
-                primary={formatServiceNodeId(id)}
-                primaryTypographyProps={{
-                  noWrap: true,
-                  sx: {
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  },
-                }}
-              />
-            </ListItem>
-          ))}
-        </List>
+        <Divider className={classes.sectionDivider} />
+        {allServices.length === 0 ? (
+          <Typography variant="body2" style={{ paddingLeft: 16, color: '#666' }}>
+            No added or deleted services.
+          </Typography>
+        ) : (
+          <List dense className={classes.listContainer}>
+            {allServices.map(({ id, type }, idx) => (
+              <Fragment key={`${type}-service-${id}`}>
+                <ListItemButton
+                  data-node-id={id}
+                  selected={isSelected(id)}
+                  onClick={() => handleClick(id)}
+                  className={classes.listItem}
+                >
+                  <Box style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                    <Box className={classes.iconBox}>{renderIcon(type)}</Box>
+                    <ListItemIcon className={classes.listItemIcon}>
+                      <HexagonIcon serviceNodeId={id} />
+                    </ListItemIcon>
+
+                    <Box className={classes.listItemText}>
+                      <Typography component="span" style={{ fontSize: '0.9rem' }}>
+                        {formatServiceNodeId(id)}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </ListItemButton>
+                {idx !== allServices.length - 1 && <Divider component="li" />}
+              </Fragment>
+            ))}
+          </List>
+        )}
       </>
     );
   };
 
-  // === render Endpoints 分組 ===
   const renderEndpointList = () => {
     if (!showEndpoint) return null;
-  
-    const groupByService = (items: { id: string; type: 'add' | 'delete' | 'change' }[]) => {
+
+    const groupByService = (
+      items: { id: string; type: 'add' | 'delete' | 'change' }[]
+    ) => {
       return items.reduce<Record<string, { id: string; type: 'add' | 'delete' | 'change' }[]>>(
         (acc, cur) => {
           const svcId = getServiceNodeId(cur.id);
@@ -199,68 +263,88 @@ export default function DiffMenu({
         {}
       );
     };
-  
+
     const allEndpoints = [
-      ...addedEndpoints.map((id) => ({ id, type: 'add' as const })),
-      ...deletedEndpoints.map((id) => ({ id, type: 'delete' as const })),
+      ...addedNodeIds
+        .filter((id) => id !== getServiceNodeId(id))
+        .map((id) => ({ id, type: 'add' as const })),
+      ...deletedNodeIds
+        .filter((id) => id !== getServiceNodeId(id))
+        .map((id) => ({ id, type: 'delete' as const })),
       ...changedEndpointNodesId.map((id) => ({ id, type: 'change' as const })),
     ];
-  
-    if (allEndpoints.length === 0) return null;
-  
+
+    const hasEndpoints = allEndpoints.length > 0;
     const groupedEndpoints = groupByService(allEndpoints);
-  
+
     return (
       <>
-        <Typography variant="h6" sx={{ mb: 1, mt: 4 }}>
+        <Typography variant="h6" className={classes.sectionTitle} style={{ marginTop: 32 }}>
           Endpoints
         </Typography>
-        <Divider sx={{ mb: 2, borderTop: '3px solid #999' }} />
-  
-        {Object.entries(groupedEndpoints).map(([serviceId, endpoints]) => (
-          <Box key={`ep-group-${serviceId}`} sx={{ mb: 2 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
-              {formatServiceNodeId(serviceId)}
-            </Typography>
-            <List dense sx={{ bgcolor: 'white', borderRadius: 1, boxShadow: 1 }}>
-              {endpoints.map(({ id, type }, idx) => (
-                <ListItem
-                  key={`${type}-endpoint-${id}`}
-                  sx={{ borderBottom: idx !== endpoints.length - 1 ? '1px solid #ccc' : 'none' }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                    <Box sx={{ width: 24, textAlign: 'center', mr: 1, flexShrink: 0 }}>
-                      {renderIcon(type)}
-                    </Box>
-                    <ListItemIcon sx={{ minWidth: 36, flexShrink: 0 }}>
-                      <CircleIcon serviceNodeId={serviceId} />
-                    </ListItemIcon>
-                    <Box
-                      sx={{
-                        flexGrow: 1,
-                        overflow: 'hidden',
-                        whiteSpace: 'nowrap',
-                        textOverflow: 'ellipsis',
-                      }}
-                      title={formatEndpointNodeId(id)}
+        <Divider className={classes.sectionDivider} />
+        {!hasEndpoints ? (
+          <Typography variant="body2" style={{ paddingLeft: 16, color: '#666' }}>
+            No differences in endpoints.
+          </Typography>
+        ) : (
+          Object.entries(groupedEndpoints).map(([serviceId, endpoints]) => (
+            <Box key={`ep-group-${serviceId}`} style={{ marginBottom: 16 }}>
+              <Typography variant="subtitle1" style={{ fontWeight: 'bold', marginBottom: 8 }}>
+                {formatServiceNodeId(serviceId)}
+              </Typography>
+              <List dense className={classes.listContainer}>
+                {endpoints.map(({ id, type }, idx) => (
+                  <Fragment key={`${type}-endpoint-${id}`}>
+                    <ListItemButton
+                      data-node-id={id}
+                      selected={isSelected(id)}
+                      onClick={() => handleClick(id)}
+                      className={classes.listItem}
                     >
-                      <Typography component="span" sx={{ fontSize: '0.8rem' }}>
-                        {formatEndpointNodeId(id)}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </ListItem>
-              ))}
-            </List>
-          </Box>
-        ))}
+                      <Box style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                        <Box className={classes.iconBox}>{renderIcon(type)}</Box>
+
+                        {/* TODO 取消註解即可 但是要先完成DiffDetailEndpoint*/}
+                        {/* {type === 'change' && isSelected(id) && (
+                        <Button
+                          variant="contained"
+                          color="info"
+                          size="small"
+                          style={{ marginRight: 8, minWidth: 'auto', padding: '4px 8px', whiteSpace: 'nowrap' }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowChangeDetailNodeId(id);
+                          }}
+                        >
+                          Show Change Details
+                        </Button>
+                      )} */}
+
+                        <ListItemIcon className={classes.listItemIcon}>
+                          <CircleIcon serviceNodeId={serviceId} />
+                        </ListItemIcon>
+
+                        <Box className={classes.listItemText} style={{ flexGrow: 1, overflow: 'hidden' }}>
+                          <Typography component="span" style={{ fontSize: '0.8rem' }}>
+                            {formatEndpointNodeId(id)}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </ListItemButton>
+                    {idx !== endpoints.length - 1 && <Divider component="li" />}
+                  </Fragment>
+                ))}
+              </List>
+            </Box>
+          ))
+        )}
       </>
     );
   };
-  
 
   return (
-    <div style={{ maxHeight: '100%', backgroundColor: '#fafafa', padding: '0.2em 0.1em' }}>
+    <div className={classes.root}>
       {renderServiceList()}
       {renderEndpointList()}
     </div>

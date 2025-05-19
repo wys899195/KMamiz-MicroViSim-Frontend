@@ -46,11 +46,9 @@ const useGraphDifference = (): [
 };
 
 // to compare each endpoint datatype in two dependency graphs
-type EndpointDataTypeDifferenceInfo = {
+export type EndpointDataTypeDifferenceInfo = {
   isRequestSchemaEqual: boolean;
-  isRequestContentTypeEqual: boolean;
   responseSchemaDiffStatusCodes: string[];
-  responseContentTypeDiffStatusCodes: string[];
 }
 
 
@@ -168,25 +166,20 @@ export class DiffDisplayUtils extends DependencyGraphUtils {
         const newEndpointDatatype = newEndpointDatatypeMap[endpointId];
         const diffInfo: EndpointDataTypeDifferenceInfo = {
           isRequestSchemaEqual: true,
-          isRequestContentTypeEqual: true,
-          responseSchemaDiffStatusCodes: [],
-          responseContentTypeDiffStatusCodes: [],
+          responseSchemaDiffStatusCodes: []
         };
 
         // compare requestSchema & requestContentType
-        const old200Schema = oldEndpointDatatype.schemas.find(s => s.status === "200");
-        const new200Schema = newEndpointDatatype.schemas.find(s => s.status === "200");
-        if (old200Schema && new200Schema) {
-          if ((old200Schema.requestSchema || "") !== (new200Schema.requestSchema || "")) {
+        const oldRequestSchema = oldEndpointDatatype.schemas.find(s => s.status.startsWith("2"));
+        const newRequestSchema = newEndpointDatatype.schemas.find(s => s.status.startsWith("2"));
+
+        if (oldRequestSchema && newRequestSchema) {
+          if (this.normalizeSchemaToCompare(oldRequestSchema.requestSchema) !== this.normalizeSchemaToCompare(newRequestSchema.requestSchema)) {
             diffInfo.isRequestSchemaEqual = false;
           }
-          if ((old200Schema.requestContentType || "") !== (new200Schema.requestContentType || "")) {
-            diffInfo.isRequestContentTypeEqual = false;
-          }
-        } else if (old200Schema || new200Schema) {
-          // If one exists but the other does not, it is still considered change
+        } else if (oldRequestSchema || newRequestSchema) {
+          // If one version exists but the other version does not, it is still considered change
           diffInfo.isRequestSchemaEqual = false;
-          diffInfo.isRequestContentTypeEqual = false;
         }
 
         // Compare responseSchema and responseContentType for each status code
@@ -195,36 +188,27 @@ export class DiffDisplayUtils extends DependencyGraphUtils {
         newEndpointDatatype.schemas.forEach(s => allStatuses.add(s.status));
         // console.log(allStatuses);
         for (const status of allStatuses) {
-          const oldSchema = oldEndpointDatatype.schemas.find(s => s.status === status);
-          const newSchema = newEndpointDatatype.schemas.find(s => s.status === status);
+          const oldResponseSchema = oldEndpointDatatype.schemas.find(s => s.status === status);
+          const newResponseSchema = newEndpointDatatype.schemas.find(s => s.status === status);
           // console.log(status)
           // console.log(oldSchema);
           // console.log(newSchema);
           // compare responseSchema
-          if (oldSchema && newSchema) {
-            if ((oldSchema.responseSchema || "") !== (newSchema.responseSchema || "")) {
+
+          if (oldResponseSchema && newResponseSchema) {
+            if (this.normalizeSchemaToCompare(oldResponseSchema.responseSchema) !== this.normalizeSchemaToCompare(newResponseSchema.responseSchema)) {
               diffInfo.responseSchemaDiffStatusCodes.push(status);
             }
-            if ((oldSchema.requestContentType || "") !== (newSchema.requestContentType || "")) {
-              diffInfo.responseContentTypeDiffStatusCodes.push(status);
-            }
-          } else {
-            // If one exists but the other does not, it is still considered change
-            // console.log("1234")
+          } else if (oldResponseSchema || newResponseSchema) {
+            // If one version exists but the other version does not, it is still considered change
             diffInfo.responseSchemaDiffStatusCodes.push(status);
-            diffInfo.responseContentTypeDiffStatusCodes.push(status);
           }
         }
 
         diffInfoMap.set(endpointId, diffInfo);
 
         // If there is any difference in the datatype between the two endpoints, record its id into changedEndpointNodesId
-        if (
-          !diffInfo.isRequestSchemaEqual ||
-          !diffInfo.isRequestContentTypeEqual ||
-          diffInfo.responseSchemaDiffStatusCodes.length > 0 ||
-          diffInfo.responseContentTypeDiffStatusCodes.length > 0
-        ) {
+        if (!diffInfo.isRequestSchemaEqual || diffInfo.responseSchemaDiffStatusCodes.length > 0) {
           changedEndpointNodesId.add(endpointId);
         }
 
@@ -235,6 +219,16 @@ export class DiffDisplayUtils extends DependencyGraphUtils {
       diffInfoMap: diffInfoMap,
       changedEndpointNodesId: Array.from(changedEndpointNodesId),
     };
+  }
+
+  private static normalizeSchemaToCompare(schema?: string): string {
+    if (!schema) return "";
+    const trimmed = schema.trim();
+    const emptySchemas = ["interface Root {\n}", "interface Root {}"];
+    if (!trimmed || emptySchemas.includes(trimmed)) {
+      return "";
+    }
+    return trimmed;
   }
 
   static PaintNodeRingForShowDifference(
@@ -413,7 +407,7 @@ export class DiffDisplayUtils extends DependencyGraphUtils {
     return mergedData;
   };
 
-  static TLinkToId(link:TLink):string {
+  static TLinkToId(link: TLink): string {
     return `${link.source}==>${link.target}`
   }
 
