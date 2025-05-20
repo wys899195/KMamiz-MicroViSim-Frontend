@@ -16,8 +16,10 @@ import {
 } from "@mui/material";
 import { Article, FiberManualRecord, Warning } from "@mui/icons-material";
 import { TAggregatedServiceInfo } from "../../entities/TAggregatedData";
+import { TServiceDisplayInfo } from "../../entities/TServiceDisplayInfo";
 import { useEffect, useState } from "react";
 import DataService from "../../services/DataService";
+
 
 function roundNumber(num: number) {
   return Math.round(num * 10000) / 10000;
@@ -30,11 +32,12 @@ export default function ServiceInfo(props: {
   service: string;
   namespace: string;
 }) {
-  const [services, setServices] = useState<TAggregatedServiceInfo[]>([]);
+  const [aggregatedServiceInfo, setAggregatedServiceInfo] = useState<TAggregatedServiceInfo[]>([]);
+  const [noAggregatedServiceInfo, setNoAggregatedServiceInfo] = useState<TServiceDisplayInfo[]>([]);
   useEffect(() => {
     const unSub = DataService.getInstance().subscribeToAggregatedData(
       (data) => {
-        setServices(
+        setAggregatedServiceInfo(
           data
             ? data.services.sort((a, b) => a.version.localeCompare(b.version))
             : []
@@ -48,14 +51,33 @@ export default function ServiceInfo(props: {
     };
   }, [props.service, props.namespace]);
 
-  const endpoints = [
-    ...new Set<string>(
-      services
-        .map((s) => s.endpoints.map((e) => ({ ...e, version: s.version })))
-        .flat()
-        .map((e) => `${e.version}\t${e.method}\t${e.labelName}`)
-    ),
-  ].length;
+  useEffect(() => {
+    const unSub = DataService.getInstance().subscribeToServiceDisplayInfo(
+      (data) => {
+        setNoAggregatedServiceInfo(
+          data
+            ? data.sort((a, b) => a.version.localeCompare(b.version))
+            : []
+        );
+      },
+      `${props.service}\t${props.namespace}`
+    );
+    return () => {
+      unSub();
+    };
+  }, [props.service, props.namespace]);
+
+  const endpointsCount =
+    aggregatedServiceInfo.length > 0
+      ? [
+        ...new Set<string>(
+          aggregatedServiceInfo
+            .map((s) => s.endpoints.map((e) => ({ ...e, version: s.version })))
+            .flat()
+            .map((e) => `${e.version}\t${e.method}\t${e.labelName}`)
+        ),
+      ].length
+      : noAggregatedServiceInfo.reduce((sum, s) => sum + s.endpointCount, 0);// When endpoint aggregation data is unavailable, attempt to retrieve the required information from static data.
 
   return (
     <div>
@@ -64,7 +86,7 @@ export default function ServiceInfo(props: {
           <ListItemIcon>
             <FiberManualRecord color="secondary" />
           </ListItemIcon>
-          <ListItemText primary={`Endpoints: ${endpoints}`} />
+          <ListItemText primary={`Endpoints: ${endpointsCount}`} />
         </ListItem>
         <ListItem disablePadding>
           <ListItemIcon>
@@ -72,7 +94,7 @@ export default function ServiceInfo(props: {
           </ListItemIcon>
           <ListItemText
             primary={`Combined Risk: ${roundNumber(
-              services.length > 0 ? sumField("avgRisk", services) / services.length : 0
+              aggregatedServiceInfo.length > 0 ? sumField("avgRisk", aggregatedServiceInfo) / aggregatedServiceInfo.length : 0
             )}`}
           />
         </ListItem>
@@ -87,10 +109,10 @@ export default function ServiceInfo(props: {
             </TableRow>
           </TableHead>
           <TableBody>
-            {services.map((s) => (
+            {(aggregatedServiceInfo.length > 0 ? aggregatedServiceInfo : noAggregatedServiceInfo).map((s) => (
               <TableRow key={s.version}>
                 <TableCell>{s.version}</TableCell>
-                <TableCell>{roundNumber(s.avgRisk)}</TableCell>
+                <TableCell>{("avgRisk" in s) ? roundNumber(s.avgRisk) : 0}</TableCell>
                 <TableCell>
                   <Tooltip title="Open SwaggerUI">
                     <IconButton

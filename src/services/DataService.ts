@@ -3,6 +3,7 @@ import { TAggregatedData } from "../entities/TAggregatedData";
 import IEndpointDataType from "../entities/TEndpointDataType";
 import { TEndpointLabel, TEndpointLabelType } from "../entities/TEndpointLabel";
 import { THistoricalData } from "../entities/THistoricalData";
+import { TServiceDisplayInfo } from "../entities/TServiceDisplayInfo";
 import { TTaggedInterface } from "../entities/TTaggedInterface";
 import { DataView } from "./DataView";
 
@@ -17,6 +18,40 @@ export default class DataService {
     const res = await fetch(path);
     if (!res.ok) return null;
     return (await res.json()) as T;
+  }
+
+  async cloneDataFromProductionService(): Promise<{
+    isSuccess: boolean;
+    message: string;
+  }> {
+    if (Config.backendConfig.SimulatorMode) {
+      const path = `${this.prefix}/data/cloneDataFromProductionService`;
+      const res = await fetch(path, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const { message } = await res.json();
+
+      if (res.status === 201) {
+        return {
+          isSuccess: true,
+          message: message || "ok"
+        };
+      } else {
+        return {
+          isSuccess: false,
+          message: message || "Internal Server Error"
+        };
+      }
+    } else {
+      return {
+        isSuccess: false,
+        message: "The current server is not running in simulator mode."
+      };
+    }
+
   }
 
   async getAggregatedData(namespace?: string) {
@@ -38,17 +73,6 @@ export default class DataService {
     return (
       (await DataService.getInstance().get<IEndpointDataType>(path)) ||
       undefined
-    );
-  }
-
-  async getEndpointDataTypesMap(uniqueLabelNames: string[]) {
-    const query = uniqueLabelNames
-      .map(name => `labelNames=${encodeURIComponent(name)}`)
-      .join("&");
-    const path = `${this.prefix}/data/dataTypesMap?${query}`;
-    return (
-      (await DataService.getInstance().get<Record<string, IEndpointDataType>>(path)) ||
-      {}
     );
   }
 
@@ -127,6 +151,17 @@ export default class DataService {
       }?notBefore=${notBefore}${filter ? `&filter=${encodeURIComponent(filter)}` : ""
       }`;
     return DataView.getInstance().subscribe<TAggregatedData>(url, (_, data) => {
+      next(data);
+    });
+  }
+
+  subscribeToServiceDisplayInfo(
+    next: (data?: TServiceDisplayInfo[]) => void,
+    filter?: string,
+  ) {
+    const url = `${this.prefix}/data/serviceDisplayInfo?${filter ? `filter=${encodeURIComponent(filter)}` : ""
+      }`;
+    return DataView.getInstance().subscribe<TServiceDisplayInfo[]>(url, (_, data) => {
       next(data);
     });
   }

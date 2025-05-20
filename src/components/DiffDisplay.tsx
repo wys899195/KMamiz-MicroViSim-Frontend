@@ -1,6 +1,6 @@
 import {
-  Card, FormControlLabel, FormGroup, Switch, Grid, Typography
-
+  Card, FormControlLabel, FormGroup, Switch, Grid, Typography, Box, Tooltip
+  , List, ListItem, ListItemIcon, ListItemText,
 } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import {
@@ -12,8 +12,6 @@ import {
   useState,
 } from "react";
 import ViewportUtils from "../classes/ViewportUtils";
-import GraphService from "../services/GraphService";
-import DiffComparatorService from "../services/DiffComparatorService";
 import ReactApexChart from "react-apexcharts";
 import BarChartUtils from "../classes/BarChartUtils";
 import { Element } from 'react-scroll';
@@ -36,16 +34,27 @@ import { TInsightDiffCoupling } from "../entities/TInsightDiffCoupling";
 import { TInsightDiffInstability } from "../entities/TInsightDiffInstability";
 import TEndpointDataType from "../entities/TEndpointDataType";
 import Loading from "./Loading";
-import DataService from "../services/DataService";
+import DiffComparatorService from "../services/DiffComparatorService";
+import DiffMenu from "./DiffMenu";
+// import DiffDetailEndpoint from "./DiffDetailEndpoint";
 
 const ForceGraph2D = lazy(() => import("react-force-graph-2d"));
 
 type DiffDisplayProps = {
   olderVersionTag: string;
   newerVersionTag: string;
-  latestVersionStr: string;
+  currentVersionStr: string;
 };
-
+type VersionContext = {
+  setEndpointGraphData: (data: any) => void;
+  setGraphData: (data: any) => void;
+  rawRef: React.MutableRefObject<string | undefined>;
+  graphRef: React.MutableRefObject<any>;
+  setCohesionData: (data: TTotalServiceInterfaceCohesion[]) => void;
+  setCouplingData: (data: TServiceCoupling[]) => void;
+  setInstabilityData: (data: TServiceInstability[]) => void;
+  setEndpointDataTypesMap: (data: Record<string, TEndpointDataType>) => void;
+};
 const useStyles = makeStyles(() => ({
   actions: {
     height: "3em",
@@ -57,17 +66,25 @@ const useStyles = makeStyles(() => ({
     padding: "1em",
   },
   graphContainer: {
+    position: 'relative',
     border: '0.08em solid #ccc',
     boxShadow: '0.4em 0em 0.5em rgba(0, 0, 0, 0.1)',
     float: 'left',
   },
   graphTitle: {
     fontWeight: 'normal',
+    margin: 0,
+    fontSize: '1rem',
   },
   graphHeader: {
-    borderBottom: '0.08em solid #ccc',
-    boxShadow: '0.0em  0.4em 0.5em rgba(0, 0, 0, 0.1)',
-    paddingLeft: '0.5em',
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderRadius: '0.5em',
+    padding: '0.3em 0.5em',
+    zIndex: 10,
+    boxShadow: '0 0.2em 0.3em rgba(0, 0, 0, 0.1)',
   },
   switch: {
     paddingLeft: "0.8em",
@@ -78,7 +95,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
   const classes = useStyles();
   const olderVersionTag = props.olderVersionTag;
   const newerVersionTag = props.newerVersionTag;
-  const latestVersionStr = props.latestVersionStr;
+  const currentVersionStr = props.currentVersionStr;
 
   /***  graph ***/
   // the older version graph data
@@ -106,6 +123,9 @@ export default function DiffDisplay(props: DiffDisplayProps) {
   // graph display control
   const [showEndpoint, setShowEndpoint] = useState(true);
   const [showGraphDiff, setShowGraphDiff] = useState(true);
+  const [fadeNodes, setFadeNodes] = useState<string[]>([]);
+  const [hilightNodeId, setHighlightNodeId] = useState<string>(''); // Clicking the diff menu item will highlight target node in diff graph
+  const [showChangeDetailNodeId, setShowChangeDetailNodeId] = useState<string>(''); // Clicking the "Show Change Details" button in the diff menu item will display the change details below the diff graph
 
 
 
@@ -127,13 +147,37 @@ export default function DiffDisplay(props: DiffDisplayProps) {
   const [showInstabilityInsightDiffChart, setShowInstabilityInsightDiffChart] = useState(true);
 
 
+
   /***window size control***/
   const rwdWidth = 1300
   const [pageSize, setPageSize] = useState([0, 0]);
   const [gridSize, setGridSize] = useState(12);
+  const [isInSmallScreen, setIsInSmallScreen] = useState(true);
   const [graphWidthRate, setCanvasWidthRate] = useState(0.5);
   const [graphHeightRate, setCanvasHeightRate] = useState(0.8);
 
+
+  const newerVersionContext: VersionContext = {
+    setEndpointGraphData: setNewerEndpointGraphData,
+    setGraphData: setNewerGraphData,
+    rawRef: newerRawGraphDataRef,
+    graphRef: newerGraphDataRef,
+    setCohesionData: setNewerCohesionData,
+    setCouplingData: setNewerCouplingData,
+    setInstabilityData: setNewerInstabilityData,
+    setEndpointDataTypesMap: setNewerEndpointDataTypesMap,
+  };
+
+  const olderVersionContext: VersionContext = {
+    setEndpointGraphData: setOlderEndpointGraphData,
+    setGraphData: setOlderGraphData,
+    rawRef: olderRawGraphDataRef,
+    graphRef: olderGraphDataRef,
+    setCohesionData: setOlderCohesionData,
+    setCouplingData: setOlderCouplingData,
+    setInstabilityData: setOlderInstabilityData,
+    setEndpointDataTypesMap: setOlderEndpointDataTypesMap,
+  };
 
   /***useEffect for window size control***/
   useEffect(() => {
@@ -141,7 +185,8 @@ export default function DiffDisplay(props: DiffDisplayProps) {
       ViewportUtils.getInstance().subscribe(([vw]) => {
         setGridSize(vw > rwdWidth ? 6 : 12)
         setCanvasWidthRate(vw > rwdWidth ? 0.5 : 0.99);
-        setCanvasHeightRate(vw > rwdWidth ? 0.8 : 0.8);
+        setCanvasHeightRate(vw > rwdWidth ? 0.8 : 0.4);
+        setIsInSmallScreen(vw > rwdWidth ? false : true)
       }),
     ];
     return () => {
@@ -159,33 +204,92 @@ export default function DiffDisplay(props: DiffDisplayProps) {
     };
   }, []);
 
-  /***  useEffect for graph diff  ***/
-  //graph data
-  useEffect(() => {
-    fetchVersionGraphData(
-      olderVersionTag,
-      olderVersionTag === latestVersionStr,
-      false,
-    );
-  }, [showEndpoint, olderVersionTag]);
-  useEffect(() => {
-    fetchVersionGraphData(
-      newerVersionTag,
-      newerVersionTag === latestVersionStr,
-      true,
-    );
-  }, [showEndpoint, newerVersionTag]);
 
-  //endpointDataType data
+  /***  useEffect for diff  ***/
   useEffect(() => {
-    fetchEndpointDataTypesMap(olderVersionTag, olderVersionTag === latestVersionStr, olderEndpointGraphData, setOlderEndpointDataTypesMap);
-  }, [olderEndpointGraphData]);
-  
-  useEffect(() => {
-    fetchEndpointDataTypesMap(newerVersionTag, newerVersionTag === latestVersionStr, newerEndpointGraphData, setNewerEndpointDataTypesMap);
-  }, [newerEndpointGraphData]);
+    if (hilightNodeId) {
+      handleFadeNodesInDiffGraph([hilightNodeId]);
+    } else {
+      handleFadeNodesInDiffGraph([]);
+    }
+  }, [hilightNodeId]);
 
-  //graph diff 
+  useEffect(() => {
+    if (showChangeDetailNodeId) {
+      console.log('open detail', showChangeDetailNodeId)
+    } else {
+      console.log('close detail')
+    }
+  }, [showChangeDetailNodeId]);
+
+
+  useEffect(() => {
+    fetchVersionData(
+      olderVersionTag === currentVersionStr ? '' : olderVersionTag,
+      olderVersionContext,
+    );
+  }, [olderVersionTag]);
+  useEffect(() => {
+    fetchVersionData(
+      newerVersionTag === currentVersionStr ? '' : newerVersionTag,
+      newerVersionContext,
+    );
+  }, [newerVersionTag]);
+
+  useEffect(() => {
+    if (
+      newerEndpointGraphData &&
+      olderEndpointGraphData &&
+      olderEndpointDataTypesMap &&
+      newerEndpointDataTypesMap
+    ) {
+      // console.log("newerEndpointGraphData=", newerEndpointGraphData);
+      // console.log("olderEndpointGraphData", olderEndpointGraphData);
+
+      // set showing graph data
+      updateGraphData(newerEndpointGraphData, newerVersionContext);
+      updateGraphData(olderEndpointGraphData, olderVersionContext,);
+
+      // set graph diff info and diff graph data
+      const nextGraphDifferenceInfo = DiffDisplayUtils.CompareTwoGraphData(
+        JSON.parse(JSON.stringify(newerEndpointGraphData)),
+        JSON.parse(JSON.stringify(olderEndpointGraphData)),
+        olderEndpointDataTypesMap,
+        newerEndpointDataTypesMap,
+        showEndpoint
+      );
+      const nextDiffGraphData = JSON.stringify(nextGraphDifferenceInfo.diffGraphData);
+      if (!rawDiffGraphDataRef.current) {
+        const timer = setInterval(() => {
+          if (!diffGraphDataRef.current) return;
+          clearInterval(timer);
+          setTimeout(() => {
+            diffGraphDataRef.current.zoom(4, 0);
+            diffGraphDataRef.current.centerAt(0, 0);
+          }, 10);
+        });
+      }
+      rawDiffGraphDataRef.current = nextDiffGraphData;
+
+      // console.log("nextGraphDifferenceInfo",nextGraphDifferenceInfo);
+
+      if (nextGraphDifferenceInfo && nextGraphDifferenceInfo.diffGraphData) {
+        // console.log("nextDiffGraphData",nextDiffGraphData);
+        setDiffGraphData(DependencyGraphUtils.ProcessData(showEndpoint ? JSON.parse(nextDiffGraphData) : DependencyGraphUtils.toServiceDependencyGraph(JSON.parse(nextDiffGraphData))));
+      }
+
+      setGraphDifferenceInfo(nextGraphDifferenceInfo);
+    }
+
+  }, [
+    newerEndpointGraphData,
+    olderEndpointGraphData,
+    newerEndpointDataTypesMap,
+    olderEndpointDataTypesMap,
+    showEndpoint,
+  ]);
+
+  //when switch showGraphDiff, zoom and center the graph.
   useEffect(() => {
     if (!showGraphDiff && newerGraphDataRef.current) {
       newerGraphDataRef.current.zoom(3, 0);
@@ -200,51 +304,6 @@ export default function DiffDisplay(props: DiffDisplayProps) {
       diffGraphDataRef.current.centerAt(0, 0);
     }
   }, [showGraphDiff]);
-  useEffect(() => {
-    if (newerEndpointGraphData && olderEndpointGraphData) {
-      const nextGraphDifferenceInfo = DiffDisplayUtils.CompareTwoGraphData(newerEndpointGraphData, olderEndpointGraphData, showEndpoint);
-      const nextDiffGraphData = JSON.stringify(nextGraphDifferenceInfo.diffGraphData);
-      if (!rawDiffGraphDataRef.current) {
-        const timer = setInterval(() => {
-          if (!diffGraphDataRef.current) return;
-          clearInterval(timer);
-          setTimeout(() => {
-            diffGraphDataRef.current.zoom(4, 0);
-            diffGraphDataRef.current.centerAt(0, 0);
-          }, 10);
-        });
-      }
-      rawDiffGraphDataRef.current = nextDiffGraphData;
-
-      if (nextGraphDifferenceInfo && nextGraphDifferenceInfo.diffGraphData) {
-        setDiffGraphData(DependencyGraphUtils.ProcessData(JSON.parse(nextDiffGraphData)));
-      }
-
-      setGraphDifferenceInfo(nextGraphDifferenceInfo);
-    }
-  }, [newerEndpointGraphData, olderEndpointGraphData, showEndpoint]);
-
-
-  /***useEffect for insight diff***/
-  // insight data
-  useEffect(() => {
-    fetchServiceInsights(
-      olderVersionTag,
-      olderVersionTag === latestVersionStr,
-      setOlderCohesionData,
-      setOlderCouplingData,
-      setOlderInstabilityData
-    );
-  }, [olderVersionTag]);
-  useEffect(() => {
-    fetchServiceInsights(
-      newerVersionTag,
-      newerVersionTag === latestVersionStr,
-      setNewerCohesionData,
-      setNewerCouplingData,
-      setNewerInstabilityData
-    );
-  }, [newerVersionTag]);
 
   //insight diff
   useEffect(() => {
@@ -262,92 +321,74 @@ export default function DiffDisplay(props: DiffDisplayProps) {
     setInstabilityDiff(newDataDiff);
   }, [olderInstabilityData, newerinstabilityData]);
 
-  const fetchVersionGraphData = async (
-    tag: string,
-    isLatestVersion: boolean,
-    isNewerVersion: boolean,
+  const fetchVersionData = async (
+    tag: string, // if tag is empty string, it means current version
+    versionContext: VersionContext
   ) => {
-    let endpointGraph: TGraphData | null = null;
-    let graph: TGraphData | null = null;
+    const data = await DiffComparatorService.getInstance().getTaggedDiffData(tag);
 
-    if (isLatestVersion) {
-      endpointGraph = await GraphService.getInstance().getDependencyGraph(true);
-      graph = await GraphService.getInstance().getDependencyGraph(showEndpoint);
-    } else {
-      const res = await DiffComparatorService.getInstance().getTaggedDependencyGraphs(tag);
-      endpointGraph = JSON.parse(JSON.stringify(res.endpointGraph));
-      graph = showEndpoint
-        ? JSON.parse(JSON.stringify(res.endpointGraph))
-        : JSON.parse(JSON.stringify(res.serviceGraph));
-    }
+    // get raw graph data
+    const endpointGraph = JSON.parse(JSON.stringify(data.graphData));
 
+    // get raw insight data
+    const cohesionData = data.cohesionData;
+    const couplingData = data.couplingData;
+    const instabilityData = data.instabilityData;
+
+    // get raw endpointDataTypesMap data
+    const endpointDataTypesMap = data.endpointDataTypesMap;
+
+    // set graph data
     if (endpointGraph) {
-      isNewerVersion ? setNewerEndpointGraphData(endpointGraph) : setOlderEndpointGraphData(endpointGraph);
+      versionContext.setEndpointGraphData(endpointGraph);
     }
 
-    if (graph) {
-      const rawGraph = JSON.stringify(graph);
-      const rawRef = isNewerVersion ? newerRawGraphDataRef : olderRawGraphDataRef;
-      const graphRef = isNewerVersion ? newerGraphDataRef : olderGraphDataRef;
-      const setGraphData = isNewerVersion ? setNewerGraphData : setOlderGraphData;
+    // set insight data 
+    versionContext.setCohesionData(cohesionData);
+    versionContext.setCouplingData(couplingData);
+    versionContext.setInstabilityData(instabilityData);
 
-      if (rawRef.current === rawGraph) return;
-
-      if (!rawRef.current) {
-        const timer = setInterval(() => {
-          if (!graphRef.current) return;
-          clearInterval(timer);
-          setTimeout(() => {
-            graphRef.current.zoom(3, 0);
-            graphRef.current.centerAt(0, 0);
-          }, 10);
-        });
-      }
-
-      rawRef.current = rawGraph;
-      setGraphData(DependencyGraphUtils.ProcessData(graph));
-    }
+    // set endpointDataTypesMap data
+    versionContext.setEndpointDataTypesMap(endpointDataTypesMap);
   };
 
-  const fetchServiceInsights = async (
-    tag: string,
-    isLatestVersion: boolean,
-    setCohesion: (data: TTotalServiceInterfaceCohesion[]) => void,
-    setCoupling: (data: TServiceCoupling[]) => void,
-    setInstability: (data: TServiceInstability[]) => void
-  ) => {
-    if (isLatestVersion) {
-      const [cohesionData, couplingData, instabilityData] = await Promise.all([
-        GraphService.getInstance().getServiceCohesion(),
-        GraphService.getInstance().getServiceCoupling(),
-        GraphService.getInstance().getServiceInstability(),
-      ]);
-      if (cohesionData) setCohesion(cohesionData);
-      if (couplingData) setCoupling(couplingData);
-      if (instabilityData) setInstability(instabilityData);
+  const handleFadeNodesInDiffGraph = (nonFadedNodeIds: string[]) => {
+    if (nonFadedNodeIds.length > 0) {
+      const allNodeIds = graphDifferenceInfo.diffGraphData.nodes.map(node => node.id);
+      const fadeNodes = allNodeIds.filter(id => !nonFadedNodeIds.includes(id));
+      setFadeNodes(fadeNodes);
     } else {
-      const insights = await DiffComparatorService.getInstance().getTaggedServiceInsights(tag);
-      if (insights) {
-        const { cohesionData, couplingData, instabilityData } = insights;
-        if (cohesionData) setCohesion(cohesionData);
-        if (couplingData) setCoupling(couplingData);
-        if (instabilityData) setInstability(instabilityData);
-      }
+      setFadeNodes([]);
     }
   };
 
-  const fetchEndpointDataTypesMap = async (
-    tag: string,
-    isLatestVersion: boolean,
-    graphData: TGraphData | null,
-    setEndpointDataTypesMap: (data: Record<string, TEndpointDataType>) => void
+  const updateGraphData = (
+    endpointGraphData: TGraphData,
+    versionContext: VersionContext
   ) => {
-    const nodeIds = graphData?.nodes.map((node) => node.id) || [];
-    const nextEndpointDataTypesMap = isLatestVersion
-      ? await DiffComparatorService.getInstance().getTaggedEndpointDataTypesMap(tag)
-      : await DataService.getInstance().getEndpointDataTypesMap(nodeIds);
+    const rawGraphStr = JSON.stringify(endpointGraphData);
+    // console.log("showEndpoint =", showEndpoint);
+    // console.log("versionContext.rawRef.current",JSON.stringify(versionContext.rawRef.current, null, 2));
+    // console.log("rawGraphStr",JSON.stringify(rawGraphStr, null, 2));
+    // console.log("endpointGraphData", JSON.stringify(endpointGraphData, null, 2));
+    // if (versionContext.rawRef.current === rawGraphStr) return;
+    if (!versionContext.rawRef.current) {
+      const timer = setInterval(() => {
+        if (!versionContext.graphRef.current) return;
+        clearInterval(timer);
+        setTimeout(() => {
+          versionContext.graphRef.current!.zoom(3, 0);
+          versionContext.graphRef.current!.centerAt(0, 0);
+        }, 10);
+      });
+    }
+    versionContext.rawRef.current = rawGraphStr;
 
-    setEndpointDataTypesMap(nextEndpointDataTypesMap);
+    const rawshowingGraph = JSON.parse(rawGraphStr);
+    const showingGraph = showEndpoint
+      ? rawshowingGraph
+      : DependencyGraphUtils.toServiceDependencyGraph(rawshowingGraph);
+    versionContext.setGraphData(DependencyGraphUtils.ProcessData(showingGraph));
   };
 
   return (
@@ -391,62 +432,181 @@ export default function DiffDisplay(props: DiffDisplayProps) {
           </FormGroup>
         </Card>
       </Grid>
-      <Grid item xs={gridSize} style={{ display: showGraphDiff ? 'block' : 'none' }}>
+      {showGraphDiff && (
+        <Grid item xs={isInSmallScreen ? 12 : 4}>
+          <Box
+            sx={{
+              height: isInSmallScreen ? pageSize[1] * (graphHeightRate - 0.05) - 45 : pageSize[1] * (graphHeightRate) - 45,
+              overflowY: 'auto',
+              border: '1px solid #ccc',
+              padding: '0.2em 0.1em 0.2em 0.1em',
+              backgroundColor: '#fafafa',
+            }}
+          >
+            <DiffMenu
+              addedNodeIds={graphDifferenceInfo.addedNodeIds}
+              deletedNodeIds={graphDifferenceInfo.deletedNodeIds}
+              changedEndpointNodesId={graphDifferenceInfo.changedEndpointNodesId}
+              showEndpoint={showEndpoint}
+              selectedNodeId={hilightNodeId}
+              setSelectedNodeId={setHighlightNodeId}
+              setShowChangeDetailNodeId={setShowChangeDetailNodeId}
+            />
+          </Box>
+        </Grid>
+      )}
+      <Grid item xs={isInSmallScreen ? 12 : 8} style={{ display: showGraphDiff ? 'block' : 'none' }}>
         <div className={classes.graphContainer}>
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 8,
+              left: 8,
+              zIndex: 10,
+              backgroundColor: 'rgba(255,255,255,0.9)',
+              borderRadius: '0.5em',
+              padding: '0.5em',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+            }}
+          >
+            <Tooltip
+              title="Endpoints or services existing in the second version but not in the first will be marked as added."
+              componentsProps={{
+                tooltip: {
+                  sx: { fontSize: '1em' }
+                }
+              }}
+            >
+              <Box
+                display="flex"
+                alignItems="center"
+                gap={0.5}
+                onMouseEnter={() => {
+                  handleFadeNodesInDiffGraph(graphDifferenceInfo.addedNodeIds);
+                }}
+                onMouseLeave={() => handleFadeNodesInDiffGraph(hilightNodeId ? [hilightNodeId] : [])}
+              >
+                <Box sx={{ width: 20, height: 20, bgcolor: "rgba(0, 255, 0, 0.7)", borderRadius: '50%' }} />
+                <Typography variant="body2" sx={{ cursor: "help" }}>Add</Typography>
+              </Box>
+            </Tooltip>
+            <Tooltip
+              title="Endpoints or services existing in the first version but not in the second will be marked as deleted."
+              componentsProps={{
+                tooltip: {
+                  sx: { fontSize: '1em' }
+                }
+              }}
+            >
+              <Box
+                display="flex"
+                alignItems="center"
+                gap={0.5}
+                onMouseEnter={() => {
+                  handleFadeNodesInDiffGraph(graphDifferenceInfo.deletedNodeIds);
+                }}
+                onMouseLeave={() => handleFadeNodesInDiffGraph(hilightNodeId ? [hilightNodeId] : [])}
+              >
+                <Box sx={{ width: 20, height: 20, bgcolor: "rgba(255, 0, 0, 0.7)", borderRadius: '50%' }} />
+                <Typography variant="body2" sx={{ cursor: "help" }}>Delete</Typography>
+              </Box>
+            </Tooltip>
+            {showEndpoint && (
+              <Tooltip
+                title="Endpoints with differing data types between the two versions will be marked as changed."
+                componentsProps={{
+                  tooltip: {
+                    sx: { fontSize: '1em' }
+                  }
+                }}
+              >
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  gap={0.5}
+                  onMouseEnter={() => {
+                    handleFadeNodesInDiffGraph(showEndpoint ? graphDifferenceInfo.changedEndpointNodesId : []);
+                  }}
+                  onMouseLeave={() => handleFadeNodesInDiffGraph(hilightNodeId ? [hilightNodeId] : [])}
+                >
+                  <Box sx={{ width: 20, height: 20, bgcolor: "rgba(255, 165, 0, 0.7)", borderRadius: '50%' }} />
+                  <Typography variant="body2" sx={{ cursor: "help" }}>Change</Typography>
+                </Box>
+              </Tooltip>
+            )}
+          </Box>
           <Suspense fallback={<Loading />}>
             <ForceGraph2D
               ref={diffGraphDataRef}
-              width={pageSize[0] - 40}
-              height={pageSize[1] * graphHeightRate}
+              width={isInSmallScreen ? pageSize[0] * 0.98 - 20: pageSize[0] * 8 / 12 - 40}
+              height={isInSmallScreen ? pageSize[1] * (graphHeightRate + 0.05) - 40 : pageSize[1] * (graphHeightRate) - 40}
               graphData={diffGraphData}
               {...DiffDependencyGraphFactory.Create(
                 graphDifferenceInfo,
                 true,
+                fadeNodes
               )}
             />
           </Suspense>
         </div>
       </Grid>
 
+      {/*TODO*/}
+      {/* {showChangeDetailNodeId && (
+        <Grid item xs={12}>
+          <DiffDetailEndpoint
+            nodeId={showChangeDetailNodeId}
+            graphDifferenceInfo={graphDifferenceInfo}
+            oldEndpointDatatypeMap={olderEndpointDataTypesMap}
+            newEndpointDatatypeMap={newerEndpointDataTypesMap}
+          />
+        </Grid>
+      )} */}
+
       {/* Graph details*/}
-      <Grid item xs={gridSize} style={{ display: showGraphDiff ? 'none' : 'block' }}>
-        <div className={classes.graphContainer}>
-          <Grid item xs={12} className={classes.graphHeader}>
-            <h3 className={classes.graphTitle}>{olderVersionTag || latestVersionStr}</h3>
+      {!showGraphDiff && (
+        <>
+          <Grid item xs={gridSize}>
+            <div className={classes.graphContainer}>
+              <div className={classes.graphHeader}>
+                <h4 className={classes.graphTitle}>
+                  {olderVersionTag || currentVersionStr}
+                </h4>
+              </div>
+              <Suspense fallback={<Loading />}>
+                <ForceGraph2D
+                  ref={olderGraphDataRef}
+                  width={pageSize[0] * graphWidthRate - 35}
+                  height={pageSize[1] * graphHeightRate - 40}
+                  graphData={olderGraphData}
+                  {...DiffDependencyGraphFactory.Create(graphDifferenceInfo, false)}
+                />
+              </Suspense>
+            </div>
           </Grid>
-          <Suspense fallback={<Loading />}>
-            <ForceGraph2D
-              ref={olderGraphDataRef}
-              width={pageSize[0] * graphWidthRate - 20}
-              height={pageSize[1] * graphHeightRate - 40}
-              graphData={olderGraphData}
-              {...DiffDependencyGraphFactory.Create(
-                graphDifferenceInfo,
-                false,
-              )}
-            />
-          </Suspense>
-        </div>
-      </Grid>
-      <Grid item xs={gridSize} style={{ display: showGraphDiff ? 'none' : 'block' }}>
-        <div className={classes.graphContainer}>
-          <Grid item xs={12} className={classes.graphHeader}>
-            <h3 className={classes.graphTitle}>{newerVersionTag || latestVersionStr}</h3>
+
+          <Grid item xs={gridSize}>
+            <div className={classes.graphContainer}>
+              <div className={classes.graphHeader}>
+                <h4 className={classes.graphTitle}>
+                  {newerVersionTag || currentVersionStr}
+                </h4>
+              </div>
+              <Suspense fallback={<Loading />}>
+                <ForceGraph2D
+                  ref={newerGraphDataRef}
+                  width={pageSize[0] * graphWidthRate - 35}
+                  height={pageSize[1] * graphHeightRate - 40}
+                  graphData={newerGraphData}
+                  {...DiffDependencyGraphFactory.Create(graphDifferenceInfo, false)}
+                />
+              </Suspense>
+            </div>
           </Grid>
-          <Suspense fallback={<Loading />}>
-            <ForceGraph2D
-              ref={newerGraphDataRef}
-              width={pageSize[0] * graphWidthRate - 20}
-              height={pageSize[1] * graphHeightRate - 40}
-              graphData={newerGraphData}
-              {...DiffDependencyGraphFactory.Create(
-                graphDifferenceInfo,
-                false,
-              )}
-            />
-          </Suspense>
-        </div>
-      </Grid>
+        </>
+      )}
 
 
       {/* Cohesion diff*/}
@@ -471,6 +631,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
         </Card>
       </Grid>
 
+
       <Grid item xs={gridSize == 6 ? 3 : 0} style={{ display: showCohesionInsightDiffChart && gridSize == 6 ? 'block' : 'none' }}></Grid>
       <Grid item xs={gridSize - 0.5} style={{ display: showCohesionInsightDiffChart ? 'block' : 'none' }}>
         <ReactApexChart
@@ -478,13 +639,13 @@ export default function DiffDisplay(props: DiffDisplayProps) {
             "Service Cohesion",
             cohesionDiff,
             BarChartUtils.SeriesFromServiceCohesionDiff,
-            olderVersionTag || latestVersionStr,
-            newerVersionTag || latestVersionStr,
+            olderVersionTag || currentVersionStr,
+            newerVersionTag || currentVersionStr,
             false,
             BarChartUtils.ServiceCohesionDiffOpts(
               cohesionDiff,
-              olderVersionTag || latestVersionStr,
-              newerVersionTag || latestVersionStr,
+              olderVersionTag || currentVersionStr,
+              newerVersionTag || currentVersionStr,
             )
           )}
         ></ReactApexChart>
@@ -495,7 +656,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
       <Grid item xs={gridSize - 0.5} style={{ display: showCohesionInsightDiffChart ? 'none' : 'block' }}>
         <ReactApexChart
           {...BarChartUtils.CreateBarChart(
-            `Service Cohesion (${olderVersionTag || latestVersionStr})`,
+            `Service Cohesion (${olderVersionTag || currentVersionStr})`,
             olderCohesionData,
             BarChartUtils.SeriesFromServiceCohesion,
             true,
@@ -507,7 +668,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
       <Grid item xs={gridSize - 0.5} style={{ display: showCohesionInsightDiffChart ? 'none' : 'block' }} >
         <ReactApexChart
           {...BarChartUtils.CreateBarChart(
-            `Service Cohesion (${newerVersionTag || latestVersionStr})`,
+            `Service Cohesion (${newerVersionTag || currentVersionStr})`,
             newerCohesionData,
             BarChartUtils.SeriesFromServiceCohesion,
             true,
@@ -544,13 +705,13 @@ export default function DiffDisplay(props: DiffDisplayProps) {
             "Service Coupling",
             couplingDiff,
             BarChartUtils.SeriesFromServiceCouplingDiff,
-            olderVersionTag || latestVersionStr,
-            newerVersionTag || latestVersionStr,
+            olderVersionTag || currentVersionStr,
+            newerVersionTag || currentVersionStr,
             false,
             BarChartUtils.ServiceCouplingDiffOpts(
               couplingDiff,
-              olderVersionTag || latestVersionStr,
-              newerVersionTag || latestVersionStr,
+              olderVersionTag || currentVersionStr,
+              newerVersionTag || currentVersionStr,
             )
           )}
         ></ReactApexChart>
@@ -561,7 +722,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
       <Grid item xs={gridSize - 0.5} style={{ display: showCouplingInsightDiffChart ? 'none' : 'block' }}>
         <ReactApexChart
           {...BarChartUtils.CreateBarChart(
-            `Service Coupling (${olderVersionTag || latestVersionStr})`,
+            `Service Coupling (${olderVersionTag || currentVersionStr})`,
             olderCouplingData,
             BarChartUtils.SeriesFromServiceCoupling,
             true,
@@ -573,7 +734,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
       <Grid item xs={gridSize - 0.5} style={{ display: showCouplingInsightDiffChart ? 'none' : 'block' }}>
         <ReactApexChart
           {...BarChartUtils.CreateBarChart(
-            `Service Coupling (${newerVersionTag || latestVersionStr})`,
+            `Service Coupling (${newerVersionTag || currentVersionStr})`,
             newerCouplingData,
             BarChartUtils.SeriesFromServiceCoupling,
             true,
@@ -611,13 +772,13 @@ export default function DiffDisplay(props: DiffDisplayProps) {
             "Service Instability",
             instabilityDiff,
             BarChartUtils.SeriesFromServiceInstabilityDiff,
-            olderVersionTag || latestVersionStr,
-            newerVersionTag || latestVersionStr,
+            olderVersionTag || currentVersionStr,
+            newerVersionTag || currentVersionStr,
             false,
             BarChartUtils.ServiceInstabilityDiffOpts(
               instabilityDiff,
-              olderVersionTag || latestVersionStr,
-              newerVersionTag || latestVersionStr,
+              olderVersionTag || currentVersionStr,
+              newerVersionTag || currentVersionStr,
             )
           )}
         ></ReactApexChart>
@@ -628,7 +789,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
       <Grid item xs={gridSize - 0.5} style={{ display: showInstabilityInsightDiffChart ? 'none' : 'block' }}>
         <ReactApexChart
           {...BarChartUtils.CreateBarChart(
-            `Service Instability (${olderVersionTag || latestVersionStr})`,
+            `Service Instability (${olderVersionTag || currentVersionStr})`,
             olderInstabilityData,
             BarChartUtils.SeriesFromServiceInstability,
             false,
@@ -640,7 +801,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
       <Grid item xs={gridSize - 0.5} style={{ display: showInstabilityInsightDiffChart ? 'none' : 'block' }}>
         <ReactApexChart
           {...BarChartUtils.CreateBarChart(
-            `Service Instability (${newerVersionTag || latestVersionStr})`,
+            `Service Instability (${newerVersionTag || currentVersionStr})`,
             newerinstabilityData,
             BarChartUtils.SeriesFromServiceInstability,
             false,
