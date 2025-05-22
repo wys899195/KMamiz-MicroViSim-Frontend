@@ -11,32 +11,32 @@ import {
   useRef,
   useState,
 } from "react";
-import ViewportUtils from "../classes/ViewportUtils";
+import ViewportUtils from "../../classes/ViewportUtils";
 import ReactApexChart from "react-apexcharts";
-import BarChartUtils from "../classes/BarChartUtils";
+import BarChartUtils from "../../classes/BarChartUtils";
 import { Element } from 'react-scroll';
 import {
   DiffDependencyGraphFactory
-} from "../classes/DiffDependencyGraphFactory";
+} from "../../classes/DiffDependencyGraphFactory";
 import {
   useGraphDifference,
   DiffDisplayUtils,
-} from "../classes/DiffDisplayUtils";
+} from "../../classes/DiffDisplayUtils";
 import {
   DependencyGraphUtils,
-} from "../classes/DependencyGraphUtils";
-import { TGraphData } from "../entities/TGraphData";
-import { TTotalServiceInterfaceCohesion } from "../entities/TTotalServiceInterfaceCohesion";
-import { TServiceCoupling } from "../entities/TServiceCoupling";
-import { TServiceInstability } from "../entities/TServiceInstability";
-import { TInsightDiffCohesion } from "../entities/TInsightDiffCohesion";
-import { TInsightDiffCoupling } from "../entities/TInsightDiffCoupling";
-import { TInsightDiffInstability } from "../entities/TInsightDiffInstability";
-import TEndpointDataType from "../entities/TEndpointDataType";
-import Loading from "./Loading";
-import DiffComparatorService from "../services/DiffComparatorService";
+} from "../../classes/DependencyGraphUtils";
+import { TGraphData } from "../../entities/TGraphData";
+import { TTotalServiceInterfaceCohesion } from "../../entities/TTotalServiceInterfaceCohesion";
+import { TServiceCoupling } from "../../entities/TServiceCoupling";
+import { TServiceInstability } from "../../entities/TServiceInstability";
+import { TInsightDiffCohesion } from "../../entities/TInsightDiffCohesion";
+import { TInsightDiffCoupling } from "../../entities/TInsightDiffCoupling";
+import { TInsightDiffInstability } from "../../entities/TInsightDiffInstability";
+import TEndpointDataType from "../../entities/TEndpointDataType";
+import Loading from "../Loading";
+import DiffComparatorService from "../../services/DiffComparatorService";
 import DiffMenu from "./DiffMenu";
-// import DiffDetailEndpoint from "./DiffDetailEndpoint";
+import DiffDetailEndpoint from "./DiffDetailEndpoint";
 
 const ForceGraph2D = lazy(() => import("react-force-graph-2d"));
 
@@ -148,7 +148,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
 
 
 
-  /***window size control***/
+  /***window control***/
   const rwdWidth = 1300
   const [pageSize, setPageSize] = useState([0, 0]);
   const [gridSize, setGridSize] = useState(12);
@@ -179,7 +179,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
     setEndpointDataTypesMap: setOlderEndpointDataTypesMap,
   };
 
-  /***useEffect for window size control***/
+  /***useEffect for window control***/
   useEffect(() => {
     const unsubscribe = [
       ViewportUtils.getInstance().subscribe(([vw]) => {
@@ -203,7 +203,11 @@ export default function DiffDisplay(props: DiffDisplayProps) {
       unsubscribe.forEach((un) => un());
     };
   }, []);
-
+  useEffect(() => {
+    if (showChangeDetailNodeId) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [showChangeDetailNodeId]);
 
   /***  useEffect for diff  ***/
   useEffect(() => {
@@ -213,15 +217,6 @@ export default function DiffDisplay(props: DiffDisplayProps) {
       handleFadeNodesInDiffGraph([]);
     }
   }, [hilightNodeId]);
-
-  useEffect(() => {
-    if (showChangeDetailNodeId) {
-      console.log('open detail', showChangeDetailNodeId)
-    } else {
-      console.log('close detail')
-    }
-  }, [showChangeDetailNodeId]);
-
 
   useEffect(() => {
     fetchVersionData(
@@ -299,11 +294,11 @@ export default function DiffDisplay(props: DiffDisplayProps) {
       olderGraphDataRef.current.zoom(3, 0);
       olderGraphDataRef.current.centerAt(0, 0);
     }
-    if (showGraphDiff && diffGraphDataRef.current) {
+    if (showGraphDiff && !showChangeDetailNodeId && diffGraphDataRef.current) {
       diffGraphDataRef.current.zoom(4, 0);
       diffGraphDataRef.current.centerAt(0, 0);
     }
-  }, [showGraphDiff]);
+  }, [showGraphDiff,showChangeDetailNodeId]);
 
   //insight diff
   useEffect(() => {
@@ -391,6 +386,11 @@ export default function DiffDisplay(props: DiffDisplayProps) {
     versionContext.setGraphData(DependencyGraphUtils.ProcessData(showingGraph));
   };
 
+  const handleCloseDetail = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+
   return (
     <>
       {/* Graph diff*/}
@@ -432,7 +432,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
           </FormGroup>
         </Card>
       </Grid>
-      {showGraphDiff && (
+      {showGraphDiff && !showChangeDetailNodeId && (
         <Grid item xs={isInSmallScreen ? 12 : 4}>
           <Box
             sx={{
@@ -455,67 +455,26 @@ export default function DiffDisplay(props: DiffDisplayProps) {
           </Box>
         </Grid>
       )}
-      <Grid item xs={isInSmallScreen ? 12 : 8} style={{ display: showGraphDiff ? 'block' : 'none' }}>
-        <div className={classes.graphContainer}>
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 8,
-              left: 8,
-              zIndex: 10,
-              backgroundColor: 'rgba(255,255,255,0.9)',
-              borderRadius: '0.5em',
-              padding: '0.5em',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-            }}
-          >
-            <Tooltip
-              title="Endpoints or services existing in the second version but not in the first will be marked as added."
-              componentsProps={{
-                tooltip: {
-                  sx: { fontSize: '1em' }
-                }
+
+      {showGraphDiff && !showChangeDetailNodeId && (
+        <Grid item xs={isInSmallScreen ? 12 : 8}>
+          <div className={classes.graphContainer}>
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 8,
+                left: 8,
+                zIndex: 10,
+                backgroundColor: 'rgba(255,255,255,0.9)',
+                borderRadius: '0.5em',
+                padding: '0.5em',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
               }}
             >
-              <Box
-                display="flex"
-                alignItems="center"
-                gap={0.5}
-                onMouseEnter={() => {
-                  handleFadeNodesInDiffGraph(graphDifferenceInfo.addedNodeIds);
-                }}
-                onMouseLeave={() => handleFadeNodesInDiffGraph(hilightNodeId ? [hilightNodeId] : [])}
-              >
-                <Box sx={{ width: 20, height: 20, bgcolor: "rgba(0, 255, 0, 0.7)", borderRadius: '50%' }} />
-                <Typography variant="body2" sx={{ cursor: "help" }}>Add</Typography>
-              </Box>
-            </Tooltip>
-            <Tooltip
-              title="Endpoints or services existing in the first version but not in the second will be marked as deleted."
-              componentsProps={{
-                tooltip: {
-                  sx: { fontSize: '1em' }
-                }
-              }}
-            >
-              <Box
-                display="flex"
-                alignItems="center"
-                gap={0.5}
-                onMouseEnter={() => {
-                  handleFadeNodesInDiffGraph(graphDifferenceInfo.deletedNodeIds);
-                }}
-                onMouseLeave={() => handleFadeNodesInDiffGraph(hilightNodeId ? [hilightNodeId] : [])}
-              >
-                <Box sx={{ width: 20, height: 20, bgcolor: "rgba(255, 0, 0, 0.7)", borderRadius: '50%' }} />
-                <Typography variant="body2" sx={{ cursor: "help" }}>Delete</Typography>
-              </Box>
-            </Tooltip>
-            {showEndpoint && (
               <Tooltip
-                title="Endpoints with differing data types between the two versions will be marked as changed."
+                title="Endpoints or services existing in the second version but not in the first will be marked as added."
                 componentsProps={{
                   tooltip: {
                     sx: { fontSize: '1em' }
@@ -527,43 +486,98 @@ export default function DiffDisplay(props: DiffDisplayProps) {
                   alignItems="center"
                   gap={0.5}
                   onMouseEnter={() => {
-                    handleFadeNodesInDiffGraph(showEndpoint ? graphDifferenceInfo.changedEndpointNodesId : []);
+                    handleFadeNodesInDiffGraph(graphDifferenceInfo.addedNodeIds);
                   }}
                   onMouseLeave={() => handleFadeNodesInDiffGraph(hilightNodeId ? [hilightNodeId] : [])}
                 >
-                  <Box sx={{ width: 20, height: 20, bgcolor: "rgba(255, 165, 0, 0.7)", borderRadius: '50%' }} />
-                  <Typography variant="body2" sx={{ cursor: "help" }}>Change</Typography>
+                  <Box sx={{ width: 20, height: 20, bgcolor: "rgba(0, 255, 0, 0.7)", borderRadius: '50%' }} />
+                  <Typography variant="body2" sx={{ cursor: "help" }}>Add</Typography>
                 </Box>
               </Tooltip>
-            )}
-          </Box>
-          <Suspense fallback={<Loading />}>
-            <ForceGraph2D
-              ref={diffGraphDataRef}
-              width={isInSmallScreen ? pageSize[0] * 0.98 - 20: pageSize[0] * 8 / 12 - 40}
-              height={isInSmallScreen ? pageSize[1] * (graphHeightRate + 0.05) - 40 : pageSize[1] * (graphHeightRate) - 40}
-              graphData={diffGraphData}
-              {...DiffDependencyGraphFactory.Create(
-                graphDifferenceInfo,
-                true,
-                fadeNodes
+              <Tooltip
+                title="Endpoints or services existing in the first version but not in the second will be marked as deleted."
+                componentsProps={{
+                  tooltip: {
+                    sx: { fontSize: '1em' }
+                  }
+                }}
+              >
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  gap={0.5}
+                  onMouseEnter={() => {
+                    handleFadeNodesInDiffGraph(graphDifferenceInfo.deletedNodeIds);
+                  }}
+                  onMouseLeave={() => handleFadeNodesInDiffGraph(hilightNodeId ? [hilightNodeId] : [])}
+                >
+                  <Box sx={{ width: 20, height: 20, bgcolor: "rgba(255, 0, 0, 0.7)", borderRadius: '50%' }} />
+                  <Typography variant="body2" sx={{ cursor: "help" }}>Delete</Typography>
+                </Box>
+              </Tooltip>
+              {showEndpoint && (
+                <Tooltip
+                  title="Endpoints with differing data types between the two versions will be marked as changed."
+                  componentsProps={{
+                    tooltip: {
+                      sx: { fontSize: '1em' }
+                    }
+                  }}
+                >
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    gap={0.5}
+                    onMouseEnter={() => {
+                      handleFadeNodesInDiffGraph(showEndpoint ? graphDifferenceInfo.changedEndpointNodesId : []);
+                    }}
+                    onMouseLeave={() => handleFadeNodesInDiffGraph(hilightNodeId ? [hilightNodeId] : [])}
+                  >
+                    <Box sx={{ width: 20, height: 20, bgcolor: "rgba(255, 165, 0, 0.7)", borderRadius: '50%' }} />
+                    <Typography variant="body2" sx={{ cursor: "help" }}>Change</Typography>
+                  </Box>
+                </Tooltip>
               )}
-            />
-          </Suspense>
-        </div>
-      </Grid>
-
-      {/*TODO*/}
-      {/* {showChangeDetailNodeId && (
-        <Grid item xs={12}>
-          <DiffDetailEndpoint
-            nodeId={showChangeDetailNodeId}
-            graphDifferenceInfo={graphDifferenceInfo}
-            oldEndpointDatatypeMap={olderEndpointDataTypesMap}
-            newEndpointDatatypeMap={newerEndpointDataTypesMap}
-          />
+            </Box>
+            <Suspense fallback={<Loading />}>
+              <ForceGraph2D
+                ref={diffGraphDataRef}
+                width={isInSmallScreen ? pageSize[0] * 0.98 - 20 : pageSize[0] * 8 / 12 - 40}
+                height={isInSmallScreen ? pageSize[1] * (graphHeightRate + 0.05) - 40 : pageSize[1] * (graphHeightRate) - 40}
+                graphData={diffGraphData}
+                {...DiffDependencyGraphFactory.Create(
+                  graphDifferenceInfo,
+                  true,
+                  fadeNodes
+                )}
+              />
+            </Suspense>
+          </div>
         </Grid>
-      )} */}
+      )}
+      {/*TODO*/}
+      {showGraphDiff && showChangeDetailNodeId && (
+        <Grid item xs={12}>
+          <Box
+            sx={{
+              height: isInSmallScreen ? 2 * (pageSize[1] * (graphHeightRate - 0.05)) : pageSize[1] * (graphHeightRate) - 45,
+              overflowY: 'auto',
+              border: '1px solid #ccc',
+              backgroundColor: '#fafafa',
+            }}
+            p={1}
+          >
+            <DiffDetailEndpoint
+              nodeId={showChangeDetailNodeId}
+              graphDifferenceInfo={graphDifferenceInfo}
+              oldEndpointDatatypeMap={olderEndpointDataTypesMap}
+              newEndpointDatatypeMap={newerEndpointDataTypesMap}
+              setShowChangeDetailNodeId={setShowChangeDetailNodeId}
+              onClose={handleCloseDetail}
+            />
+          </Box>
+        </Grid>
+      )}
 
       {/* Graph details*/}
       {!showGraphDiff && (

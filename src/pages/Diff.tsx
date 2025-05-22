@@ -10,7 +10,7 @@ import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp
 import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
 import DiffComparatorService from "../services/DiffComparatorService";
 import { useLocation, useNavigate } from "react-router-dom";
-import DiffDisplay from "../components/DiffDisplay";
+import DiffDisplay from "../components/ComparatorDisplay/DiffDisplay";
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
 
@@ -107,7 +107,7 @@ export default function Diff() {
         const sortedTags = nextData.sort((a, b) => { // sort descending by time and put the current version tag at the top 
           if (a.tag === currentVersionStr) return -1;
           if (b.tag === currentVersionStr) return 1;
-          return b.time - a.time;
+          return a.time - b.time;
         });
 
         sortedTags.forEach((tagI) => {

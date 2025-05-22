@@ -18,7 +18,7 @@ import {
   faSquareMinus,
 } from '@fortawesome/free-regular-svg-icons';
 import { faSquarePen } from '@fortawesome/free-solid-svg-icons';
-import { Color } from '../classes/ColorUtils';
+import { Color } from '../../classes/ColorUtils';
 import { makeStyles } from '@mui/styles';
 
 
@@ -306,20 +306,20 @@ export default function DiffMenu({
                         <Box className={classes.iconBox}>{renderIcon(type)}</Box>
 
                         {/* TODO 取消註解即可 但是要先完成DiffDetailEndpoint*/}
-                        {/* {type === 'change' && isSelected(id) && (
-                        <Button
-                          variant="contained"
-                          color="info"
-                          size="small"
-                          style={{ marginRight: 8, minWidth: 'auto', padding: '4px 8px', whiteSpace: 'nowrap' }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowChangeDetailNodeId(id);
-                          }}
-                        >
-                          Show Change Details
-                        </Button>
-                      )} */}
+                        {type === 'change' && isSelected(id) && (
+                          <Button
+                            variant="contained"
+                            color="info"
+                            size="small"
+                            style={{ marginRight: 8, minWidth: 'auto', padding: '4px 8px', whiteSpace: 'nowrap' }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowChangeDetailNodeId(id);
+                            }}
+                          >
+                            Show Change Details
+                          </Button>
+                        )}
 
                         <ListItemIcon className={classes.listItemIcon}>
                           <CircleIcon serviceNodeId={serviceId} />
