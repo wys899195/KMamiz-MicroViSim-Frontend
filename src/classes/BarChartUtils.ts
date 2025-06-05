@@ -2,7 +2,7 @@ import { ApexOptions } from "apexcharts";
 import { Props } from "react-apexcharts";
 import { TServiceCoupling } from "../entities/TServiceCoupling";
 import { TServiceInstability } from "../entities/TServiceInstability";
-import {TServiceStatistics} from "../entities/TStatistics";
+import { TServiceStatistics } from "../entities/TStatistics";
 import { TTotalServiceInterfaceCohesion } from "../entities/TTotalServiceInterfaceCohesion";
 import { TInsightDiffCohesion } from "../entities/TInsightDiffCohesion";
 import { TInsightDiffCoupling } from "../entities/TInsightDiffCoupling";
@@ -53,7 +53,7 @@ export default class BarChartUtils {
         ),
         ...overwriteOpts,
       },
-      series: toSeriesStrategy(data,versionTag1,versionTag2),
+      series: toSeriesStrategy(data, versionTag1, versionTag2),
     };
   }
 
@@ -183,25 +183,21 @@ export default class BarChartUtils {
     strategy: {
       x: (d: T) => string | number;
       y: (d: T) => number;
-      tooltip: (
-        y: number,
-        seriesIndex: number,
-        dataPointIndex: number
-      ) => string;
+      tooltip: (y: number, seriesIndex: number, dataPointIndex: number) => string;
     },
-  ) {
+    colorFunc?: (d: T) => [string, string]
+  ): ApexOptions {
+    // colors 陣列會依 data 筆數回傳兩倍長度，先把每筆資料產生 [v1Color, v2Color]
+    const colors = colorFunc
+      ? data.flatMap((d) => colorFunc(d))
+      : undefined;
+
     return {
-      stroke: {
-        show: false,
-      },
+      stroke: { show: false },
       dataLabels: {
         enabledOnSeries: [0, 1],
-        formatter: (value: number) => {
-          return value === 0 ? '0' : value.toString();
-        },
-        style: {
-          colors: ['#000000', '#000000'],
-        }
+        formatter: (value: number) => (value === 0 ? "0" : value.toString()),
+        style: { colors: ["#000000", "#000000"] },
       },
       tooltip: {
         shared: true,
@@ -209,13 +205,11 @@ export default class BarChartUtils {
         y: {
           formatter: (
             y: number,
-            {
-              seriesIndex,
-              dataPointIndex,
-            }: { seriesIndex: number; dataPointIndex: number }
+            { seriesIndex, dataPointIndex }: { seriesIndex: number; dataPointIndex: number }
           ) => strategy.tooltip(y, seriesIndex, dataPointIndex),
         },
       },
+      colors,
     };
   }
 
@@ -412,54 +406,66 @@ export default class BarChartUtils {
     };
   }
 
-  static ServiceCohesionDiffOpts (
+  static ServiceCohesionDiffOpts(
     cohesionDiff: TInsightDiffCohesion[],
     versionTag1: string,
-    versionTag2: string,
+    versionTag2: string
   ): ApexOptions {
+    const colorFunc = (d: TInsightDiffCohesion): [string, string] => {
+      if (d.totalInterfaceCohesionV1 === d.totalInterfaceCohesionV2) {
+        return ["#C0C0C0", "#C0C0C0"];
+      } else if (d.totalInterfaceCohesionV1 > d.totalInterfaceCohesionV2) {
+        return ["#0000FF", "#FF0000"]; // V1 高藍色, V2 低紅色
+      } else {
+        return ["#FF0000", "#0000FF"]; // V1 低紅色, V2 高藍色
+      }
+    };
+
     const base = BarChartUtils.StackMixedDiffChartOverwriteOpts(
       cohesionDiff,
       {
         x: (d) => d.name,
         y: (d) => d.totalInterfaceCohesionV2,
-        tooltip: (y) => {
-          return y.toString();
-        },
-      }
+        tooltip: (y) => y.toString(),
+      },
+      colorFunc
+    );
+
+    const labelColors = cohesionDiff.map((d) =>
+      d.totalInterfaceCohesionV1 === d.totalInterfaceCohesionV2 ? "#C0C0C0" : "#000000"
     );
 
     const { maxY, maxRY } = cohesionDiff.reduce(
-      ({ maxY, maxRY }, { totalInterfaceCohesionV1,totalInterfaceCohesionV2}) => ({
+      ({ maxY, maxRY }, { totalInterfaceCohesionV1, totalInterfaceCohesionV2 }) => ({
         maxY: Math.max(maxY, totalInterfaceCohesionV1),
-        maxRY: Math.max(maxRY,totalInterfaceCohesionV2),
+        maxRY: Math.max(maxRY, totalInterfaceCohesionV2),
       }),
       { maxY: 0, maxRY: 0 }
     );
 
     return {
       ...base,
+      xaxis: {
+        categories: cohesionDiff.map((d) => d.name),
+        labels: {
+          trim: true,
+          style: {
+            colors: labelColors,
+          },
+        },
+      },
       yaxis: [
         {
-          title: {
-            text: `TSIC (${versionTag1})`,
-            style: {
-              color: "#FFA500",
-            },
-          },
-          ...BarChartUtils.generateTick(1),
+          title: { text: `TSIC (${versionTag1})`, style: { color: "#FFA500" } },
+          ...BarChartUtils.generateTick(maxY),
           tickAmount: 10,
         },
         {
           opposite: true,
-          title: {
-            text: `TSIC (${versionTag2})`,
-            style: {
-              color: "#00a2ff",
-            },
-          },
-          ...BarChartUtils.generateTick(1),
+          title: { text: `TSIC (${versionTag2})`, style: { color: "#00a2ff" } },
+          ...BarChartUtils.generateTick(maxRY),
           tickAmount: 10,
-        }
+        },
       ],
     };
   }
@@ -467,48 +473,60 @@ export default class BarChartUtils {
   static ServiceCouplingDiffOpts(
     couplingDiff: TInsightDiffCoupling[],
     versionTag1: string,
-    versionTag2: string,
+    versionTag2: string
   ): ApexOptions {
+    const colorFunc = (d: TInsightDiffCoupling): [string, string] => {
+      if (d.acsV1 === d.acsV2) {
+        return ["#C0C0C0", "#C0C0C0"];
+      } else if (d.acsV1 > d.acsV2) {
+        return ["#0000FF", "#FF0000"];
+      } else {
+        return ["#FF0000", "#0000FF"];
+      }
+    };
+
     const base = BarChartUtils.StackMixedDiffChartOverwriteOpts(
       couplingDiff,
       {
         x: (d) => d.name,
         y: (d) => d.acsV2,
-        tooltip: (y) => {
-          return y.toString();
-        },
-      }
+        tooltip: (y) => y.toString(),
+      },
+      colorFunc
     );
 
-    const { maxY} = couplingDiff.reduce(
-      ({ maxY}, { acsV1,acsV2}) => ({
+    const labelColors = couplingDiff.map((d) =>
+      d.acsV1 === d.acsV2 ? "#C0C0C0" : "#000000"
+    );
+
+    const { maxY } = couplingDiff.reduce(
+      ({ maxY }, { acsV1, acsV2 }) => ({
         maxY: Math.max(maxY, acsV1, acsV2),
       }),
-      { maxY: 1}
+      { maxY: 1 }
     );
 
     return {
       ...base,
+      xaxis: {
+        categories: couplingDiff.map((d) => d.name),
+        labels: {
+          trim: true,
+          style: {
+            colors: labelColors,
+          },
+        },
+      },
       yaxis: [
         {
-          title: {
-            text: `ACS (${versionTag1})`,
-            style: {
-              color: "#FFA500",
-            },
-          },
+          title: { text: `ACS (${versionTag1})`, style: { color: "#FFA500" } },
           ...BarChartUtils.generateTick(maxY),
         },
         {
           opposite: true,
-          title: {
-            text: `ACS (${versionTag2})`,
-            style: {
-              color: "#00a2ff",
-            },
-          },
+          title: { text: `ACS (${versionTag2})`, style: { color: "#00a2ff" } },
           ...BarChartUtils.generateTick(maxY),
-        }
+        },
       ],
     };
   }
@@ -516,50 +534,62 @@ export default class BarChartUtils {
   static ServiceInstabilityDiffOpts(
     instabilityDiff: TInsightDiffInstability[],
     versionTag1: string,
-    versionTag2: string,
+    versionTag2: string
   ): ApexOptions {
+    const colorFunc = (d: TInsightDiffInstability): [string, string] => {
+      if (d.instabilityV1 === d.instabilityV2) {
+        return ["#C0C0C0", "#C0C0C0"];
+      } else if (d.instabilityV1 > d.instabilityV2) {
+        return ["#0000FF", "#FF0000"];
+      } else {
+        return ["#FF0000", "#0000FF"];
+      }
+    };
+
     const base = BarChartUtils.StackMixedDiffChartOverwriteOpts(
       instabilityDiff,
       {
         x: (d) => d.name,
         y: (d) => d.instabilityV2,
-        tooltip: (y) => {
-          return y.toString();
-        },
-      }
+        tooltip: (y) => y.toString(),
+      },
+      colorFunc
     );
 
-    const { maxY} = instabilityDiff.reduce(
-      ({ maxY}, { instabilityV1,instabilityV2}) => ({
+    const labelColors = instabilityDiff.map((d) =>
+      d.instabilityV1 === d.instabilityV2 ? "#C0C0C0" : "#000000"
+    );
+
+    const { maxY } = instabilityDiff.reduce(
+      ({ maxY }, { instabilityV1, instabilityV2 }) => ({
         maxY: Math.max(maxY, instabilityV1, instabilityV2),
       }),
-      { maxY: 0}
+      { maxY: 0 }
     );
 
     return {
       ...base,
+      xaxis: {
+        categories: instabilityDiff.map((d) => d.name),
+        labels: {
+          trim: true,
+          style: {
+            colors: labelColors,
+          },
+        },
+      },
       yaxis: [
         {
-          title: {
-            text: `SDP (${versionTag1})`,
-            style: {
-              color: "#FFA500",
-            },
-          },
+          title: { text: `SDP (${versionTag1})`, style: { color: "#FFA500" } },
           min: 0,
           max: 1,
         },
         {
           opposite: true,
-          title: {
-            text: `SDP (${versionTag2})`,
-            style: {
-              color: "#00a2ff",
-            },
-          },
+          title: { text: `SDP (${versionTag2})`, style: { color: "#00a2ff" } },
           min: 0,
           max: 1,
-        }
+        },
       ],
     };
   }
@@ -619,18 +649,33 @@ export default class BarChartUtils {
     versionTag1: string,
     versionTag2: string,
   ) {
-    const fields = [
-      {
-        f: "totalInterfaceCohesionV1",
-        name: versionTag1,
-      },
-      {
-        f: "totalInterfaceCohesionV2",
-        name: versionTag2,
-      }
-    ];
-    const base = BarChartUtils.mapFieldsToDiffSeries(fields,cohesionDiff);
-    return base;
+    const seriesV1 = {
+      name: versionTag1,
+      data: cohesionDiff.map((d) => ({
+        x: d.name,
+        y: BarChartUtils.roundToDisplay(d.totalInterfaceCohesionV1),
+        fillColor: BarChartUtils.getDiffColor(
+          d.totalInterfaceCohesionV1,
+          d.totalInterfaceCohesionV2,
+          'v1'
+        ),
+      })),
+    };
+
+    const seriesV2 = {
+      name: versionTag2,
+      data: cohesionDiff.map((d) => ({
+        x: d.name,
+        y: BarChartUtils.roundToDisplay(d.totalInterfaceCohesionV2),
+        fillColor: BarChartUtils.getDiffColor(
+          d.totalInterfaceCohesionV1,
+          d.totalInterfaceCohesionV2,
+          'v2'
+        ),
+      })),
+    };
+
+    return [seriesV1, seriesV2];
   }
 
   static SeriesFromServiceCouplingDiff(
@@ -638,37 +683,84 @@ export default class BarChartUtils {
     versionTag1: string,
     versionTag2: string,
   ) {
-    const fields = [
-      {
-        f: "acsV1",
-        name: versionTag1,
-      },
-      {
-        f: "acsV2",
-        name: versionTag2,
-      }
-    ];
-    const base = BarChartUtils.mapFieldsToDiffSeries(fields,couplingDiff);
-    return base;
+    const seriesV1 = {
+      name: versionTag1,
+      data: couplingDiff.map((d) => {
+        return {
+          x: d.name,
+          y: BarChartUtils.roundToDisplay(d.acsV1),
+          fillColor: BarChartUtils.getDiffColor(
+            d.acsV2,
+            d.acsV1,
+            'v1'
+          ),
+        };
+      }),
+    };
+
+    const seriesV2 = {
+      name: versionTag2,
+      data: couplingDiff.map((d) => {
+        return {
+          x: d.name,
+          y: BarChartUtils.roundToDisplay(d.acsV2),
+          fillColor: BarChartUtils.getDiffColor(
+            d.acsV2,
+            d.acsV1,
+            'v2'
+          ),
+        };
+      }),
+    };
+
+    return [seriesV1, seriesV2];
   }
+
 
   static SeriesFromServiceInstabilityDiff(
     instabilityDiff: TInsightDiffInstability[],
     versionTag1: string,
     versionTag2: string,
   ) {
-    const fields = [
-      {
-        f: "instabilityV1",
-        name: versionTag1,
-      },
-      {
-        f: "instabilityV2",
-        name: versionTag2,
-      }
-    ];
-    const base = BarChartUtils.mapFieldsToDiffSeries(fields,instabilityDiff);
-    return base;
+    const seriesV1 = {
+      name: versionTag1,
+      data: instabilityDiff.map((d) => {
+        return {
+          x: d.name,
+          y: BarChartUtils.roundToDisplay(d.instabilityV1),
+          fillColor: BarChartUtils.getDiffColor(
+            d.instabilityV2,
+            d.instabilityV1,
+            'v1'
+          ),
+        };
+      }),
+    };
+
+    const seriesV2 = {
+      name: versionTag2,
+      data: instabilityDiff.map((d) => {
+        return {
+          x: d.name,
+          y: BarChartUtils.roundToDisplay(d.instabilityV2),
+          fillColor: BarChartUtils.getDiffColor(
+            d.instabilityV2,
+            d.instabilityV1,
+            'v2'
+          ),
+        };
+      }),
+    };
+
+    return [seriesV1, seriesV2];
+  }
+  private static getDiffColor(v1: number, v2: number, target: 'v1' | 'v2') {
+    if (v1 === v2) return '#B0B0B0'; // 灰色
+
+    const isV1Higher = v1 > v2;
+
+    if (target === 'v1') return isV1Higher ? '#00a2ff' : '#FF0000';
+    else return isV1Higher ? '#FF0000' : '#00a2ff';
   }
 
   private static stringToColorHex(str: string) {
