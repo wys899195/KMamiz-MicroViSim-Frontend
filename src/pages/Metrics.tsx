@@ -1,3 +1,4 @@
+import Config from "../../Config";
 import {
   Grid,
   Box,
@@ -34,8 +35,8 @@ const useStyles = makeStyles(() => ({
     position: "fixed",
     top: "4em",
     left: "0em",
-    backgroundColor:'white',
-    zIndex:99,
+    backgroundColor: 'white',
+    zIndex: 99,
   },
   pageBody: {
     marginTop: '8em',
@@ -44,101 +45,112 @@ const useStyles = makeStyles(() => ({
 
 export default function Metrics() {
   const classes = useStyles();
-  const [lastTimes, setLastTimes] = useState<number>(1800); //display data for the last 30 minutes by default
+  const [timeOffset, setTimeOffset] = useState<number>(Config.backendConfig.SimulatorMode ? -86400 * 7 : 1800); //display data for the last 30 minutes by default
   const [mappedHistoricalData, setMappedHistoricalData] =
     useState<TLineChartData>();
-  const [statistics,setStatistics] = useState<TServiceStatistics[]>([]);
+  const [statistics, setStatistics] = useState<TServiceStatistics[]>([]);
 
   useEffect(() => {
     const unsubscribe = [
       GraphService.getInstance().subscribeToLineChartData(
-        setMappedHistoricalData,lastTimes * 1000
+        setMappedHistoricalData, timeOffset * 1000,
       ),
     ];
 
     return () => {
       unsubscribe.forEach((un) => un());
     };
-  }, [lastTimes]);
+  }, [timeOffset]);
 
   useEffect(() => {
     const unsubscribeStatistics = [
       GraphService.getInstance().subscribeToServiceHistoricalStatistics(
-        setStatistics,lastTimes * 1000
+        setStatistics, timeOffset * 1000
       ),
     ];
     return () => {
       unsubscribeStatistics.forEach((uns) => uns());
     };
-  }, [lastTimes]);
+  }, [timeOffset]);
 
   const areaCharts: {
     name: string;
     field: TLineChartDataFields;
     options?: any;
   }[] = [
-    { name: "Requests", field: "requests" },
-    {
-      name: "Risks",
-      field: "risk",
-      options: {
-        yaxis: {
-          max: 1,
-          min: 0,
+      { name: "Requests", field: "requests" },
+      {
+        name: "Risks",
+        field: "risk",
+        options: {
+          yaxis: {
+            max: 1,
+            min: 0,
+          },
         },
       },
-    },
-    { name: "RequestErrors", field: "requestErrors" },
-    { name: "ServerErrors", field: "serverErrors" },
-    { name: "Latency (Coefficient of Variation)", field: "latencyCV" },
-  ];
+      { name: "RequestErrors", field: "requestErrors" },
+      { name: "ServerErrors", field: "serverErrors" },
+      { name: "Latency (Coefficient of Variation)", field: "latencyCV" },
+    ];
 
-  const statisticsTimeOptions = [
-    { label: 'last 10 min', value: 600 },
-    { label: 'last 30 min', value: 1800 },
-    { label: 'last 1 hr'  , value: 3600 },
-    { label: 'last 3 hr'  , value: 10800 },
-    { label: 'last 6 hr'  , value: 21600 },
-    { label: 'last 12 hr' , value: 43200 },
-    { label: 'last 1 day' , value: 86400 },
-    { label: 'last 7 days', value: 604800 },
-  ];
+  const statisticsTimeOptions = (Config.backendConfig.SimulatorMode
+    ? [
+      { label: 'next 1 day', value: -86400 },
+      { label: 'next 2 days', value: -86400 * 2 },
+      { label: 'next 3 days', value: -86400 * 3 },
+      { label: 'next 4 days', value: -86400 * 4 },
+      { label: 'next 5 days', value: -86400 * 5 },
+      { label: 'next 6 days', value: -86400 * 6 },
+      { label: 'next 7 days', value: -86400 * 7 },
+    ]
+    : [
+      { label: 'last 10 min', value: 600 },
+      { label: 'last 30 min', value: 1800 },
+      { label: 'last 1 hr', value: 3600 },
+      { label: 'last 3 hr', value: 10800 },
+      { label: 'last 6 hr', value: 21600 },
+      { label: 'last 12 hr', value: 43200 },
+      { label: 'last 1 day', value: 86400 },
+      { label: 'last 7 days', value: 86400 * 7 },
+    ]
+  );
 
   return (
     <Box className={classes.root}>
       <Grid container padding={1} spacing={0.5} className={classes.pageHeader}>
         <Grid item xs={12} margin="1em 1em 0 0" >
-        <FormControl className={classes.select}>
-          <InputLabel id="lt-label">LastTimes</InputLabel>
-          <Select
-            labelId="lt-label"
-            label="LastTimes"
-            onChange={(e) => setLastTimes(+e.target.value)}
-            value={lastTimes}
-          >
-            {statisticsTimeOptions.map((option) => (
-              <MenuItem key={`lt-item-${option.value}`} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+          <FormControl className={classes.select}>
+            <InputLabel id="lt-label">Time Offset</InputLabel>
+            <Select
+              labelId="lt-label"
+              label="Time Offset"
+              onChange={(e) => setTimeOffset(+e.target.value)}
+              value={timeOffset}
+            >
+              {statisticsTimeOptions.map((option) => (
+                <MenuItem key={`lt-item-${option.value}`} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </Grid>
       </Grid>
       <Grid container className={classes.pageBody}>
         {mappedHistoricalData
           ? areaCharts.map((c) => (
-              <Grid key={c.name} item xs={6}>
-                <LineChart
-                  title={c.name}
-                  series={LineChartUtils.MappedBaseDataToSeriesData(
-                    mappedHistoricalData,
-                    c.field
-                  )}
-                  overwriteOptions={c.options}
-                />
-              </Grid>
-            ))
+            <Grid key={c.name} item xs={6}>
+              <LineChart
+                title={c.name}
+                series={LineChartUtils.MappedBaseDataToSeriesData(
+                  mappedHistoricalData,
+                  c.field
+                )}
+                overwriteOptions={c.options}
+              />
+            </Grid>
+          ))
           : null}
         <Grid item xs={12} padding={1}>
           <ServiceStatisticsTable servicesStatistics={statistics} />
