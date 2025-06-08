@@ -65,13 +65,15 @@ export default class SimulationService {
 
     const resBody = await res.json();
     return {
-      message: resBody.message,
+      message: typeof resBody.message === 'string'
+        ? String(resBody.message)
+        : JSON.stringify(resBody.message),
       resStatus: res.status
     }
   }
 
-  async generateStaticYamlFromCurrentData() {
-    const path = `${this.prefix}/simulation/generateStaticYaml`;
+  async generateSimConfigFromCurrentStaticData() {
+    const path = `${this.prefix}/simulation/generateStaticSimConfig`;
     return await SimulationService.getInstance().get<
       {
         staticYamlStr: string,

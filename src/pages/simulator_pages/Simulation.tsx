@@ -1,5 +1,5 @@
 import {
-  Card, Grid, Button, Tooltip, TextField,
+  Card, Grid, Button, Tooltip, TextField, Typography,
 } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import {
@@ -66,11 +66,10 @@ const useStyles = makeStyles(() => ({
     backgroundColor: '#ddd',
     height: '100%',
   },
-  textField: {
+  editorField: {
     resize: 'none',
     width: '100%',
     overflowY: 'auto',
-    height: '80vh',
     border: '1px solid black'
   },
   buttonContainer: {
@@ -90,17 +89,18 @@ export default function Simulation() {
   // create new version tag
   const latestVersionStr = "Latest";
   const [newVersionTagToCreate, setNewVersionTagToCreate] = useState<string>("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [versionTagErrorMessage, setVersionTagErrorMessage] = useState("");
+  const [errorLines, setErrorLines] = useState<string[]>([]);
 
   /***window size control***/
   const rwdWidth = 1000;
-  const [gridSize, setGridSize] = useState(12);
+  const [isInSmallScreen, setIsInSmallScreen] = useState<boolean>(true);
 
   /***useEffect for window size control***/
   useEffect(() => {
     const unsubscribe = [
       ViewportUtils.getInstance().subscribe(([vw]) => {
-        setGridSize(vw > rwdWidth ? 6 : 12)
+        setIsInSmallScreen(vw > rwdWidth ? false : true)
       }),
     ];
     return () => {
@@ -113,15 +113,23 @@ export default function Simulation() {
       return;
     }
     setLoading(true);
+    setErrorLines([]);
     try {
       const { message, resStatus } = await SimulationService.getInstance().retrieveDataBySimulateYaml(yamlInput);
 
       if (resStatus >= 400) {
-        alert(`Failed to simulate data retrival.\n\n[error message]\n${message}`);
+        const lines = message.split('\n---\n').map(line => line.trim()).filter(line => line.length > 0);
+
+        setErrorLines(lines);
         console.error(`${message}`)
       } else {
         setYamlInput("");
-        alert(`ok!`);
+        setErrorLines([]);
+        await SwalHandler.fire({
+          icon: 'success',
+          title: 'Success',
+          text: 'Simulation completed successfully!',
+        });
       }
     } finally {
       setLoading(false);
@@ -212,7 +220,7 @@ export default function Simulation() {
   const fetchStaticYamlStr = async () => {
     setLoading(true);
     try {
-      const { staticYamlStr, message } = await SimulationService.getInstance().generateStaticYamlFromCurrentData();
+      const { staticYamlStr, message } = await SimulationService.getInstance().generateSimConfigFromCurrentStaticData();
 
       if (message !== 'ok') {
         await SwalHandler.fire({
@@ -240,7 +248,7 @@ export default function Simulation() {
     if (!newVersionTagToCreate) return;
     if (newVersionTagToCreate == latestVersionStr) {
       setNewVersionTagToCreate("");
-      setErrorMessage(`Version name cannot be set to "${latestVersionStr}"`);
+      setVersionTagErrorMessage(`Version name cannot be set to "${latestVersionStr}"`);
       return;
     }
     setLoading(true);
@@ -285,6 +293,33 @@ export default function Simulation() {
     };
   };
 
+  const ErrorMessageCard = ({ height }: { height: string }) => (
+    <Card
+      variant="outlined"
+      style={{
+        padding: 16,
+        backgroundColor: "#fee",
+        height,
+        overflowY: 'auto',
+        overflowX: 'auto',
+        boxSizing: 'border-box',
+      }}
+    >
+      <Typography variant="h6" color="error" gutterBottom>
+        {errorLines[0]} {/* Use the first line of the error message as the title */}
+      </Typography>
+      {errorLines.length > 1 && (
+        <ul>
+          {errorLines.slice(1).map((line, idx) => (
+            <li key={idx}>
+              <Typography variant="body2" color="error">{line}</Typography>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
+
   return (
     <div className={classes.container}>
       <div
@@ -293,7 +328,7 @@ export default function Simulation() {
       >
         <Grid container spacing={2}>
 
-          <Grid item xs={gridSize} justifyContent="center" alignItems="center">
+          <Grid item xs={isInSmallScreen ? 12 : 6} justifyContent="center" alignItems="center">
             <Card variant="outlined" className={classes.buttonGroups}>
               <Button
                 variant="contained"
@@ -332,7 +367,7 @@ export default function Simulation() {
               </Button>
             </Card>
           </Grid>
-          <Grid item xs={gridSize}>
+          <Grid item xs={isInSmallScreen ? 12 : 6}>
             <Card variant="outlined" className={classes.actions}>
               <TextField
                 id="new-version-tag"
@@ -341,8 +376,8 @@ export default function Simulation() {
                 variant="outlined"
                 value={newVersionTagToCreate}
                 onChange={(e) => setNewVersionTagToCreate(e.target.value)}
-                error={!!errorMessage}
-                helperText={errorMessage}
+                error={!!versionTagErrorMessage}
+                helperText={versionTagErrorMessage}
               />
               <Tooltip title="Save simulator data as a new version for the comparator in the production environment.">
                 <Button
@@ -356,14 +391,23 @@ export default function Simulation() {
               </Tooltip>
             </Card>
           </Grid>
-          <Grid item xs={12}>
+          {isInSmallScreen && errorLines.length > 0 && (
+            <Grid item xs={12}>
+              <ErrorMessageCard height="20vh" />
+            </Grid>
+          )}
+          <Grid item xs={isInSmallScreen ? 12 : errorLines.length > 0 ? 9 : 12}>
             <MonacoEditor
-              className={classes.textField}
+              className={classes.editorField}
               value={yamlInput}
               onChange={handleEditorChange}
               language="yaml"
               theme="light"
-              height="75vh"
+              height={!isInSmallScreen
+                ? "75vh"
+                : errorLines.length > 0
+                  ? "45vh"
+                  : "65vh"}
               options={{
                 minimap: { enabled: false },
                 lineNumbers: "on",
@@ -375,9 +419,12 @@ export default function Simulation() {
               }}
             />
           </Grid>
+          {!isInSmallScreen && errorLines.length > 0 && (
+            <Grid item xs={3}>
+              <ErrorMessageCard height="75vh" />
+            </Grid>
+          )}
         </Grid>
-
-
 
       </div>
     </div>
