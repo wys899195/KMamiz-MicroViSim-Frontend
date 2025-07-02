@@ -173,8 +173,8 @@ export default function Diff() {
     });
   };
   const selects = [
-    { name: "Select the first vertion", relVal: () => olderVersionTag },
-    { name: "Select the second version", relVal: () => newerVersionTag },
+    { name: "Select the 1st vertion", relVal: () => olderVersionTag },
+    { name: "Select the 2nd version", relVal: () => newerVersionTag },
   ];
   const desplayFormattedCreateTime = (timestamp: number): string => {
     if (!timestamp) {
