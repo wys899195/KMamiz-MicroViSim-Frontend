@@ -14,7 +14,6 @@ const Interfaces = lazy(() => import("./pages/Interfaces"));
 const Swagger = lazy(() => import("./pages/Swagger"));
 const Difference = lazy(() => import("./pages/Diff"));
 
-const SimulateDependencyGraph = lazy(() => import("./pages/simulator_pages/SimulateDependencyGraph"));
 const Simulation = lazy(() => import("./pages/simulator_pages/Simulation"));
 
 ReactDOM.render(
@@ -35,7 +34,6 @@ ReactDOM.render(
           {Config.backendConfig.SimulatorMode && (
             <> 
               <Route path="/simulation" element={<Simulation/>} /> 
-              <Route path="/simulate-dependencyGraph" element={<SimulateDependencyGraph />} />
             </>
           )}
         </Routes>
