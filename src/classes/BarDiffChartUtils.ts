@@ -19,16 +19,18 @@ export default class BarDiffChartUtils {
     versionTag2: string,
     stacked = false,
     overwriteOpts: Props = {},
-    height = 600
+    height: number,
+    subtitle?: string
   ): Props {
     return {
       type: "bar",
       height,
       options: {
         ...BarDiffChartUtils.DefaultOptions(
-          title,
           stacked,
           data.map(({ name }) => name),
+          title,
+          subtitle
         ),
         ...overwriteOpts,
       },
@@ -37,14 +39,25 @@ export default class BarDiffChartUtils {
   }
 
   static DefaultOptions(
-    title: string,
+
     stacked: boolean,
     categories: any[],
+    title: string,
+    subtitle: string = "",
   ): ApexOptions {
     return {
       title: {
         text: title.trim() === "" ? undefined : title,
         align: "center",
+        offsetY: 0,
+      },
+      subtitle: {
+        text: subtitle.trim() === "" ? undefined : subtitle,
+        align: "center",
+        style: {
+          fontSize: "14px",
+          color: "#666",
+        },
       },
       chart: {
         type: "bar",
@@ -152,7 +165,7 @@ export default class BarDiffChartUtils {
       yaxis: [
         {
           title: {
-            text: `TSIC for ${versionTag1}`,
+            text: `${versionTag1}`,
             style: {
               color: BarDiffChartUtils.DIFF_COLORS.v1,
               fontSize: "18px"
@@ -163,7 +176,7 @@ export default class BarDiffChartUtils {
         {
           opposite: true,
           title: {
-            text: `TSIC for ${versionTag2}`,
+            text: `${versionTag2}`,
             style: {
               color: BarDiffChartUtils.DIFF_COLORS.v2,
               fontSize: "18px"
@@ -209,7 +222,7 @@ export default class BarDiffChartUtils {
       yaxis: [
         {
           title: {
-            text: `ACS for ${versionTag1}`,
+            text: `${versionTag1}`,
             style: {
               color: BarDiffChartUtils.DIFF_COLORS.v1,
               fontSize: "18px",
@@ -220,7 +233,7 @@ export default class BarDiffChartUtils {
         {
           opposite: true,
           title: {
-            text: `ACS for ${versionTag2}`,
+            text: `${versionTag2}`,
             style: {
               color: BarDiffChartUtils.DIFF_COLORS.v2,
               fontSize: "18px",
@@ -264,7 +277,7 @@ export default class BarDiffChartUtils {
       yaxis: [
         {
           title: {
-            text: `SDP for ${versionTag1}`,
+            text: `${versionTag1}`,
             style: {
               color: BarDiffChartUtils.DIFF_COLORS.v1,
               fontSize: "18px",
@@ -275,7 +288,7 @@ export default class BarDiffChartUtils {
         {
           opposite: true,
           title: {
-            text: `SDP for ${versionTag2}`,
+            text: `${versionTag2}`,
             style: {
               color: BarDiffChartUtils.DIFF_COLORS.v2,
               fontSize: "18px",
@@ -469,7 +482,7 @@ export default class BarDiffChartUtils {
       cohesionDiff,
       (d) => d.name,
       (d) => d.totalInterfaceCohesionV2 - d.totalInterfaceCohesionV1,
-      () => "TSIC Change (2nd version - 1st version)",
+      () => "TSIC Change",
       0.1
     );
   }
@@ -478,7 +491,7 @@ export default class BarDiffChartUtils {
       couplingDiff,
       (d) => d.name,
       (d) => d.acsV2 - d.acsV1,
-      () => "ACS Change (2nd version - 1st version)",
+      () => "ACS Change",
       1,
     );
   }
@@ -487,7 +500,7 @@ export default class BarDiffChartUtils {
       instabilityDiff,
       (d) => d.name,
       (d) => d.instabilityV2 - d.instabilityV1,
-      () => "SDP Change (2nd version - 1st version)",
+      () => "SDP Change ",
       0.1,
     );
   }
@@ -497,7 +510,7 @@ export default class BarDiffChartUtils {
   ) {
     return [
       {
-        name: "TSIC Change (2nd version - 1st version)",
+        name: "TSIC Change",
         data: cohesionDiff.map((d) => {
           const diff = BarDiffChartUtils.roundToDisplay(d.totalInterfaceCohesionV2 - d.totalInterfaceCohesionV1);
           return {
@@ -514,7 +527,7 @@ export default class BarDiffChartUtils {
   ) {
     return [
       {
-        name: "ACS Change (2nd version - 1st version)",
+        name: "ACS Change",
         data: couplingDiff.map((d) => {
           const diff = BarDiffChartUtils.roundToDisplay(d.acsV2 - d.acsV1);
           return {
@@ -531,7 +544,7 @@ export default class BarDiffChartUtils {
   ) {
     return [
       {
-        name: "SDP Change (2nd version - 1st version)",
+        name: "SDP Change ",
         data: instabilityDiff.map((d) => {
           const diff = BarDiffChartUtils.roundToDisplay(d.instabilityV2 - d.instabilityV1);
           return {
