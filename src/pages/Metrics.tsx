@@ -96,13 +96,7 @@ export default function Metrics() {
 
   const statisticsTimeOptions = (Config.backendConfig.SimulatorMode
     ? [
-      { label: 'next 1 day', value: -86400 },
-      { label: 'next 2 days', value: -86400 * 2 },
-      { label: 'next 3 days', value: -86400 * 3 },
-      { label: 'next 4 days', value: -86400 * 4 },
-      { label: 'next 5 days', value: -86400 * 5 },
-      { label: 'next 6 days', value: -86400 * 6 },
-      { label: 'next 7 days', value: -86400 * 7 },
+      { label: 'simulation', value: 0},
     ]
     : [
       { label: 'last 10 min', value: 600 },
@@ -118,25 +112,27 @@ export default function Metrics() {
 
   return (
     <Box className={classes.root}>
-      <Grid container padding={1} spacing={0.5} className={classes.pageHeader}>
-        <Grid item xs={12} margin="1em 1em 0 0" >
-          <FormControl className={classes.select}>
-            <InputLabel id="lt-label">Time Offset</InputLabel>
-            <Select
-              labelId="lt-label"
-              label="Time Offset"
-              onChange={(e) => setTimeOffset(+e.target.value)}
-              value={timeOffset}
-            >
-              {statisticsTimeOptions.map((option) => (
-                <MenuItem key={`lt-item-${option.value}`} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+      {!Config.backendConfig.SimulatorMode && (
+        <Grid container padding={1} spacing={0.5} className={classes.pageHeader}>
+          <Grid item xs={12} margin="1em 1em 0 0" >
+            <FormControl className={classes.select}>
+              <InputLabel id="lt-label">Time Offset</InputLabel>
+              <Select
+                labelId="lt-label"
+                label="Time Offset"
+                onChange={(e) => setTimeOffset(+e.target.value)}
+                value={timeOffset}
+              >
+                {statisticsTimeOptions.map((option) => (
+                  <MenuItem key={`lt-item-${option.value}`} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
         </Grid>
-      </Grid>
+      )}
       <Grid container className={classes.pageBody}>
         {mappedHistoricalData
           ? areaCharts.map((c) => (

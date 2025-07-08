@@ -6,6 +6,7 @@ import {
 } from "../entities/TLineChartData";
 import { TRequestInfoChartData } from "../entities/TRequestInfoChartData";
 import { Color } from "./ColorUtils";
+import Config from "../../Config";
 
 export default class LineChartUtils {
   static DefaultOptions(title: string): ApexOptions {
@@ -34,10 +35,17 @@ export default class LineChartUtils {
         type: "datetime",
         labels: {
           formatter: (_, ts) => {
-            const tok = new Date(ts as any).toISOString().split("T");
-            const dateTok = tok[0].split("-");
-            const timeTok = tok[1].split(":");
-            return `${dateTok[1]}/${dateTok[2]} ${timeTok[0]}:${timeTok[1]}`;
+            const date = new Date(ts as any);
+            const month = date.getUTCMonth() + 1;
+            const day = date.getUTCDate();
+            const hours = String(date.getUTCHours()).padStart(2, "0");
+            const minutes = String(date.getUTCMinutes()).padStart(2, "0");
+
+            if (Config.backendConfig.SimulatorMode) {
+              return `Day${day} ${hours}:${minutes}`;  // e.g., "Day1 03:00"
+            } else {
+              return `${String(month).padStart(2, "0")}/${String(day).padStart(2, "0")} ${hours}:${minutes}`;
+            }
           },
         },
       },

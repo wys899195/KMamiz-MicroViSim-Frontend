@@ -13,10 +13,10 @@ export default class SimulationService {
     return (await res.json()) as T;
   }
 
-  async retrieveDataBySimulateYaml(yamlData: string) {
-    const res = await fetch(`${this.prefix}/simulation/retrieveDataByYAML`, {
+  async retrieveDataBySimulateYaml(simConfigYAML: string) {
+    const res = await fetch(`${this.prefix}/simulation/startSimulation`, {
       method: "POST",
-      body: JSON.stringify({ yamlData }),
+      body: JSON.stringify({ simConfigYAML }),
       headers: {
         "Content-Type": "application/json",
       },
