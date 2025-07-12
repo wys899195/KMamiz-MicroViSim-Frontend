@@ -93,7 +93,7 @@ export default function Simulation() {
   const [errorLines, setErrorLines] = useState<string[]>([]);
 
   /***window size control***/
-  const rwdWidth = 1000;
+  const rwdWidth = 1200;
   const [isInSmallScreen, setIsInSmallScreen] = useState<boolean>(true);
 
   /***useEffect for window size control***/
@@ -396,7 +396,7 @@ export default function Simulation() {
               <ErrorMessageCard height="20vh" />
             </Grid>
           )}
-          <Grid item xs={isInSmallScreen ? 12 : errorLines.length > 0 ? 9 : 12}>
+          <Grid item xs={isInSmallScreen ? 12 : errorLines.length > 0 ? 8 : 12}>
             <MonacoEditor
               className={classes.editorField}
               value={yamlInput}
@@ -420,7 +420,7 @@ export default function Simulation() {
             />
           </Grid>
           {!isInSmallScreen && errorLines.length > 0 && (
-            <Grid item xs={3}>
+            <Grid item xs={4}>
               <ErrorMessageCard height="75vh" />
             </Grid>
           )}
