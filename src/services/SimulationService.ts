@@ -1,4 +1,5 @@
 import Config from "../../Config";
+import YAML from 'yaml';
 
 export default class SimulationService {
   private static instance?: SimulationService;
@@ -14,12 +15,13 @@ export default class SimulationService {
   }
 
   async retrieveDataBySimulateYaml(simConfigYAML: string) {
+    const blob = new Blob([simConfigYAML], { type: 'text/yaml' });
+    const formData = new FormData();
+    formData.append('file', blob, 'simConfig.yaml');
+
     const res = await fetch(`${this.prefix}/simulation/startSimulation`, {
       method: "POST",
-      body: JSON.stringify({ simConfigYAML }),
-      headers: {
-        "Content-Type": "application/json",
-      },
+      body: formData,
     });
 
     const resBody = await res.json();
@@ -28,8 +30,9 @@ export default class SimulationService {
         ? String(resBody.message)
         : JSON.stringify(resBody.message),
       resStatus: res.status
-    }
+    };
   }
+
 
   async generateSimConfigFromCurrentStaticData() {
     const path = `${this.prefix}/simulation/generateStaticSimConfig`;

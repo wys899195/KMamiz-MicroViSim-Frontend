@@ -11,7 +11,7 @@ import DataService from "../../services/DataService";
 import ViewportUtils from "../../classes/ViewportUtils";
 import MonacoEditor from "@monaco-editor/react";
 import DiffComparatorService from "../../services/DiffComparatorService";
-
+import YAML from 'yaml';
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
 
@@ -39,6 +39,9 @@ const useStyles = makeStyles(() => ({
     gap: '1em',
     padding: '1em',
     minHeight: '4.2em',
+  },
+  fullWidthButton: {
+    gridColumn: 'span 2',
   },
   button: {
     textTransform: 'none',
@@ -108,10 +111,31 @@ export default function Simulation() {
     };
   }, []);
 
+  useEffect(() => {
+    const savedYaml = localStorage.getItem('simulatorYaml');
+    if (savedYaml) {
+      setYamlInput(savedYaml);
+    }
+  }, []);
+
   const handleStartSimulateClick = async () => {
     if (!yamlInput) {
       return;
     }
+
+    try {
+      YAML.parse(yamlInput);
+    } catch (err) {
+      await SwalHandler.fire({
+        icon: 'error',
+        title: 'Invalid YAML Format',
+        text: String(err),
+      });
+      return;
+    }
+    
+    // console.log(`handleStartSimulateClick 開始計算總執行時間`);
+    // const startTime = performance.now();
     setLoading(true);
     setErrorLines([]);
     try {
@@ -123,7 +147,8 @@ export default function Simulation() {
         setErrorLines(lines);
         console.error(`${message}`)
       } else {
-        setYamlInput("");
+        localStorage.setItem('simulatorYaml', yamlInput);
+        // setYamlInput("");
         setErrorLines([]);
         await SwalHandler.fire({
           icon: 'success',
@@ -133,6 +158,9 @@ export default function Simulation() {
       }
     } finally {
       setLoading(false);
+      // const endTime = performance.now(); // 結束時間
+      // const duration = endTime - startTime;
+      // console.log(`handleStartSimulateClick 總執行時間: ${duration.toFixed(2)} 毫秒`);
     }
   };
 
@@ -163,7 +191,7 @@ export default function Simulation() {
       icon: 'warning',
       title: 'This action cannot be undone. Are you sure you want to proceed?',
       html: `
-        The simulator will clone data from the KMamiz production environment, and 
+        The simulator will clone data from the KMamiz, and 
          <strong style="color: red;">all existing data in the simulator will be overwritten!</strong><br />
       `,
       showCancelButton: true,
@@ -269,7 +297,7 @@ export default function Simulation() {
             await SwalHandler.fire({
               icon: 'success',
               title: 'Version Created!',
-              html: `In the comparator of the KMamiz production environment, you can view the system architecture of version <strong style="color: blue;">"[from Simulator] ${newVersionTagToCreate}"</strong>. `
+              html: `In the comparator, you can view the system architecture of version <strong style="color: blue;">"[from Simulator] ${newVersionTagToCreate}"</strong>. `
             });
             setNewVersionTagToCreate("");
           } else {
@@ -335,9 +363,9 @@ export default function Simulation() {
                 color="primary"
                 onClick={handleStartSimulateClick}
                 disabled={loading || !yamlInput}
-                className={classes.button}
+                className={`${classes.button} ${classes.fullWidthButton}`}
               >
-                {loading ? 'Loading...' : 'Start Simulate'}
+                {loading ? 'Loading...' : 'Start Simulation'}
               </Button>
               <Button
                 variant="contained"
@@ -346,7 +374,7 @@ export default function Simulation() {
                 disabled={loading}
                 className={classes.button}
               >
-                {loading ? 'Loading...' : 'Generate Yaml from Current Data'}
+                {loading ? 'Loading...' : 'Generate YAML from Simulator Data'}
               </Button>
               <Button
                 variant="contained"
@@ -355,16 +383,25 @@ export default function Simulation() {
                 disabled={loading}
                 className={classes.button}
               >
-                {loading ? 'Loading...' : 'clone data from KMamiz'}
+                {loading ? 'Loading...' : 'Clone Data from KMamiz '}
               </Button>
-              <Button
+              {/* <Button
+                variant="contained"
+                color="error"
+                onClick={handleGenerateExampleYamlClick}
+                disabled={loading}
+                className={classes.button}
+              >
+                {loading ? 'Loading...' : 'Use Example YAML'}
+              </Button> */}
+              {/* <Button
                 variant="contained"
                 color="success"
                 disabled={loading}
                 className={classes.button}
               >
                 {loading ? 'Loading...' : 'Export Simulation Report'}
-              </Button>
+              </Button> */}
             </Card>
           </Grid>
           <Grid item xs={isInSmallScreen ? 12 : 6}>
@@ -372,14 +409,14 @@ export default function Simulation() {
               <TextField
                 id="new-version-tag"
                 fullWidth
-                label="Save simulator data as a new version for the comparator in the production environment."
+                label="Save simulator data as a new version for the comparator."
                 variant="outlined"
                 value={newVersionTagToCreate}
                 onChange={(e) => setNewVersionTagToCreate(e.target.value)}
                 error={!!versionTagErrorMessage}
                 helperText={versionTagErrorMessage}
               />
-              <Tooltip title="Save simulator data as a new version for the comparator in the production environment.">
+              <Tooltip title="Save simulator data as a new version for the comparator.">
                 <Button
                   variant="contained"
                   onClick={() => createNewVersion()}
