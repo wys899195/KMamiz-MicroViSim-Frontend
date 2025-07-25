@@ -664,6 +664,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
               newerVersionTag || currentVersionStr,
             ),
             600,
+            "TSIC"
           )}
         ></ReactApexChart>
       </Grid>
@@ -680,6 +681,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
               cohesionDiff.filter(d => d.totalInterfaceCohesionV1 !== d.totalInterfaceCohesionV2),
             ),
             600,
+            "TSIC",
             "(Change from 1st version to 2nd version)"
           )}
         ></ReactApexChart>
@@ -745,6 +747,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
               newerVersionTag || currentVersionStr,
             ),
             600,
+            "ACS"
           )}
         ></ReactApexChart>
       </Grid>
@@ -761,6 +764,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
               couplingDiff.filter(d => d.acsV1 !== d.acsV2),
             ),
             600,
+            "ACS",
             "(Change from 1st version to 2nd version)"
           )}
         ></ReactApexChart>
@@ -826,6 +830,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
               newerVersionTag || currentVersionStr,
             ),
             600,
+            "SDP"
           )}
         ></ReactApexChart>
       </Grid>
@@ -842,6 +847,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
               instabilityDiff.filter(d => d.instabilityV1 !== d.instabilityV2),
             ),
             600,
+            "SDP",
             "(Change from 1st version to 2nd version)"
           )}
         ></ReactApexChart>

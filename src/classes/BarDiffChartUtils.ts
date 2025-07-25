@@ -20,17 +20,21 @@ export default class BarDiffChartUtils {
     stacked = false,
     overwriteOpts: Props = {},
     height: number,
+    metricName: string,
     subtitle?: string
   ): Props {
+    const isNoDiff: boolean = data.length === 0;
     return {
       type: "bar",
       height,
       options: {
         ...BarDiffChartUtils.DefaultOptions(
+          isNoDiff,
           stacked,
           data.map(({ name }) => name),
           title,
-          subtitle
+          subtitle,
+          metricName
         ),
         ...overwriteOpts,
       },
@@ -39,11 +43,13 @@ export default class BarDiffChartUtils {
   }
 
   static DefaultOptions(
-
+    isNoDiff: boolean,
     stacked: boolean,
     categories: any[],
     title: string,
     subtitle: string = "",
+    metricName: string,
+
   ): ApexOptions {
     return {
       title: {
@@ -52,11 +58,14 @@ export default class BarDiffChartUtils {
         offsetY: 0,
       },
       subtitle: {
-        text: subtitle.trim() === "" ? undefined : subtitle,
+        text: isNoDiff
+          ? `No changes detected in ${metricName}`
+          : subtitle.trim() === "" ? undefined : subtitle,
         align: "center",
         style: {
-          fontSize: "14px",
-          color: "#666",
+          fontSize: isNoDiff ? "20px" : "14px",
+          fontWeight: isNoDiff ? "bold" : undefined,
+          color: isNoDiff ? "#2ECC71" : "#666",
         },
       },
       chart: {
@@ -157,9 +166,6 @@ export default class BarDiffChartUtils {
         categories: cohesionDiff.map((d) => d.name),
         labels: {
           trim: true,
-          style: {
-            fontSize: "20px",
-          },
         },
       },
       yaxis: [
@@ -214,9 +220,6 @@ export default class BarDiffChartUtils {
         categories: couplingDiff.map((d) => d.name),
         labels: {
           trim: true,
-          style: {
-            fontSize: "20px",
-          },
         },
       },
       yaxis: [
@@ -269,9 +272,6 @@ export default class BarDiffChartUtils {
         categories: instabilityDiff.map((d) => d.name),
         labels: {
           trim: true,
-          style: {
-            fontSize: "20px",
-          },
         },
       },
       yaxis: [
@@ -438,9 +438,6 @@ export default class BarDiffChartUtils {
       xaxis: {
         categories: data.map(getName),
         labels: {
-          style: {
-            fontSize: "20px",
-          },
         },
       },
       yaxis: [createYAxis(false), createYAxis(true)],
