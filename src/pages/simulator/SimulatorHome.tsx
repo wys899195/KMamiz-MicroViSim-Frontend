@@ -10,7 +10,7 @@ import SimulationService from "../../services/SimulationService";
 import DataService from "../../services/DataService";
 import ViewportUtils from "../../classes/ViewportUtils";
 import MonacoEditor from "@monaco-editor/react";
-import DiffComparatorService from "../../services/DiffComparatorService";
+import ComparatorService from "../../services/ComparatorService";
 import YAML from 'yaml';
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
@@ -80,7 +80,7 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-export default function Simulation() {
+export default function SimulatorHome() {
   const classes = useStyles();
 
   const [yamlInput, setYamlInput] = useState(() => {
@@ -291,7 +291,7 @@ export default function Simulation() {
         showConfirmButton: false,
         backdrop: true,
         didRender: async () => {
-          const isSuccess = await DiffComparatorService.getInstance().addTaggedDiffData(newVersionTagToCreate);
+          const isSuccess = await ComparatorService.getInstance().addTaggedDiffData(newVersionTagToCreate);
 
           if (isSuccess) {
             await SwalHandler.fire({
@@ -355,7 +355,6 @@ export default function Simulation() {
         style={{ width: `100%` }}
       >
         <Grid container spacing={2}>
-
           <Grid item xs={isInSmallScreen ? 12 : 6} justifyContent="center" alignItems="center">
             <Card variant="outlined" className={classes.buttonGroups}>
               <Button

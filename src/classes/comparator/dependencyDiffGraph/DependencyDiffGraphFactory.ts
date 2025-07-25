@@ -1,5 +1,4 @@
-import { DependencyGraphUtils } from "./DependencyGraphUtils";
-import { DiffDisplayUtils, GraphDifferenceInfo } from "./DiffDisplayUtils";
+import { DiffDisplayUtils, GraphDifferenceInfo } from "../DiffDisplayUtils";
 
 export class DiffDependencyGraphFactory {
   private constructor() { }

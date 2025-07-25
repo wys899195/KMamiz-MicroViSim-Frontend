@@ -14,15 +14,16 @@ import {
 import ViewportUtils from "../../classes/ViewportUtils";
 import ReactApexChart from "react-apexcharts";
 import BarChartUtils from "../../classes/BarChartUtils";
-import BarDiffChartUtils from "../../classes/BarDiffChartUtils";
+import InsightComparisonBarChartUtils from "../../classes/comparator/InsightDiffBarChart/InsightComparisonBarChartUtils";
+import InsightChangeBarChartUtils from "../../classes/comparator/InsightDiffBarChart/InsightChangeBarChartUtils";
 import { Element } from 'react-scroll';
 import {
   DiffDependencyGraphFactory
-} from "../../classes/DiffDependencyGraphFactory";
+} from "../../classes/comparator/dependencyDiffGraph/DependencyDiffGraphFactory";
 import {
   useGraphDifference,
   DiffDisplayUtils,
-} from "../../classes/DiffDisplayUtils";
+} from "../../classes/comparator/DiffDisplayUtils";
 import {
   DependencyGraphUtils,
 } from "../../classes/DependencyGraphUtils";
@@ -30,14 +31,15 @@ import { TGraphData } from "../../entities/TGraphData";
 import { TTotalServiceInterfaceCohesion } from "../../entities/TTotalServiceInterfaceCohesion";
 import { TServiceCoupling } from "../../entities/TServiceCoupling";
 import { TServiceInstability } from "../../entities/TServiceInstability";
-import { TInsightDiffCohesion } from "../../entities/TInsightDiffCohesion";
-import { TInsightDiffCoupling } from "../../entities/TInsightDiffCoupling";
-import { TInsightDiffInstability } from "../../entities/TInsightDiffInstability";
+import { TInsightDiffCohesion } from "../../entities/comparator/TInsightDiffCohesion";
+import { TInsightDiffCoupling } from "../../entities/comparator/TInsightDiffCoupling";
+import { TInsightDiffInstability } from "../../entities/comparator/TInsightDiffInstability";
 import TEndpointDataType from "../../entities/TEndpointDataType";
 import Loading from "../Loading";
-import DiffComparatorService from "../../services/DiffComparatorService";
+import ComparatorService from "../../services/ComparatorService";
 import DiffMenu from "./DiffMenu";
 import DiffDetailEndpoint from "./DiffDetailEndpoint";
+import { InsightComparator } from "../../classes/InsightComparator";
 
 const ForceGraph2D = lazy(() => import("react-force-graph-2d"));
 
@@ -94,9 +96,9 @@ const useStyles = makeStyles(() => ({
 export default function DiffDisplay(props: DiffDisplayProps) {
   if (!props.newerVersionTag || !props.olderVersionTag) return <></>;
   const classes = useStyles();
-  const olderVersionTag = props.olderVersionTag;
-  const newerVersionTag = props.newerVersionTag;
   const currentVersionStr = props.currentVersionStr;
+  const olderVersionTag = props.olderVersionTag || currentVersionStr;
+  const newerVersionTag = props.newerVersionTag || currentVersionStr;
 
   /***  graph ***/
   // the older version graph data
@@ -303,25 +305,53 @@ export default function DiffDisplay(props: DiffDisplayProps) {
 
   //insight diff
   useEffect(() => {
-    const newDataDiff = DiffDisplayUtils.mergeCohesionDiffData(olderCohesionData, newerCohesionData);
+    const newDataDiff = InsightComparator.getInstance().mergeCohesionDiffData([
+      {
+        versionTag: olderVersionTag,
+        cohesionData: olderCohesionData
+      },
+      {
+        versionTag: newerVersionTag,
+        cohesionData: newerCohesionData
+      }
+    ]);
     setCohesionDiff(newDataDiff);
   }, [olderCohesionData, newerCohesionData]);
 
   useEffect(() => {
-    const newDataDiff = DiffDisplayUtils.mergeCouplingDiffData(olderCouplingData, newerCouplingData);
+    const newDataDiff = InsightComparator.getInstance().mergeCouplingDiffData([
+      {
+        versionTag: olderVersionTag,
+        couplingData: olderCouplingData,
+      },
+      {
+        versionTag: newerVersionTag,
+        couplingData: newerCouplingData,
+      }
+    ]);
     setCouplingDiff(newDataDiff);
   }, [olderCouplingData, newerCouplingData]);
 
   useEffect(() => {
-    const newDataDiff = DiffDisplayUtils.mergeInstabilityDiffData(olderInstabilityData, newerinstabilityData);
+    const newDataDiff = InsightComparator.getInstance().mergeInstabilityDiffData([
+      {
+        versionTag: olderVersionTag,
+        instabilityData: olderInstabilityData,
+      },
+      {
+        versionTag: newerVersionTag,
+        instabilityData: newerinstabilityData,
+      },
+    ]);
     setInstabilityDiff(newDataDiff);
   }, [olderInstabilityData, newerinstabilityData]);
 
+  // other function
   const fetchVersionData = async (
     tag: string, // if tag is empty string, it means current version
     versionContext: VersionContext
   ) => {
-    const data = await DiffComparatorService.getInstance().getTaggedDiffData(tag);
+    const data = await ComparatorService.getInstance().getTaggedDiffData(tag);
 
     // get raw graph data
     const endpointGraph = JSON.parse(JSON.stringify(data.graphData));
@@ -587,7 +617,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
             <div className={classes.graphContainer}>
               <div className={classes.graphHeader}>
                 <h4 className={classes.graphTitle}>
-                  {olderVersionTag || currentVersionStr}
+                  {olderVersionTag}
                 </h4>
               </div>
               <Suspense fallback={<Loading />}>
@@ -606,7 +636,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
             <div className={classes.graphContainer}>
               <div className={classes.graphHeader}>
                 <h4 className={classes.graphTitle}>
-                  {newerVersionTag || currentVersionStr}
+                  {newerVersionTag}
                 </h4>
               </div>
               <Suspense fallback={<Loading />}>
@@ -647,21 +677,21 @@ export default function DiffDisplay(props: DiffDisplayProps) {
       </Grid>
       <Grid item xs={gridSize} style={{ display: showCohesionInsightDiffChart ? 'block' : 'none' }}>
         <ReactApexChart
-          {...BarDiffChartUtils.CreateDiffBarChart(
+          {...InsightComparisonBarChartUtils.CreateComparisonBarChart(
             "Service Cohesion (TSIC) Comparison",
-            cohesionDiff.filter(
-              (d) => d.totalInterfaceCohesionV1 !== d.totalInterfaceCohesionV2
-            ),
-            BarDiffChartUtils.SeriesFromServiceCohesionComparison,
-            olderVersionTag || currentVersionStr,
-            newerVersionTag || currentVersionStr,
+            cohesionDiff,
+            InsightComparisonBarChartUtils.SeriesFromServiceCohesionComparison,
+            [
+              olderVersionTag,
+              newerVersionTag,
+            ],
             false,
-            BarDiffChartUtils.ServiceCohesionComparisonOpts(
-              cohesionDiff.filter(
-                (d) => d.totalInterfaceCohesionV1 !== d.totalInterfaceCohesionV2
-              ),
-              olderVersionTag || currentVersionStr,
-              newerVersionTag || currentVersionStr,
+            InsightComparisonBarChartUtils.ServiceCohesionComparisonOpts(
+              cohesionDiff,
+              [
+                olderVersionTag,
+                newerVersionTag,
+              ]
             ),
             600,
             "TSIC"
@@ -670,15 +700,17 @@ export default function DiffDisplay(props: DiffDisplayProps) {
       </Grid>
       <Grid item xs={gridSize} style={{ display: showCohesionInsightDiffChart ? 'block' : 'none' }}>
         <ReactApexChart
-          {...BarDiffChartUtils.CreateDiffBarChart(
+          {...InsightChangeBarChartUtils.CreateChangesBarChart(
             "Service Cohesion (TSIC) Change",
-            cohesionDiff.filter(d => d.totalInterfaceCohesionV1 !== d.totalInterfaceCohesionV2),
-            BarDiffChartUtils.SeriesFromCohesionChange,
-            olderVersionTag || currentVersionStr,
-            newerVersionTag || currentVersionStr,
+            cohesionDiff,
+            InsightChangeBarChartUtils.SeriesFromCohesionChange,
+            olderVersionTag,
+            newerVersionTag,
             false,
-            BarDiffChartUtils.CohesionChangeBarChartOpts(
-              cohesionDiff.filter(d => d.totalInterfaceCohesionV1 !== d.totalInterfaceCohesionV2),
+            InsightChangeBarChartUtils.CohesionChangeBarChartOpts(
+              cohesionDiff,
+              olderVersionTag,
+              newerVersionTag
             ),
             600,
             "TSIC",
@@ -691,7 +723,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
       <Grid item xs={gridSize} style={{ display: showCohesionInsightDiffChart ? 'none' : 'block' }}>
         <ReactApexChart
           {...BarChartUtils.CreateBarChart(
-            `Service Cohesion (${olderVersionTag || currentVersionStr})`,
+            `Service Cohesion (${olderVersionTag})`,
             olderCohesionData,
             BarChartUtils.SeriesFromServiceCohesion,
             true,
@@ -702,7 +734,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
       <Grid item xs={gridSize} style={{ display: showCohesionInsightDiffChart ? 'none' : 'block' }} >
         <ReactApexChart
           {...BarChartUtils.CreateBarChart(
-            `Service Cohesion (${newerVersionTag || currentVersionStr})`,
+            `Service Cohesion (${newerVersionTag})`,
             newerCohesionData,
             BarChartUtils.SeriesFromServiceCohesion,
             true,
@@ -734,47 +766,53 @@ export default function DiffDisplay(props: DiffDisplayProps) {
       </Grid>
       <Grid item xs={gridSize} style={{ display: showCouplingInsightDiffChart ? 'block' : 'none' }}>
         <ReactApexChart
-          {...BarDiffChartUtils.CreateDiffBarChart(
+          {...InsightComparisonBarChartUtils.CreateComparisonBarChart(
             "Service Coupling (ACS) Comparison",
-            couplingDiff.filter(d => d.acsV1 !== d.acsV2),
-            BarDiffChartUtils.SeriesFromServiceCouplingComparison,
-            olderVersionTag || currentVersionStr,
-            newerVersionTag || currentVersionStr,
+            couplingDiff,
+            InsightComparisonBarChartUtils.SeriesFromServiceCouplingComparison,
+            [
+              olderVersionTag,
+              newerVersionTag,
+            ],
             false,
-            BarDiffChartUtils.ServiceCouplingComparisonOpts(
-              couplingDiff.filter(d => d.acsV1 !== d.acsV2),
-              olderVersionTag || currentVersionStr,
-              newerVersionTag || currentVersionStr,
+            InsightComparisonBarChartUtils.ServiceCouplingComparisonOpts(
+              couplingDiff,
+              [
+                olderVersionTag,
+                newerVersionTag,
+              ]
             ),
             600,
             "ACS"
           )}
-        ></ReactApexChart>
+        />
       </Grid>
       <Grid item xs={gridSize} style={{ display: showCouplingInsightDiffChart ? 'block' : 'none' }}>
         <ReactApexChart
-          {...BarDiffChartUtils.CreateDiffBarChart(
+          {...InsightChangeBarChartUtils.CreateChangesBarChart(
             "Service Coupling (ACS) Change",
-            couplingDiff.filter(d => d.acsV1 !== d.acsV2),
-            BarDiffChartUtils.SeriesFromCouplingChange,
-            olderVersionTag || currentVersionStr,
-            newerVersionTag || currentVersionStr,
+            couplingDiff,
+            InsightChangeBarChartUtils.SeriesFromCouplingChange,
+            olderVersionTag,
+            newerVersionTag,
             false,
-            BarDiffChartUtils.CouplingChangeBarChartOpts(
-              couplingDiff.filter(d => d.acsV1 !== d.acsV2),
+            InsightChangeBarChartUtils.CouplingChangeBarChartOpts(
+              couplingDiff,
+              olderVersionTag,
+              newerVersionTag
             ),
             600,
             "ACS",
             "(Change from 1st version to 2nd version)"
           )}
-        ></ReactApexChart>
+        />
       </Grid>
 
       {/* Coupling details*/}
       <Grid item xs={gridSize} style={{ display: showCouplingInsightDiffChart ? 'none' : 'block' }}>
         <ReactApexChart
           {...BarChartUtils.CreateBarChart(
-            `Service Coupling (${olderVersionTag || currentVersionStr})`,
+            `Service Coupling (${olderVersionTag})`,
             olderCouplingData,
             BarChartUtils.SeriesFromServiceCoupling,
             true,
@@ -785,7 +823,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
       <Grid item xs={gridSize} style={{ display: showCouplingInsightDiffChart ? 'none' : 'block' }}>
         <ReactApexChart
           {...BarChartUtils.CreateBarChart(
-            `Service Coupling (${newerVersionTag || currentVersionStr})`,
+            `Service Coupling (${newerVersionTag})`,
             newerCouplingData,
             BarChartUtils.SeriesFromServiceCoupling,
             true,
@@ -817,47 +855,47 @@ export default function DiffDisplay(props: DiffDisplayProps) {
       </Grid>
       <Grid item xs={gridSize} style={{ display: showInstabilityInsightDiffChart ? 'block' : 'none' }}>
         <ReactApexChart
-          {...BarDiffChartUtils.CreateDiffBarChart(
+          {...InsightComparisonBarChartUtils.CreateComparisonBarChart(
             "Service Instability (SDP) Comparison",
-            instabilityDiff.filter(d => d.instabilityV1 !== d.instabilityV2),
-            BarDiffChartUtils.SeriesFromServiceInstabilityComparison,
-            olderVersionTag || currentVersionStr,
-            newerVersionTag || currentVersionStr,
+            instabilityDiff,
+            InsightComparisonBarChartUtils.SeriesFromServiceInstabilityComparison,
+            [olderVersionTag, newerVersionTag],
             false,
-            BarDiffChartUtils.ServiceInstabilityComparisonOpts(
-              instabilityDiff.filter(d => d.instabilityV1 !== d.instabilityV2),
-              olderVersionTag || currentVersionStr,
-              newerVersionTag || currentVersionStr,
+            InsightComparisonBarChartUtils.ServiceInstabilityComparisonOpts(
+              instabilityDiff,
+              [olderVersionTag, newerVersionTag],
             ),
             600,
             "SDP"
           )}
-        ></ReactApexChart>
+        />
       </Grid>
       <Grid item xs={gridSize} style={{ display: showInstabilityInsightDiffChart ? 'block' : 'none' }}>
         <ReactApexChart
-          {...BarDiffChartUtils.CreateDiffBarChart(
+          {...InsightChangeBarChartUtils.CreateChangesBarChart(
             "Service Instability (SDP) Change",
-            instabilityDiff.filter(d => d.instabilityV1 !== d.instabilityV2),
-            BarDiffChartUtils.SeriesFromInstabilityChange,
-            olderVersionTag || currentVersionStr,
-            newerVersionTag || currentVersionStr,
+            instabilityDiff,
+            InsightChangeBarChartUtils.SeriesFromInstabilityChange,
+            olderVersionTag,
+            newerVersionTag,
             false,
-            BarDiffChartUtils.InstabilityChangeBarChartOpts(
-              instabilityDiff.filter(d => d.instabilityV1 !== d.instabilityV2),
+            InsightChangeBarChartUtils.InstabilityChangeBarChartOpts(
+              instabilityDiff,
+              olderVersionTag,
+              newerVersionTag
             ),
             600,
             "SDP",
             "(Change from 1st version to 2nd version)"
           )}
-        ></ReactApexChart>
+        />
       </Grid>
 
       {/* Instability details*/}
       <Grid item xs={gridSize} style={{ display: showInstabilityInsightDiffChart ? 'none' : 'block' }}>
         <ReactApexChart
           {...BarChartUtils.CreateBarChart(
-            `Service Instability (${olderVersionTag || currentVersionStr})`,
+            `Service Instability (${olderVersionTag})`,
             olderInstabilityData,
             BarChartUtils.SeriesFromServiceInstability,
             false,
@@ -868,7 +906,7 @@ export default function DiffDisplay(props: DiffDisplayProps) {
       <Grid item xs={gridSize} style={{ display: showInstabilityInsightDiffChart ? 'none' : 'block' }}>
         <ReactApexChart
           {...BarChartUtils.CreateBarChart(
-            `Service Instability (${newerVersionTag || currentVersionStr})`,
+            `Service Instability (${newerVersionTag})`,
             newerinstabilityData,
             BarChartUtils.SeriesFromServiceInstability,
             false,

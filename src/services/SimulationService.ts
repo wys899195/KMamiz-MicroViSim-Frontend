@@ -6,7 +6,7 @@ export default class SimulationService {
   static getInstance = () => this.instance || (this.instance = new this());
   private constructor() { }
 
-  private readonly prefix = `${Config.apiPrefix}`;
+  private readonly prefix = `${Config.apiPrefix}/simulation`;
 
   private async get<T>(path: string) {
     const res = await fetch(path);
@@ -19,7 +19,7 @@ export default class SimulationService {
     const formData = new FormData();
     formData.append('file', blob, 'simConfig.yaml');
 
-    const res = await fetch(`${this.prefix}/simulation/startSimulation`, {
+    const res = await fetch(`${this.prefix}/startSimulation`, {
       method: "POST",
       body: formData,
     });
@@ -35,7 +35,7 @@ export default class SimulationService {
 
 
   async generateSimConfigFromCurrentStaticData() {
-    const path = `${this.prefix}/simulation/generateStaticSimConfig`;
+    const path = `${this.prefix}/generateStaticSimConfig`;
     return await SimulationService.getInstance().get<
       {
         staticYamlStr: string,

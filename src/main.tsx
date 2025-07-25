@@ -12,9 +12,9 @@ const Insights = lazy(() => import("./pages/Insights"));
 const Endpoints = lazy(() => import("./pages/Endpoints"));
 const Interfaces = lazy(() => import("./pages/Interfaces"));
 const Swagger = lazy(() => import("./pages/Swagger"));
-const Difference = lazy(() => import("./pages/Diff"));
+const ComparatorHome = lazy(() => import("./pages/comparator/ComparatorHome"));
 
-const Simulation = lazy(() => import("./pages/simulator_pages/Simulation"));
+const Simulation = lazy(() => import("./pages/simulator/SimulatorHome"));
 
 ReactDOM.render(
   <React.StrictMode>
@@ -29,11 +29,11 @@ ReactDOM.render(
           <Route path="/interfaces" element={<Interfaces />} />
           <Route path="/swagger/:service" element={<Swagger />} />
           {!Config.backendConfig.SimulatorMode && (
-            <Route path="/diff" element={<Difference />} />
+            <Route path="/comparatorHome" element={<ComparatorHome />} />
           )}
           {Config.backendConfig.SimulatorMode && (
             <> 
-              <Route path="/simulation" element={<Simulation/>} /> 
+              <Route path="/simulatorHome" element={<Simulation/>} /> 
             </>
           )}
         </Routes>

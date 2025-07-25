@@ -1,8 +1,8 @@
-import { TGraphData } from "./TGraphData";
-import { TTotalServiceInterfaceCohesion } from "./TTotalServiceInterfaceCohesion";
-import { TServiceCoupling } from "./TServiceCoupling";
-import { TServiceInstability } from "./TServiceInstability";
-import TEndpointDataType from "./TEndpointDataType";
+import { TGraphData } from "../TGraphData";
+import { TTotalServiceInterfaceCohesion } from "../TTotalServiceInterfaceCohesion";
+import { TServiceCoupling } from "../TServiceCoupling";
+import { TServiceInstability } from "../TServiceInstability";
+import TEndpointDataType from "../TEndpointDataType";
 
 export type TTaggedDiffData = {
   _id?: string;

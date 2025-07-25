@@ -2,7 +2,7 @@ import { useState, useEffect, Suspense } from "react";
 import {
   GraphDifferenceInfo,
   EndpointDataTypeDifferenceInfo,
-} from "../../classes/DiffDisplayUtils";
+} from "../../classes/comparator/DiffDisplayUtils";
 import TEndpointDataType from "../../entities/TEndpointDataType";
 import {
   Box,

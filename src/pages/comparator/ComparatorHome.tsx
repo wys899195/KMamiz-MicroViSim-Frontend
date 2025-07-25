@@ -8,9 +8,9 @@ import {
 } from "@mui/material";
 import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
 import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
-import DiffComparatorService from "../services/DiffComparatorService";
+import ComparatorService from "../../services/ComparatorService";
 import { useLocation, useNavigate } from "react-router-dom";
-import DiffDisplay from "../components/ComparatorDisplay/DiffDisplay";
+import DiffDisplay from "../../components/comparator/DiffDisplay";
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
 
@@ -71,7 +71,7 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-export default function Diff() {
+export default function ComparatorHome() {
   const classes = useStyles();
   const navigate = useNavigate();
   const { search } = useLocation();
@@ -122,7 +122,7 @@ export default function Diff() {
       }
     };
 
-    const unSub = DiffComparatorService.getInstance().subscribeToDiffdataTags(next);
+    const unSub = ComparatorService.getInstance().subscribeToDiffdataTags(next);
     return () => {
       unSub();
     };
@@ -138,7 +138,7 @@ export default function Diff() {
   useEffect(() => {
     const url = `${olderVersionTag}${newerVersionTag && `\t${newerVersionTag}`}`;
     const encoded = btoa(encodeURIComponent(url));
-    navigate(`/diff${encoded && `?q=${encoded}`}`, {
+    navigate(`/comparatorHome${encoded && `?q=${encoded}`}`, {
       replace: true,
     });
   }, [olderVersionTag, newerVersionTag]);
@@ -189,16 +189,45 @@ export default function Diff() {
   const createNewVersion = async () => {
     if (!newVersionTagToCreate) return;
     if (newVersionTagToCreate == currentVersionStr) {
+      await SwalHandler.fire({
+        icon: 'error',
+        title: 'Invalid Version Name',
+        text: `Version name cannot be set to "${currentVersionStr}"`,
+      });
       setNewVersionTagToCreate("");
-      setErrorMessage(`Version name cannot be set to "${currentVersionStr}"`);
       return;
     }
     try {
-      await DiffComparatorService.getInstance().addTaggedDiffData(newVersionTagToCreate);
-      setNewVersionTagToCreate("");
-      window.location.replace("/diff");
+      await SwalHandler.fire({
+        title: 'Processing...',
+        didOpen: () => {
+          SwalHandler.showLoading();
+        },
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        backdrop: true,
+        didRender: async () => {
+          await ComparatorService.getInstance().addTaggedDiffData(newVersionTagToCreate);
+
+          SwalHandler.fire({
+            icon: 'success',
+            title: 'Version Created',
+            showConfirmButton: true,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              setNewVersionTagToCreate("");
+              window.location.replace("/comparatorHome");
+            }
+          });
+        },
+      });
     } catch (error) {
-      setErrorMessage(`Failed to create version: ${error}`);
+      await SwalHandler.fire({
+        icon: 'error',
+        title: 'Unexpected Error',
+        text: `An unexpected error occurred: ${error}`,
+      });
     }
 
   };
@@ -231,14 +260,15 @@ export default function Diff() {
         showConfirmButton: false,
         backdrop: true,
         didRender: async () => {
-          const isSuccess = await DiffComparatorService.getInstance().deleteTaggedDiffData(tagToDelete);
+          const isSuccess = await ComparatorService.getInstance().deleteTaggedDiffData(tagToDelete);
 
           if (isSuccess) {
             await SwalHandler.fire({
               icon: 'success',
               title: 'Success',
+              showConfirmButton: true,
             });
-            window.location.replace("/diff");
+            window.location.replace("/comparatorHome");
           } else {
             await SwalHandler.fire({
               icon: 'error',
@@ -249,14 +279,13 @@ export default function Diff() {
         },
       });
     } catch (error) {
-      console.error('Error during deleting version:', error);
       await SwalHandler.fire({
         icon: 'error',
         title: 'Unexpected Error',
-        text: `An unexpected error occurred while deleting the version: ${error}`,
+        text: `An unexpected error occurred: ${error}`,
       });
-    } 
-    
+    }
+
 
   };
   const shouldDisableDeleteButton = (level: number): boolean => {
@@ -272,7 +301,7 @@ export default function Diff() {
       <Grid container padding={showPageHeader ? 1 : 0} spacing={0.5} className={classes.pageHeader}>
         {showPageHeader &&
           <Grid item xs={5}>
-            <Typography variant="h5">Difference</Typography>
+            <Typography variant="h5">Comparator</Typography>
           </Grid>
         }
         {showPageHeader &&

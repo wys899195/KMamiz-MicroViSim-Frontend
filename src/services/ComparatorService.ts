@@ -1,13 +1,13 @@
 import Config from "../../Config";
-import { TTaggedDiffData } from "../entities/TTaggedDiffData";
+import { TTaggedDiffData } from "../entities/comparator/TTaggedDiffData";
 import { DataView } from "./DataView";
 
-export default class DiffComparatorService {
-  private static instance?: DiffComparatorService;
+export default class ComparatorService {
+  private static instance?: ComparatorService;
   static getInstance = () => this.instance || (this.instance = new this());
   private constructor() { }
 
-  private readonly prefix = `${Config.apiPrefix}`;
+  private readonly prefix = `${Config.apiPrefix}/comparator`;
 
   private subscribeToArray<T>(path: string, next: (data: T[]) => void) {
     return DataView.getInstance().subscribe<T[]>(path, (_, data) =>
@@ -24,13 +24,13 @@ export default class DiffComparatorService {
   async getDiffdataTags() {
     return (
       (await this.get<{ tag: string; time: number }[]>(
-        `${this.prefix}/diffComparator/tags`
+        `${this.prefix}/tags`
       )) || []
     );
   }
 
   async addTaggedDiffData(tag: string) {
-    const res = await fetch(`${this.prefix}/diffComparator/diffData`, {
+    const res = await fetch(`${this.prefix}/diffData`, {
       method: "POST",
       body: JSON.stringify({ tag }),
       headers: {
@@ -41,7 +41,7 @@ export default class DiffComparatorService {
   }
 
   async deleteTaggedDiffData(tag: string) {
-    const res = await fetch(`${this.prefix}/diffComparator/diffData`, {
+    const res = await fetch(`${this.prefix}/diffData`, {
       method: "DELETE",
       body: JSON.stringify({ tag }),
       headers: {
@@ -52,8 +52,8 @@ export default class DiffComparatorService {
   }
 
   async getTaggedDiffData(tag: string): Promise<TTaggedDiffData> {
-    const path = `${this.prefix}/diffComparator/diffData?tag=${tag}`;
-    const result = await DiffComparatorService.getInstance().get<TTaggedDiffData>(path);
+    const path = `${this.prefix}/diffData?tag=${tag}`;
+    const result = await ComparatorService.getInstance().get<TTaggedDiffData>(path);
     return result ?? {
       tag: tag,
       graphData: { nodes: [], links: [] },
@@ -67,7 +67,7 @@ export default class DiffComparatorService {
   subscribeToDiffdataTags(
     next: (data: { tag: string; time: number }[]) => void
   ) {
-    const path = `${this.prefix}/diffComparator/tags`;
-    return DiffComparatorService.getInstance().subscribeToArray(path, next);
+    const path = `${this.prefix}/tags`;
+    return ComparatorService.getInstance().subscribeToArray(path, next);
   }
 }

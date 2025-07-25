@@ -33,7 +33,7 @@ export default function Header() {
   const [isOpen, setOpen] = useState(false);
   const [hasAlert, setHasAlert] = useState(false);
   const navigate = useNavigate();
-  const pageTitle = Config.backendConfig.SimulatorMode ? "KMamiz (Simulator)" : "KMamiz";
+  const pageTitle = Config.backendConfig.SimulatorMode ? "KMamiz-MicroViSim Simulator" : "KMamiz-MicroViSim Monitor";
 
   useEffect(() => {
     const unSub = AlertManager.getInstance().listen(
@@ -51,10 +51,10 @@ export default function Header() {
     { name: "Interfaces", path: "/interfaces", icon: <Code /> },
     
     ...(!Config.backendConfig.SimulatorMode ? [
-      { name: "Difference", path: "/diff", icon: <Difference /> },
+      { name: "Comparator", path: "/comparatorHome", icon: <Difference /> },
     ] : []),
     ...(Config.backendConfig.SimulatorMode ? [
-      { name: "Simulation", path: "/simulation", icon: <FlashOnIcon /> },
+      { name: "Simulator", path: "/simulatorHome", icon: <FlashOnIcon /> },
     ] : []),
   ];
 

@@ -1,15 +1,10 @@
 import { Dispatch, SetStateAction, useState } from "react";
-import { TGraphData, TLink } from "../entities/TGraphData";
-import { Color } from "./ColorUtils";
-import { DependencyGraphUtils } from "./DependencyGraphUtils"
+import { TGraphData, TLink } from "../../entities/TGraphData";
+import { Color } from "../ColorUtils";
+import { DependencyGraphUtils } from "../DependencyGraphUtils"
 
-import { TTotalServiceInterfaceCohesion } from "../entities/TTotalServiceInterfaceCohesion";
-import { TServiceCoupling } from "../entities/TServiceCoupling";
-import { TServiceInstability } from "../entities/TServiceInstability";
-import { TInsightDiffCohesion } from "../entities/TInsightDiffCohesion";
-import { TInsightDiffCoupling } from "../entities/TInsightDiffCoupling";
-import { TInsightDiffInstability } from "../entities/TInsightDiffInstability";
-import TEndpointDataType from "../entities/TEndpointDataType";
+
+import TEndpointDataType from "../../entities/TEndpointDataType";
 
 // to compare two dependency graphs
 export type GraphDifferenceInfo = {
@@ -272,140 +267,6 @@ export class DiffDisplayUtils extends DependencyGraphUtils {
     DiffDisplayUtils.PaintNode(node, color.hex, ctx);
     ctx.globalAlpha = 1;
   }
-
-  static mergeCohesionDiffData = (
-    datav1: TTotalServiceInterfaceCohesion[],
-    datav2: TTotalServiceInterfaceCohesion[]
-  ): TInsightDiffCohesion[] => {
-    const allServiceNames = new Set([
-      ...datav1.map(item => item.name),
-      ...datav2.map(item => item.name),
-    ]);
-    const mergedData: TInsightDiffCohesion[] = [];
-
-    allServiceNames.forEach(serviceName => {
-      const v1 = datav1.find(item => item.name === serviceName) || {
-        uniqueServiceName: serviceName,
-        name: serviceName,
-        dataCohesion: 0,
-        usageCohesion: 0,
-        totalInterfaceCohesion: 0,
-        endpointCohesion: [],
-        totalEndpoints: 0,
-        consumers: []
-      };
-      const v2 = datav2.find(item => item.name === serviceName) || {
-        uniqueServiceName: serviceName,
-        name: serviceName,
-        dataCohesion: 0,
-        usageCohesion: 0,
-        totalInterfaceCohesion: 0,
-        endpointCohesion: [],
-        totalEndpoints: 0,
-        consumers: []
-      };
-      const diff: TInsightDiffCohesion = {
-        uniqueServiceName: serviceName,
-        name: serviceName,
-        dataCohesionV1: v1.dataCohesion,
-        usageCohesionV1: v1.usageCohesion,
-        totalInterfaceCohesionV1: v1.totalInterfaceCohesion,
-        dataCohesionV2: v2.dataCohesion,
-        usageCohesionV2: v2.usageCohesion,
-        totalInterfaceCohesionV2: v2.totalInterfaceCohesion
-      };
-      mergedData.push(diff);
-    });
-    return mergedData;
-  };
-
-  static mergeCouplingDiffData = (
-    datav1: TServiceCoupling[],
-    datav2: TServiceCoupling[]
-  ): TInsightDiffCoupling[] => {
-    const allServiceNames = new Set([
-      ...datav1.map(item => item.name),
-      ...datav2.map(item => item.name),
-    ]);
-
-    const mergedData: TInsightDiffCoupling[] = [];
-
-    allServiceNames.forEach(serviceName => {
-      const v1 = datav1.find(item => item.name === serviceName) || {
-        uniqueServiceName: serviceName,
-        name: serviceName,
-        ais: 0,
-        ads: 0,
-        acs: 0,
-      };
-      const v2 = datav2.find(item => item.name === serviceName) || {
-        uniqueServiceName: serviceName,
-        name: serviceName,
-        ais: 0,
-        ads: 0,
-        acs: 0,
-      };
-
-      const diff: TInsightDiffCoupling = {
-        uniqueServiceName: serviceName,
-        name: serviceName,
-        aisV1: v1.ais,
-        adsV1: v1.ads,
-        acsV1: v1.acs,
-        aisV2: v2.ais,
-        adsV2: v2.ads,
-        acsV2: v2.acs,
-      };
-
-      mergedData.push(diff);
-    });
-    return mergedData;
-  };
-
-  static mergeInstabilityDiffData = (
-    datav1: TServiceInstability[],
-    datav2: TServiceInstability[]
-  ): TInsightDiffInstability[] => {
-    const allServiceNames = new Set([
-      ...datav1.map(item => item.name),
-      ...datav2.map(item => item.name),
-    ]);
-
-    const mergedData: TInsightDiffInstability[] = [];
-
-    allServiceNames.forEach(serviceName => {
-      const v1 = datav1.find(item => item.name === serviceName) || {
-        uniqueServiceName: serviceName,
-        name: serviceName,
-        dependingBy: 0,
-        dependingOn: 0,
-        instability: 0,
-      };
-
-      const v2 = datav2.find(item => item.name === serviceName) || {
-        uniqueServiceName: serviceName,
-        name: serviceName,
-        dependingBy: 0,
-        dependingOn: 0,
-        instability: 0,
-      };
-
-      const diff: TInsightDiffInstability = {
-        uniqueServiceName: serviceName,
-        name: serviceName,
-        dependingByV1: v1.dependingBy,
-        dependingOnV1: v1.dependingOn,
-        instabilityV1: v1.instability,
-        dependingByV2: v2.dependingBy,
-        dependingOnV2: v2.dependingOn,
-        instabilityV2: v2.instability,
-      };
-
-      mergedData.push(diff);
-    });
-
-    return mergedData;
-  };
 
   static TLinkToId(link: TLink): string {
     return `${link.source}==>${link.target}`
