@@ -53,8 +53,12 @@ export default class InsightChangeBarChartUtils extends InsightDiffBarChartUtils
     const min = Math.min(...changes);
     const max = Math.max(...changes);
     const maxAbs = Math.max(Math.abs(min), Math.abs(max));
-    const labelZeroThreshold = tickInterval / 2;
 
+    //Automatically enlarge the tick interval to avoid excessive Y-axis ticks.
+    while (tickInterval * 10 < maxAbs * 2) {
+      tickInterval *= 10;
+    }
+    const labelZeroThreshold = tickInterval / 2;
     const createYAxis = (opposite = false) => ({
       opposite,
       title: {

@@ -69,6 +69,10 @@ export default class InsightComparisonBarChartUtils extends InsightDiffBarChartU
       const v2 = getValue(d, versionTag2);
       return Math.max(max, v1, v2);
     }, 0);
+    let tickInterval = yAxisTitleTickInterval.tickInterval;
+    while (tickInterval * 10 < maxY) {
+      tickInterval *= 10;
+    }
 
     return {
       ...base,
@@ -87,7 +91,7 @@ export default class InsightComparisonBarChartUtils extends InsightDiffBarChartU
               fontSize: "18px",
             },
           },
-          ...InsightComparisonBarChartUtils.generateIntervalTick(0, maxY, yAxisTitleTickInterval.tickInterval),
+          ...InsightComparisonBarChartUtils.generateIntervalTick(0, maxY, tickInterval),
         },
         {
           opposite: true,
@@ -98,7 +102,7 @@ export default class InsightComparisonBarChartUtils extends InsightDiffBarChartU
               fontSize: "18px",
             },
           },
-          ...InsightComparisonBarChartUtils.generateIntervalTick(0, maxY, yAxisTitleTickInterval.tickInterval),
+          ...InsightComparisonBarChartUtils.generateIntervalTick(0, maxY, tickInterval),
         },
       ],
     };
